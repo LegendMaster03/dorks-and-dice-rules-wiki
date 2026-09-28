@@ -13,6 +13,7 @@ Rules Wiki should independently reimplement the useful UI/UX patterns of that mo
 - compatible differences may already have been resolved by Rules Core;
 - conflicting differences may require a global or campaign ruling;
 - campaign scope may inherit from a published Dorks & Dice baseline or override it;
+- the UI must support materially different edition families instead of assuming all content is 5e-shaped;
 - monster/stat-block presentation should use the cleaner D&D 5.5e-style information hierarchy already partially implemented in Rules Wiki.
 
 The central product principle is:
@@ -23,7 +24,7 @@ The central product principle is:
 
 This plan is an evolution of the current Rules Wiki architecture rather than a rewrite.
 
-The repository already provides several important foundations:
+The repository already provides important foundations:
 
 - Rules Wiki is a separate application from Rules Core;
 - the normal hosted request path is `browser -> Site Tool Host -> Rules Wiki -> Site delegation -> Rules Core`;
@@ -34,7 +35,7 @@ The repository already provides several important foundations:
 - the Rules Library already uses a list/detail browser with incremental loading;
 - stable deep links exist for known content families and generic imported families;
 - browser back/forward navigation is already supported;
-- campaign scope can be represented in the browser route/query state;
+- campaign scope can be represented in browser route/query state;
 - the top-level Rules Wiki navigation is already organized broadly around Players, Rules, Dungeon Masters, Sources, and Adjudication;
 - specialized renderers already exist for monsters, spells, classes, subclasses, prestige classes, species, feats, items, conditions, skills, and general rules;
 - the monster renderer already uses a D&D 5.5e-inspired presentation grammar;
@@ -65,16 +66,18 @@ The primary mismatch is that much of the current UI still reflects its origin as
 14. Published rules remain distinct from source evidence and unpublished authoring state.
 15. A rule that exists in multiple source editions should normally appear once in the conceptual browser list, with source/edition alternatives exposed in the detail context.
 16. Unknown or newly imported entity families must remain browsable through a generic fallback even before they receive a specialized renderer.
-17. Responsive behavior must be based on Rules Wiki’s usable hosted width, not assumptions about a standalone viewport.
+17. Responsive behavior must be based on Rules Wiki's usable hosted width, not assumptions about a standalone viewport.
 18. Keyboard navigation, focus visibility, accessible names, and non-color state indicators are required product behavior rather than optional polish.
 19. New UI must preserve light/dark compatibility through host variables rather than creating an isolated color system.
-20. Do not merge implementation branches to `main` without explicit authorization.
+20. Edition-specific presentation must not silently reinterpret another edition's mechanics. Rules Core supplies semantics; Rules Wiki chooses how to display them.
+21. 3e/3.5e content must not be forced into 5e/5.5e assumptions merely to reuse a renderer.
+22. Do not merge implementation branches to `main` without explicit authorization.
 
 ## 5e.tools reference-design boundary
 
-The 5e.tools repository is useful because it already demonstrates a mature information architecture for a dense tabletop rules reference.
+The 5e.tools repository is useful because it demonstrates a mature information architecture for a dense tabletop rules reference.
 
-Rules Wiki should borrow the following **interaction concepts** where they fit the Dorks & Dice product:
+Rules Wiki should borrow interaction concepts where they fit the Dorks & Dice product:
 
 - grouped top navigation by user-facing content category;
 - dense list/detail browsing;
@@ -87,16 +90,16 @@ Rules Wiki should borrow the following **interaction concepts** where they fit t
 - specialized content layouts rather than one universal document card;
 - class/subclass-specific navigation and comparison surfaces;
 - stat-block-specific presentation;
-- optional reading/reference conveniences such as pinned records, comparison views, and popout-style focused reading where they provide real value;
+- optional reading/reference conveniences such as pinned records, comparison views, and focused reading where they provide real value;
 - responsive composition that preserves fast browsing rather than simply stacking every desktop panel vertically.
 
-Rules Wiki should **not** attempt feature-for-feature cloning where the feature belongs to a different product responsibility. Examples include 5e.tools-specific content management, prerelease/homebrew managers, Foundry/Roll20 integration, offline-cache management, DM Screen ownership, and other utilities that Dorks & Dice already handles elsewhere or does not need.
+Rules Wiki should not attempt feature-for-feature cloning where the feature belongs to a different product responsibility. Examples include 5e.tools-specific content management, prerelease/homebrew managers, Foundry/Roll20 integration, offline-cache management, DM Screen ownership, and utilities that Dorks & Dice already handles elsewhere or does not need.
 
-Parity therefore means:
+Parity means:
 
 > When Rules Wiki and 5e.tools solve the same user task, Rules Wiki should aim for comparable efficiency and clarity. It does not mean reproducing every 5e.tools page or subsystem.
 
-Prefer independent implementation using Rules Wiki’s existing components and contracts. If code is ever directly copied or substantially adapted from the MIT-licensed reference repository, preserve the required license notice and attribution for that code.
+Prefer independent implementation using Rules Wiki's existing components and contracts. If code is ever directly copied or substantially adapted from the MIT-licensed reference repository, preserve the required license notice and attribution for that code.
 
 ## Product model
 
@@ -152,28 +155,18 @@ Default for most rule families.
 
 ```text
 +--------------------------------------------------------------+
-| Rules Wiki navigation                                        |
+| Rules Wiki navigation                                       |
 +----------------------+---------------------------------------+
 | Search / Filters     | Selected rule                         |
 | Sort columns         |                                       |
-|----------------------| Effective rule / source tabs / compare|
+|----------------------| Effective / source tabs / compare     |
 | Dense result list    | Type-specific renderer                |
 |                      |                                       |
 |                      | Context / provenance                  |
 +----------------------+---------------------------------------+
 ```
 
-Families likely to use this directly include:
-
-- spells;
-- feats;
-- backgrounds;
-- species/races;
-- items;
-- conditions;
-- skills/competencies;
-- general rules;
-- many imported/third-party content families.
+Families likely to use this directly include spells, feats, backgrounds, species/races, items, conditions, skills/competencies, general rules, and many imported/third-party content families.
 
 ### 2. Class family workspace
 
@@ -186,16 +179,19 @@ It should support:
 - class features organized by level;
 - subclass selection/tabs;
 - subclass feature alignment with class progression;
-- subclass comparison where useful;
-- edition/source tabs and Dorks & Dice effective rule context;
-- deep linking to a class, subclass, or important feature;
+- prestige-class progression and prerequisites;
+- subclass or prestige-class comparison where useful;
+- edition/source tabs and Dorks & Dice effective-rule context;
+- deep linking to a class, subclass, prestige class, or important feature;
 - responsive collapse into a usable single-pane/drill-in flow.
+
+The workspace must be able to represent both 5e/5.5e class structures and 3e/3.5e structures such as BAB, multiple save progressions, skill points/class skills, prerequisite-heavy prestige classes, and edition-specific spellcasting progressions.
 
 ### 3. Stat-block workspace
 
 Monsters and future stat-block-like entities use a dedicated renderer.
 
-The D&D 5.5e-inspired hierarchy is the default presentation grammar:
+The D&D 5.5e-inspired hierarchy is the preferred modern presentation grammar where normalized values permit it:
 
 - name / type / size / alignment;
 - AC, HP, Speed, Initiative;
@@ -206,7 +202,7 @@ The D&D 5.5e-inspired hierarchy is the default presentation grammar:
 - legendary/mythic/lair/regional sections;
 - unknown additional mechanics preserved rather than dropped.
 
-Source editions may differ in underlying shape. Rules Core remains responsible for normalized semantics; Rules Wiki only renders the supplied mechanical document.
+Older-edition mechanics such as touch/flat-footed AC, BAB, grapple, DR, SR, miss chance, or edition-specific attack structures must remain visible when Rules Core supplies them. The visual grammar may modernize readability, but it must not erase edition mechanics.
 
 ### 4. Reading/document workspace
 
@@ -268,7 +264,7 @@ Examples of valid Rules Core additions when UI work exposes a gap:
 
 - filter facets that are expensive or semantically unsafe to derive client-side;
 - stable sort fields;
-- parent/child relationships such as class -> subclass;
+- parent/child relationships such as class -> subclass or class -> prestige-class prerequisites;
 - edition/source identities;
 - comparison semantics;
 - effective scope/ruling state;
@@ -280,7 +276,7 @@ Examples that should remain Rules Wiki concerns:
 
 - which pane is open;
 - active tab;
-- selected row styling;
+- selected-row styling;
 - column width;
 - keyboard shortcuts;
 - scroll position;
@@ -291,7 +287,7 @@ Examples that should remain Rules Wiki concerns:
 - list density;
 - local sorting only when Rules Core has already supplied the complete bounded set and semantic ordering is not implied.
 
-If an API change is required, use a separate Rules Core branch/PR and keep the Rules Wiki change reviewable. Do not duplicate the missing backend behavior locally merely to unblock a UI phase.
+If an API change is required, use a separate Rules Core branch/PR and keep the Rules Wiki change reviewable. Do not duplicate missing backend behavior locally merely to unblock a UI phase.
 
 ## Navigation architecture
 
@@ -301,15 +297,15 @@ The target hierarchy should be driven by user intent and available content rathe
 
 Initial content groups should continue from the current structure and be refined through testing:
 
-- **Players** — Species/Races, Classes, Subclasses, Prestige Classes, Backgrounds, Feats, Options & Features, Skills/Competencies, Spells, Items where player-oriented access is useful;
+- **Players** — Species/Races, Classes, Subclasses, Prestige Classes, Backgrounds, Feats, Options & Features, Skills/Competencies, Spells, and Items where player-oriented access is useful;
 - **Rules** — All Rules/Rules Glossary, Conditions, House Rules, general rule families, tables/reference material when available;
 - **Dungeon Masters** — Bestiary and DM-facing rule families;
 - **Sources** — Source Library and source-related maintenance according to capability;
-- **Adjudication** — Rules Lawyer, cross-version review, campaign-rules authoring according to authority.
+- **Adjudication** — Rules Lawyer, cross-version review, and campaign-rules authoring according to authority.
 
 Do not expose a navigation item merely because a backend endpoint exists.
 
-Unknown dynamic entity families should remain reachable through a generic discovery mechanism rather than forcing every imported family into the permanent nav.
+Unknown dynamic entity families should remain reachable through a generic discovery mechanism rather than forcing every imported family into permanent navigation.
 
 Global omniselect/omnisearch may be added later as a direct content jump, but it must search Rules Core-backed Rules Wiki content rather than 5e.tools.
 
@@ -330,14 +326,13 @@ Search should be the dominant control at the top of each result list. It must:
 
 Each entity family should define useful sortable columns rather than relying on name-only ordering.
 
-Examples:
-
 | Family | Candidate sort fields |
 | --- | --- |
 | Monster | Name, CR, Type, Size, Source/Edition |
 | Spell | Name, Level, School, Casting Time, Source/Edition |
-| Class | Name, Hit Die, Primary Ability, Source/Edition |
+| Class | Name, Hit Die, Primary Ability or progression metadata, Source/Edition |
 | Subclass | Name, Parent Class, Source/Edition |
+| Prestige Class | Name, Prerequisite summary, progression metadata, Source/Edition |
 | Feat | Name, Category, Prerequisite, Source/Edition |
 | Species/Race | Name, Size, Speed, Source/Edition |
 | Item | Name, Type, Rarity, Value/Weight where meaningful, Source/Edition |
@@ -362,7 +357,8 @@ Entity-specific filters may include:
 
 - monster CR/type/size/environment/tags;
 - spell level/school/classes/casting time/range/components/duration/concentration/ritual;
-- class/subclass parent relationships and feature-level information;
+- class/subclass/prestige-class relationships and feature-level information;
+- 3.xe class skill/BAB/save/caster progression metadata where useful;
 - item type/rarity/attunement/property;
 - feat category/prerequisite;
 - species size/speed/traits;
@@ -432,7 +428,8 @@ Examples:
 - monster stat changes shown in stat-block context;
 - spell field changes aligned by casting/range/duration/rules sections;
 - class feature additions/removals aligned by level;
-- subclass changes aligned under the parent class progression;
+- subclass/prestige-class changes aligned under the relevant class progression;
+- 3e -> 3.5e changes in skills, feats, combat statistics, spell fields, or prerequisite structures;
 - item property changes grouped by mechanical category.
 
 The comparison UI must render Rules Core comparison semantics; it must not independently decide whether a difference is compatible, contradictory, or automatically resolvable.
@@ -464,7 +461,32 @@ Campaign views should clearly distinguish:
 - unpublished campaign change;
 - resulting published campaign rule.
 
-The UI should infer scope from the current browser/campaign context whenever possible rather than requiring users to choose backend-like “effective rules” scopes redundantly.
+The UI should infer scope from the current browser/campaign context whenever possible rather than requiring users to choose backend-like effective-rule scopes redundantly.
+
+## Edition-family presentation strategy
+
+Rules Wiki should use shared interaction patterns without pretending every edition has the same mechanical shape.
+
+### 5e / 5.5e
+
+The first human-testing target. These editions establish the initial reference-browser, class/subclass, spell, feat, species, background, item, condition, and stat-block presentation patterns.
+
+### 3.xe
+
+For this plan, **3.xe means D&D 3e and D&D 3.5e**. After the 5e/5.5e player-reference surface is stable, Rules Wiki should deliberately test the architecture against 3.xe before bestiary completion.
+
+High-value 3.xe concepts include:
+
+- base classes and prestige classes;
+- BAB and multiple save progressions;
+- skill ranks, class/cross-class behavior, and skill families such as Craft, Knowledge, Perform, and Profession;
+- feat categories, prerequisite chains, and feat relationships;
+- spell levels that vary by class/list;
+- school/subschool/descriptors, saving throws, spell resistance, and richer component/cost fields;
+- weapon/armor categories, enhancement/special properties, charges, costs, and other item mechanics;
+- combat/reference mechanics such as touch AC, flat-footed AC, grapple, damage reduction, spell resistance, and miss chance.
+
+The purpose of the 3.xe phase is not merely to add more labels. It must prove that the shared browser and renderer architecture can display a materially different rules family without flattening it into 5e semantics.
 
 ## Stat-block presentation
 
@@ -481,6 +503,8 @@ DEX 14 (+2)
 ```
 
 with save information integrated cleanly rather than returning to older stat-block layouts merely for visual parity with 5e.tools.
+
+For 3.xe and other older editions, edition-specific combat statistics must remain visible even when the surrounding stat-block presentation uses the cleaner modern hierarchy.
 
 5e.tools remains useful for browsing density, entity selection, filtering, tabs, and general stat-block reference behavior. The final Rules Wiki stat-block visual grammar may deliberately differ.
 
@@ -505,7 +529,7 @@ Narrow
   back-to-list preserves filters/search/selection
 ```
 
-Use container-aware behavior where practical so Rules Wiki responds correctly even when the physical viewport is wide but the Tool’s actual canvas is constrained.
+Use container-aware behavior where practical so Rules Wiki responds correctly even when the physical viewport is wide but the Tool's actual canvas is constrained.
 
 The Site ribbon and footer remain outside Rules Wiki ownership. Other Tools must not inherit Rules Wiki-specific spacing, width, or viewport assumptions.
 
@@ -575,7 +599,9 @@ During migration:
 - legacy `rules-core-*` CSS/DOM class names may remain temporarily where mass renaming would create regression risk;
 - new UI should prefer Rules Wiki terminology, but do not perform a repository-wide class-name rename solely for cosmetic purity;
 - authoring/admin views can temporarily retain older layouts while normal browsing is modernized;
-- a phase must not partially move authoritative behavior into the frontend to avoid a coordinated Rules Core change.
+- a phase must not partially move authoritative behavior into the frontend to avoid a coordinated Rules Core change;
+- 5e/5.5e presentation improvements must not make 3e/3.5e records unreadable before the dedicated 3.xe phase;
+- 3.xe additions must preserve the generic fallback for still-unsupported editions and entity families.
 
 ## Phased roadmap
 
@@ -591,7 +617,7 @@ Required work:
 4. Normalize scroll ownership so the page does not accumulate competing nested scroll containers unnecessarily.
 5. Establish container-aware responsive breakpoints for wide, medium, and narrow hosted widths.
 6. Preserve existing routes, API contracts, deep links, source visibility, and authority behavior.
-7. Add/strengthen frontend integration tests for shell ownership, list/detail drill-in, route restoration, and narrow/wide behavior.
+7. Add or strengthen frontend integration tests for shell ownership, list/detail drill-in, route restoration, and narrow/wide behavior.
 8. Treat current 5e.tools interaction patterns as reference evidence, not runtime dependencies.
 
 Phase 0 non-goals:
@@ -601,7 +627,7 @@ Phase 0 non-goals:
 - no broad filter-facet expansion yet;
 - no adjudication workflow rewrite;
 - no mass CSS class rename;
-- no changes to other Tools’ layouts.
+- no changes to other Tools' layouts.
 
 ### Phase 1 — reference-browser shell parity
 
@@ -621,7 +647,7 @@ Required work:
 - family/scope switching without losing recoverable context unnecessarily;
 - narrow-width list -> detail drill-in;
 - polished empty/loading/error states;
-- remove remaining “backend workspace” framing from ordinary browsing.
+- remove remaining backend-workspace framing from ordinary browsing.
 
 Acceptance requires successful use with at least monsters, spells, classes, feats, species, items, and a generic unknown family.
 
@@ -648,7 +674,7 @@ Unknown entity families must continue through generic fallback configuration.
 
 ### Phase 3 — class, subclass, and prestige-class workspace
 
-Goal: make class-family content ready for human acceptance testing, beginning with 5e and 5.5e.
+Goal: make class-family content ready for human acceptance testing, beginning with 5e and 5.5e while establishing an edition-flexible workspace.
 
 Required work:
 
@@ -660,9 +686,9 @@ Required work:
 - subclass feature alignment;
 - prestige-class support without forcing it into 5e assumptions;
 - source/edition version views;
-- subclass comparison where available/useful;
+- subclass/prestige-class comparison where available/useful;
 - cross-edition class comparison entry point;
-- stable routes for class/subclass selection;
+- stable routes for class/subclass/prestige-class selection;
 - responsive behavior;
 - keyboard and accessibility coverage.
 
@@ -692,11 +718,43 @@ Each family receives:
 - cross-links/relationships where Rules Core exposes them;
 - stable routes and responsive behavior.
 
-Do not mark this phase complete merely because records render. Human testers must be able to find, distinguish, and inspect the records efficiently.
+Do not mark this phase complete merely because records render. Human testers must be able to find, distinguish, and inspect records efficiently.
 
-### Phase 5 — bestiary and stat-block completion
+### Phase 5 — 3.xe (3e/3.5e) reference completion
 
-Goal: complete the bestiary around the existing D&D 5.5e-inspired stat-block foundation.
+Goal: deliberately stress the new UI architecture against D&D 3e and 3.5e before bestiary completion, proving that the system is edition-flexible rather than a 5e UI with extra labels.
+
+Required work:
+
+- use the Phase 3 class workspace for 3e/3.5e base classes and prestige classes;
+- render BAB, Fortitude/Reflex/Will progressions, skill points/class skills, caster progression, prerequisites, and other class-table fields without flattening them into 5e concepts;
+- support 3e/3.5e race/species presentation without assuming 5e species fields;
+- present ranked skills and family skills such as Craft, Knowledge, Perform, and Profession clearly;
+- support class/cross-class or other edition-specific competency context when Rules Core exposes it;
+- present feat categories, prerequisite chains, and related-feat relationships;
+- present 3.xe spell metadata including class-dependent spell levels, school/subschool/descriptors, components, range, duration, saving throw, spell resistance, and material/XP/focus costs where available;
+- present 3.xe item mechanics such as weapon/armor categories, enhancement/special properties, charges, costs, and related rules;
+- provide usable browsing for combat/reference mechanics such as touch AC, flat-footed AC, BAB, grapple, DR, SR, and miss chance where represented as rules content;
+- expose clear 3e versus 3.5e source/version identity;
+- verify semantic comparison entry points for 3e -> 3.5e differences;
+- add family-specific columns and filters needed for efficient 3.xe lookup;
+- retain generic fallback for 3.xe fields that do not yet have a specialized visual component.
+
+Acceptance should include at least:
+
+- a 3.5e base class;
+- a prestige class with meaningful prerequisites;
+- a ranked/family skill example;
+- a prerequisite-heavy feat;
+- a spell whose metadata differs materially from the 5e presentation model;
+- an item with 3.xe-specific mechanics;
+- one 3e versus 3.5e concept comparison.
+
+This phase does not complete the 3.xe bestiary. Monster-specific 3.xe presentation is handled in Phase 6 so bestiary behavior can be evaluated as one cross-edition stat-block system.
+
+### Phase 6 — bestiary and stat-block completion
+
+Goal: complete the bestiary around the existing D&D 5.5e-inspired stat-block foundation while preserving edition-specific mechanics.
 
 Required work:
 
@@ -705,15 +763,17 @@ Required work:
 - complete normalized stat-block field coverage;
 - robust fallback for source-edition-specific mechanics;
 - 5.5e-style ability score/modifier presentation;
-- actions/bonus actions/reactions/legendary/mythic/lair/regional sections;
+- 3e/3.5e support for touch/flat-footed AC, BAB, grapple, saves, DR, SR, miss chance, and other applicable fields;
+- actions/bonus actions/reactions/legendary/mythic/lair/regional sections where applicable;
+- edition-appropriate action/attack structures without inventing absent mechanics;
 - source/edition tabs;
 - edition comparison in stat-block context where practical;
 - links to related creatures/mechanics when Rules Core exposes them;
 - print/focused reading behavior if useful at the table.
 
-### Phase 6 — global search and reference conveniences
+### Phase 7 — global search and reference conveniences
 
-Goal: reduce the time from “I need a rule” to “I am looking at it.”
+Goal: reduce the time from "I need a rule" to "I am looking at it."
 
 Candidate capabilities:
 
@@ -727,7 +787,7 @@ Candidate capabilities:
 
 Do not reproduce unrelated 5e.tools utilities merely for parity.
 
-### Phase 7 — source and edition context redesign
+### Phase 8 — source and edition context redesign
 
 Goal: make provenance and edition alternatives understandable without overwhelming ordinary browsing.
 
@@ -742,7 +802,7 @@ Required work:
 - clear separation of effective Dorks & Dice/campaign result from source evidence;
 - source-library transitions that retain useful context.
 
-### Phase 8 — cross-edition comparison UX
+### Phase 9 — cross-edition comparison UX
 
 Goal: make edition comparison a polished first-class Rules Wiki capability.
 
@@ -754,14 +814,15 @@ Required work:
 - clear semantic categories for differences;
 - unchanged content minimized;
 - entity-aware comparison for high-value families;
+- specific validation of 3e -> 3.5e and 5e -> 5.5e comparisons;
 - direct links back to each complete source version;
 - compact provenance on compared values;
 - read-only comparison for normal users;
-- authorized “resolve this difference” transition.
+- authorized resolve-this-difference transition.
 
 Rules Core remains authoritative for comparison semantics and automatic compatibility.
 
-### Phase 9 — adjudication and campaign-resolution redesign
+### Phase 10 — adjudication and campaign-resolution redesign
 
 Goal: transform Rules Lawyer/campaign authoring from inherited backend workspace UI into an in-context human ruling workflow.
 
@@ -779,7 +840,7 @@ Required work:
 - keep manual concept creation and normalization as secondary/escape-hatch tools;
 - preserve source-access and authority constraints.
 
-### Phase 10 — Sources and maintenance modernization
+### Phase 11 — Sources and maintenance modernization
 
 Goal: bring source-management surfaces into the same visual system without allowing maintenance UI to dominate the product.
 
@@ -795,7 +856,7 @@ Modernize:
 
 Large maintenance operations should expose progress, errors, and resumable/recoverable states clearly. Source credit/attribution must remain visible where required.
 
-### Phase 11 — reading/reference modes and long-form content
+### Phase 12 — reading/reference modes and long-form content
 
 Goal: support long-form rules and book-like reference content without forcing it into a dense two-column browser when that is not the best reading model.
 
@@ -809,7 +870,7 @@ Candidate work:
 - focused reading mode;
 - return-to-browser context preservation.
 
-### Phase 12 — accessibility, responsive, and performance hardening
+### Phase 13 — accessibility, responsive, and performance hardening
 
 Goal: treat the redesigned surface as production-ready across real devices and input methods.
 
@@ -832,16 +893,20 @@ Required validation includes:
 - source-access variation;
 - campaign membership/role variation.
 
-### Phase 13 — human acceptance and UI consistency pass
+### Phase 14 — human acceptance and UI consistency pass
 
 Goal: test complete user tasks rather than individual components.
 
 Run acceptance scenarios for at least:
 
-- player looking up a spell during play;
+- player looking up a 5e/5.5e spell during play;
 - player comparing 5e and 5.5e versions of a feature;
-- player browsing a class and subclass;
+- player browsing a 5e/5.5e class and subclass;
+- player browsing a 3.5e base class and prestige class;
+- player locating a 3.xe skill, feat, spell, and item by edition-relevant filters;
+- user comparing a meaningful 3e and 3.5e rule difference;
 - DM finding a monster and reading its complete stat block;
+- DM inspecting a 3.xe monster without losing edition-specific statistics;
 - DM browsing campaign-effective rules;
 - Rules Lawyer comparing conflicting editions and recording a draft ruling;
 - campaign DM creating an override without affecting global rules;
@@ -861,11 +926,14 @@ feature/ui-phase-0-foundation
 feature/ui-phase-1-reference-browser
 feature/ui-phase-2-filter-framework
 feature/ui-phase-3-class-workspace
+feature/ui-phase-4-5e-reference
+feature/ui-phase-5-3xe-reference
+feature/ui-phase-6-bestiary
 ```
 
 Do not modify `main` directly and do not merge until explicitly authorized.
 
-When a phase discovers a required Rules Core API addition, use a separate Rules Core branch. Keep cross-repository dependency explicit in the PR descriptions and validation rather than mixing backend semantics into Rules Wiki.
+When a phase discovers a required Rules Core API addition, use a separate Rules Core branch. Keep cross-repository dependency explicit in PR descriptions and validation rather than mixing backend semantics into Rules Wiki.
 
 ## Before each implementation phase
 
@@ -892,7 +960,8 @@ Every phase should include the narrowest useful combination of:
 - stale async result protection tests;
 - capability/authorization presentation tests;
 - regression tests ensuring generic unknown families remain browsable;
-- regression tests ensuring source restrictions are not bypassed by presentation changes.
+- regression tests ensuring source restrictions are not bypassed by presentation changes;
+- edition-shape regression tests where a specialized renderer supports more than one edition family.
 
 Where human visual judgment matters, automated tests should protect structure and behavior while human acceptance evaluates density, clarity, and usability.
 
@@ -900,7 +969,7 @@ Where human visual judgment matters, automated tests should protect structure an
 
 Phase 0 should prove at least:
 
-- hosted Rules Wiki uses the full application body without changing another Tool’s layout;
+- hosted Rules Wiki uses the full application body without changing another Tool's layout;
 - the Site ribbon and footer remain Site-owned;
 - no duplicate Rules Wiki title/application chrome appears in hosted mode;
 - the Rules Wiki nav remains attached to the application surface;
@@ -920,18 +989,20 @@ The target architecture is reached when a user can:
 3. search, sort, and filter large rules catalogs with speed comparable to a mature reference site;
 4. select a result and inspect it without losing browsing context;
 5. follow or share a stable deep link to the same concept;
-6. browse classes/subclasses through a purpose-built class workspace;
-7. read monsters in the D&D 5.5e-style stat-block presentation;
-8. inspect the effective Dorks & Dice or campaign rule as the primary result;
-9. inspect accessible source/edition versions without confusing them for the effective ruling;
-10. compare two editions/source versions through semantic differences supplied by Rules Core;
-11. move from a conflict directly into the correct global or campaign ruling workflow when authorized;
-12. save a draft ruling without accidentally publishing it;
-13. understand campaign inheritance versus campaign override;
-14. inspect provenance/source evidence without maintenance UI dominating ordinary browsing;
-15. use the same core workflows on wide desktop, intermediate embedded widths, and narrow/mobile layouts;
-16. complete ordinary browsing with keyboard-only input and visible accessible state;
-17. continue browsing unknown/imported entity families through generic fallback even before specialized UI exists;
-18. use Rules Wiki with no runtime dependency on 5e.tools;
-19. use Rules Wiki without any duplicate rules semantics or authorization state being owned outside Rules Core;
-20. evolve Rules Wiki UI independently without forcing layout changes onto other Dorks & Dice Tools.
+6. browse 5e/5.5e classes and subclasses through a purpose-built class workspace;
+7. browse 3e/3.5e base classes and prestige classes without losing edition-specific progression or prerequisite information;
+8. find and read 3.xe skills, feats, spells, items, and combat/reference mechanics without forcing them into 5e semantics;
+9. read monsters in the D&D 5.5e-style presentation while retaining edition-specific mechanics such as 3.xe touch AC, BAB, grapple, DR, and SR when applicable;
+10. inspect the effective Dorks & Dice or campaign rule as the primary result;
+11. inspect accessible source/edition versions without confusing them for the effective ruling;
+12. compare two editions/source versions through semantic differences supplied by Rules Core, including meaningful 3e -> 3.5e and 5e -> 5.5e cases;
+13. move from a conflict directly into the correct global or campaign ruling workflow when authorized;
+14. save a draft ruling without accidentally publishing it;
+15. understand campaign inheritance versus campaign override;
+16. inspect provenance/source evidence without maintenance UI dominating ordinary browsing;
+17. use the same core workflows on wide desktop, intermediate embedded widths, and narrow/mobile layouts;
+18. complete ordinary browsing with keyboard-only input and visible accessible state;
+19. continue browsing unknown/imported entity families through generic fallback even before specialized UI exists;
+20. use Rules Wiki with no runtime dependency on 5e.tools;
+21. use Rules Wiki without any duplicate rules semantics or authorization state being owned outside Rules Core;
+22. evolve Rules Wiki UI independently without forcing layout changes onto other Dorks & Dice Tools.
