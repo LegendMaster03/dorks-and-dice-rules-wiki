@@ -132,6 +132,13 @@ export function canSortBrowserDataset(loadedCount, totalCount) {
         && Number(loadedCount) >= Number(totalCount);
 }
 
+export function browserColumnAriaSort(entityType, sort, columnKey, sortApplied) {
+    if (!sortApplied) return "none";
+    const normalized = normalizeBrowserSort(entityType, sort);
+    if (normalized.key !== columnKey) return "none";
+    return normalized.direction === "desc" ? "descending" : "ascending";
+}
+
 export function sortRulesForBrowser(rules, entityType, sort) {
     const normalized = normalizeBrowserSort(entityType, sort);
     if (!normalized.key) return [...rules];
@@ -164,9 +171,11 @@ export function renderIndexHeader(
 
     for (const value of columns) {
         const selected = normalizedSort.key === value.key;
-        const ariaSort = selected
-            ? normalizedSort.direction === "desc" ? "descending" : "ascending"
-            : "none";
+        const ariaSort = browserColumnAriaSort(
+            entityType,
+            normalizedSort,
+            value.key,
+            canSort);
         const wrapper = element("span", {
             className: `rules-core-library-column-header${value.align === "center" ? " is-center" : ""}`,
             attributes: {
