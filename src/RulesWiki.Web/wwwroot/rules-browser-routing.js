@@ -54,22 +54,62 @@ export function parseBrowserScopeFromLocation(app) {
         : null;
 }
 
+export function parseBrowserViewState(search = "") {
+    const parameters = new URLSearchParams(search);
+    const query = (parameters.get("q") ?? "").trim();
+    const sortKey = (parameters.get("sort") ?? "").trim() || null;
+    const requestedDirection = (parameters.get("dir") ?? "").toLowerCase();
+    const sortDirection = requestedDirection === "desc" ? "desc" : "asc";
+    return { query, sortKey, sortDirection };
+}
+
+export function parseBrowserViewStateFromLocation() {
+    return parseBrowserViewState(window.location.search);
+}
+
 export function browserHref(app, toolRelativePath, scopeValue = app.browserScope) {
     const base = app.hostContext.toolBasePath ?? "/tools/rules-wiki";
     const path = `${base.replace(/\/$/, "")}${toolRelativePath || "/"}`;
     const parameters = new URLSearchParams(window.location.search);
     parameters.delete("scope");
+    parameters.delete("q");
+    parameters.delete("sort");
+    parameters.delete("dir");
+
     if (scopeValue?.startsWith("campaign:")) {
         parameters.set("scope", scopeValue);
     }
-    const query = parameters.toString();
-    return query ? `${path}?${query}` : path;
+
+    const query = String(app.browserFilters?.query ?? "").trim();
+    if (query) parameters.set("q", query);
+
+    const sortKey = app.browserSort?.key ?? null;
+    if (sortKey) {
+        parameters.set("sort", sortKey);
+        if (app.browserSort?.direction === "desc") parameters.set("dir", "desc");
+    }
+
+    const queryString = parameters.toString();
+    return queryString ? `${path}?${queryString}` : path;
 }
 
 export function pushToolRoute(app, toolRelativePath, scopeValue = app.browserScope) {
+    updateToolRoute(app, toolRelativePath, scopeValue, false);
+}
+
+export function replaceToolRoute(app, toolRelativePath, scopeValue = app.browserScope) {
+    updateToolRoute(app, toolRelativePath, scopeValue, true);
+}
+
+function updateToolRoute(app, toolRelativePath, scopeValue, replace) {
     const href = browserHref(app, toolRelativePath || "/", scopeValue);
     const current = `${window.location.pathname}${window.location.search}`;
-    if (current !== href) window.history.pushState({}, "", href);
+    if (current === href) return;
+    if (replace) {
+        window.history.replaceState({}, "", href);
+    } else {
+        window.history.pushState({}, "", href);
+    }
 }
 
 export function catalogRouteForEntity(entityType) {
