@@ -251,6 +251,13 @@ async function renderRulesBrowser(app, container) {
         ariaLabel: "Search rules",
         title: "Press F or / to focus search. Use J/K to move through results."
     });
+    const searchField = element("div", { className: "rules-core-library-search-field" },
+        search,
+        element("span", {
+            className: "rules-core-library-search-hint",
+            text: "F",
+            attributes: { "aria-hidden": "true" }
+        }));
     const clearSearch = element("button", {
         type: "button",
         className: "rules-core-library-search-clear",
@@ -272,9 +279,8 @@ async function renderRulesBrowser(app, container) {
     });
     const searchGroup = element("div", { className: "rules-core-library-search-group" },
         element("div", { className: "rules-core-library-search-wrap" },
-            element("div", { className: "rules-core-library-search-wrap" },
-                search,
-                clearSearch)),
+            searchField,
+            clearSearch),
         indexStatus,
         filterToggle);
 
@@ -513,8 +519,9 @@ async function renderRulesBrowser(app, container) {
         if (!hasPublishedRuleset) {
             indexStatus.textContent = "Nothing published";
         } else {
-            const sortPending = Boolean(app.browserSort.key) && !canSortCurrentDataset();
-            indexStatus.textContent = `${currentRules.length} of ${totalCount}${sortPending ? " · sort after full load" : ""}`;
+            indexStatus.textContent = hasMore
+                ? `${currentRules.length} of ${totalCount} · load all to sort`
+                : `${currentRules.length} of ${totalCount}`;
         }
         renderContinuousIndexFooter(
             indexFooter,
@@ -731,6 +738,7 @@ async function renderRulesBrowser(app, container) {
     });
 
     scope.addEventListener("change", async () => {
+        detailSerial += 1;
         if (!scope.value.startsWith("campaign:")) {
             overrideFilter.querySelector("input").checked = false;
         }
