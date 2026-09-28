@@ -1,0 +1,51 @@
+name: Validate Rules Wiki
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "**" ]
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Restore
+        run: dotnet restore dorks-and-dice-rules-wiki.slnx
+      - name: Test
+        run: dotnet test dorks-and-dice-rules-wiki.slnx --configuration Release --no-restore
+      - name: Enforce Embedded Module v2 lifecycle
+        run: |
+          if grep -R "MutationObserver" -n src/RulesWiki.Web/wwwroot; then
+            echo "Application-owned frontend code must not use MutationObserver as a render lifecycle."
+            exit 1
+          fi
+      - name: Validate Compose configuration
+        run: docker compose -f docker-compose.yml config >/dev/null
+      - name: Build container
+        run: docker build -t dorks-and-dice-rules-wiki:test -f src/RulesWiki.Web/Dockerfile .
+      - name: Smoke test container
+        run: |
+          docker rm -f dorks-and-dice-rules-wiki-smoketest 2>/dev/null || true
+          docker run -d --name dorks-and-dice-rules-wiki-smoketest \
+            -p 127.0.0.1:58080:8080 \
+            -e ToolHost__BaseUrl=http://site.example.invalid \
+            dorks-and-dice-rules-wiki:test
+          ready=false
+          for i in {1..20}; do
+            if curl -fsS http://127.0.0.1:58080/ready | grep -q '"status":"ready"'; then ready=true; break; fi
+            sleep 1
+          done
+          if [ "$ready" != "true" ]; then docker logs dorks-and-dice-rules-wiki-smoketest || true; exit 1; fi
+          curl -fsS http://127.0.0.1:58080/app.js | grep -q 'Rules'
+      - name: Cleanup smoke-test container
+        if: always()
+        run: docker rm -f dorks-and-dice-rules-wiki-smoketest 2>/dev/null || true

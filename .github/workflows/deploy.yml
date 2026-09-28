@@ -1,0 +1,44 @@
+name: Deploy Rules Wiki
+
+on:
+  workflow_run:
+    workflows: [ "Validate Rules Wiki" ]
+    types: [ completed ]
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: dorks-and-dice-rules-wiki
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.ref_name == 'main') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
+    runs-on: [self-hosted, dorks-and-dice-rules-wiki]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+      - name: Build image
+        run: docker build -t dorks-and-dice-rules-wiki:latest -f src/RulesWiki.Web/Dockerfile .
+      - name: Deploy
+        run: |
+          ENV_FILE=/mnt/HDDs/www/dorks-and-dice-rules-wiki/.env
+          if [ ! -f "$ENV_FILE" ]; then
+            echo "Rules Wiki deployment configuration is missing: $ENV_FILE"
+            exit 1
+          fi
+          docker compose --project-name dorks-and-dice-rules-wiki --env-file "$ENV_FILE" -f docker-compose.yml config >/dev/null
+          docker compose --project-name dorks-and-dice-rules-wiki --env-file "$ENV_FILE" -f docker-compose.yml up -d --force-recreate --remove-orphans
+      - name: Verify deployed service
+        run: |
+          for i in {1..60}; do
+            response=$(docker run --rm --network dorks-and-dice-backend curlimages/curl:8.12.1 -fsS http://dorks-and-dice-rules-wiki:8080/ready 2>/dev/null || true)
+            if echo "$response" | grep -q '"status":"ready"'; then exit 0; fi
+            sleep 1
+          done
+          docker logs --tail 200 dorks-and-dice-rules-wiki || true
+          exit 1
