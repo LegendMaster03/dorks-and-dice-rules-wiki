@@ -37,6 +37,11 @@
     gap: .25rem;
 }
 
+.rules-core-library-search-field {
+    position: relative;
+    min-width: 0;
+}
+
 .rules-core-library-search {
     min-height: 2rem;
     padding-right: 2rem;
