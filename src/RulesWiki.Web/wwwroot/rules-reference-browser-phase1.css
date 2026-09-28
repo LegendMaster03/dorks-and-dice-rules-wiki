@@ -1,0 +1,268 @@
+.rules-core-library-shell {
+    container-name: rules-wiki-browser;
+    container-type: inline-size;
+    gap: .35rem;
+}
+
+.rules-core-library-heading {
+    min-height: 1.55rem;
+    padding-inline: .1rem;
+}
+
+.rules-core-library-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(9rem, 12rem);
+    padding: .25rem .35rem;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.rules-core-library-workspace {
+    grid-template-columns: minmax(21rem, 34%) minmax(0, 1fr);
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+}
+
+.rules-core-library-search-group {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: .3rem;
+    padding: .35rem .4rem;
+}
+
+.rules-core-library-search-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .25rem;
+}
+
+.rules-core-library-search {
+    min-height: 2rem;
+    padding-right: 2rem;
+}
+
+.rules-core-library-search-clear {
+    min-width: 2rem;
+    padding-inline: .42rem;
+    border: 0;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.rules-core-library-search-clear:hover,
+.rules-core-library-search-clear:focus-visible {
+    background: color-mix(in srgb, var(--bs-primary) 8%, transparent);
+    color: var(--bs-body-color);
+    outline: 2px solid color-mix(in srgb, var(--bs-primary) 55%, transparent);
+    outline-offset: -2px;
+}
+
+.rules-core-library-search-clear:disabled {
+    opacity: .32;
+}
+
+.rules-core-library-index-header {
+    min-height: 1.8rem;
+    padding: .2rem .45rem;
+}
+
+.rules-core-library-column-header {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+}
+
+.rules-core-library-column-header.is-center {
+    justify-content: center;
+}
+
+.rules-core-library-column-sort {
+    display: inline-flex;
+    min-width: 0;
+    max-width: 100%;
+    align-items: center;
+    gap: .2rem;
+    padding: .08rem .12rem;
+    border: 0;
+    border-radius: .25rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: inherit;
+    text-align: inherit;
+}
+
+.rules-core-library-column-sort:hover:not(:disabled),
+.rules-core-library-column-sort:focus-visible:not(:disabled) {
+    background: color-mix(in srgb, var(--bs-primary) 8%, transparent);
+    color: var(--bs-body-color);
+    outline: 2px solid color-mix(in srgb, var(--bs-primary) 52%, transparent);
+    outline-offset: 0;
+}
+
+.rules-core-library-column-sort:disabled {
+    opacity: .72;
+    cursor: default;
+}
+
+.rules-core-library-column-sort.is-active {
+    color: var(--bs-body-color);
+}
+
+.rules-core-library-sort-indicator {
+    flex: 0 0 auto;
+    font-size: .58rem;
+}
+
+.rules-core-library-row {
+    min-height: 2.3rem;
+    padding: .28rem .48rem;
+}
+
+.rules-core-library-row:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: -2px;
+}
+
+.rules-core-library-row.is-selected .rules-core-library-row-name {
+    font-weight: 760;
+}
+
+.rules-core-library-cell {
+    font-size: .71rem;
+}
+
+.rules-core-library-row-name {
+    font-size: .82rem;
+}
+
+.rules-core-library-row-override {
+    margin-top: .08rem;
+    font-size: .6rem;
+}
+
+.rules-core-library-loading,
+.rules-core-library-empty-list,
+.rules-core-library-detail-loading,
+.rules-core-library-detail-empty {
+    padding: .75rem;
+}
+
+.rules-core-library-state {
+    display: grid;
+    min-height: 8rem;
+    place-content: center;
+    gap: .35rem;
+    padding: 1rem;
+    color: var(--bs-secondary-color);
+    text-align: center;
+}
+
+.rules-core-library-state-title {
+    margin: 0;
+    color: var(--bs-body-color);
+    font-size: .86rem;
+    font-weight: 700;
+}
+
+.rules-core-library-state-detail {
+    max-width: 34rem;
+    margin: 0;
+    font-size: .76rem;
+    line-height: 1.4;
+}
+
+.rules-core-library-search-status {
+    min-width: 4.5rem;
+    text-align: right;
+}
+
+@container rules-wiki-browser (max-width: 900px) {
+    .rules-core-library-controls {
+        grid-template-columns: minmax(0, 1fr) minmax(9rem, 11rem);
+    }
+
+    .rules-core-library-heading {
+        align-items: baseline;
+    }
+
+    .rules-core-library-revision {
+        white-space: normal;
+    }
+
+    .rules-core-library-workspace {
+        display: block;
+        height: auto;
+        min-height: 0;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .rules-core-library-index {
+        min-height: 32rem;
+        max-height: calc(100dvh - 12rem);
+        border-right: 0;
+        border-bottom: 0;
+    }
+
+    .rules-core-library-detail {
+        display: none;
+        overflow: visible;
+    }
+
+    .rules-core-library-workspace.has-selection .rules-core-library-index {
+        display: none;
+    }
+
+    .rules-core-library-workspace.has-selection .rules-core-library-detail {
+        display: block;
+    }
+
+    .rules-core-library-mobile-back {
+        display: inline-flex;
+    }
+}
+
+@container rules-wiki-browser (max-width: 560px) {
+    .rules-core-library-search-group {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .rules-core-library-search-status {
+        grid-column: 1 / -1;
+        grid-row: 2;
+        padding-left: .15rem;
+        text-align: left;
+    }
+
+    .rules-core-library-filterbar {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+
+    .rules-core-library-filter-check {
+        min-height: auto;
+    }
+
+    .rules-core-library-workspace {
+        border-right: 0;
+        border-left: 0;
+        border-radius: 0;
+    }
+
+    .rules-core-library-detail-body {
+        padding: .65rem .35rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .rules-core-library-row,
+    .rules-core-library-column-sort,
+    .rules-core-library-search-clear {
+        scroll-behavior: auto;
+        transition: none;
+    }
+}
