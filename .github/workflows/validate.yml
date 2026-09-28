@@ -18,10 +18,27 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "10.0.x"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
       - name: Restore
         run: dotnet restore dorks-and-dice-rules-wiki.slnx
       - name: Test
         run: dotnet test dorks-and-dice-rules-wiki.slnx --configuration Release --no-restore
+      - name: Validate migrated browser modules
+        run: |
+          set -euo pipefail
+          for file in src/RulesWiki.Web/wwwroot/*.js tools/*.mjs; do
+            node --input-type=module --check < "$file"
+          done
+          node tools/validate-monster-renderer.mjs
+          node tools/validate-structured-rule-renderers.mjs
+          node tools/validate-render-lifecycle.mjs
+          node tools/validate-workspace-routing.mjs
+          if grep -R '/tools/rules-core' -n src/RulesWiki.Web/wwwroot tools; then
+            echo "Rules Wiki presentation still contains the old Tool mount."
+            exit 1
+          fi
       - name: Enforce Embedded Module v2 lifecycle
         run: |
           if grep -R "MutationObserver" -n src/RulesWiki.Web/wwwroot; then
