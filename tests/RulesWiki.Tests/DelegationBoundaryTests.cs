@@ -70,6 +70,27 @@ public sealed class DelegationBoundaryTests
     }
 
     [Fact]
+    public async Task ProxyPreservesRulesCoreAuthorizationDenial()
+    {
+        var handler = new RecordingHandler(_ => new HttpResponseMessage(HttpStatusCode.Forbidden)
+        {
+            Content = new StringContent("{\"title\":\"Source access denied\"}", Encoding.UTF8, "application/problem+json")
+        });
+        var proxy = new RulesCoreDelegationProxy(new HttpClient(handler) { BaseAddress = new Uri("https://site.test") });
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Method = "GET";
+        httpContext.Request.Path = "/api/sources/entities/restricted";
+        httpContext.Response.Body = new MemoryStream();
+        HostedToolAuthenticationMiddleware.SetAuthenticationContext(httpContext, AuthContext());
+
+        await proxy.ForwardAsync(httpContext);
+
+        Assert.Equal(StatusCodes.Status403Forbidden, httpContext.Response.StatusCode);
+        httpContext.Response.Body.Position = 0;
+        Assert.Contains("Source access denied", await new StreamReader(httpContext.Response.Body).ReadToEndAsync(), StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ProxyRequiresAuthenticatedDelegationContext()
     {
         var proxy = new RulesCoreDelegationProxy(new HttpClient(new RecordingHandler(_ => throw new Xunit.Sdk.XunitException("Upstream must not be called.")))
