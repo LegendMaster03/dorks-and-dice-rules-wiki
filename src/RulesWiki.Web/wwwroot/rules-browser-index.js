@@ -117,9 +117,9 @@ export function getBrowserColumns(entityType) {
 export function normalizeBrowserSort(entityType, sort) {
     const requestedKey = sort?.key ?? null;
     if (!requestedKey) return { key: null, direction: "asc" };
-    const column = getBrowserColumns(entityType)
+    const columnDefinition = getBrowserColumns(entityType)
         .find(value => value.key === requestedKey && value.sortable);
-    if (!column) return { key: null, direction: "asc" };
+    if (!columnDefinition) return { key: null, direction: "asc" };
     return {
         key: requestedKey,
         direction: sort?.direction === "desc" ? "desc" : "asc"
@@ -280,9 +280,9 @@ export function browserColumnValue(rule, key) {
     if (key === "name") return rule.displayName ?? "";
     if (key === "entityType") return humanizeEntityType(rule.entityType);
     if (key === "source") {
-        return rule.editionDisplayName
-            || rule.sourceCode
+        return rule.sourceCode
             || rule.packageDisplayName
+            || rule.editionDisplayName
             || "";
     }
     if (key === "parentClass") {
