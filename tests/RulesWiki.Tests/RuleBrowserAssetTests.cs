@@ -19,6 +19,56 @@ public sealed class RuleBrowserAssetTests
     }
 
     [Fact]
+    public void BrowserPersistsRecoverableSearchAndSortState()
+    {
+        var content = ReadWebAssets(
+            "rules-browser.js",
+            "rules-browser-index.js",
+            "rules-browser-routing.js");
+
+        Assert.Contains("parseBrowserViewStateFromLocation", content, StringComparison.Ordinal);
+        Assert.Contains("parameters.set(\"q\"", content, StringComparison.Ordinal);
+        Assert.Contains("parameters.set(\"sort\"", content, StringComparison.Ordinal);
+        Assert.Contains("replaceToolRoute", content, StringComparison.Ordinal);
+        Assert.Contains("normalizeBrowserSort", content, StringComparison.Ordinal);
+        Assert.Contains("sortRulesForBrowser", content, StringComparison.Ordinal);
+        Assert.Contains("canSortBrowserDataset", content, StringComparison.Ordinal);
+        Assert.Contains("Load all results before sorting", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BrowserUsesContainerAwareDrillInAndAccessibleSelection()
+    {
+        var content = ReadWebAssets(
+            "rules-browser.js",
+            "rules-browser-index.js",
+            "rules-reference-browser-phase1.css");
+
+        Assert.Contains("container-type: inline-size", content, StringComparison.Ordinal);
+        Assert.Contains("@container rules-wiki-browser (max-width: 900px)", content, StringComparison.Ordinal);
+        Assert.Contains("getBoundingClientRect", content, StringComparison.Ordinal);
+        Assert.Contains("isCompactRulesBrowserWidth", content, StringComparison.Ordinal);
+        Assert.Contains("aria-selected", content, StringComparison.Ordinal);
+        Assert.Contains("aria-sort", content, StringComparison.Ordinal);
+        Assert.Contains("arrowdown", content, StringComparison.Ordinal);
+        Assert.Contains("arrowup", content, StringComparison.Ordinal);
+        Assert.Contains("escape", content, StringComparison.Ordinal);
+        Assert.Contains("focus-visible", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BrowserProtectsIncrementalAndDetailRequestsFromStaleResults()
+    {
+        var content = ReadWebAsset("rules-browser.js");
+
+        Assert.Contains("serial !== loadSerial", content, StringComparison.Ordinal);
+        Assert.Contains("detailSerial", content, StringComparison.Ordinal);
+        Assert.Contains("currentRules.length < totalCount", content, StringComparison.Ordinal);
+        Assert.Contains("loadMore", content, StringComparison.Ordinal);
+        Assert.Contains("keepSelection: true", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SourceLibraryConsumesStableEntityRoutingContract()
     {
         var content = ReadWebAsset("source-library.js");
@@ -48,9 +98,9 @@ public sealed class RuleBrowserAssetTests
 
         Assert.Contains("resolvePublishedEmptyState", content, StringComparison.Ordinal);
         Assert.Contains("No published", content, StringComparison.Ordinal);
-        Assert.Contains("source records exist in the Source Library", content, StringComparison.Ordinal);
-        Assert.Contains("imported/source material is not published", content, StringComparison.Ordinal);
-        Assert.Contains("Published catalogs are filtered by source access", content, StringComparison.Ordinal);
+        Assert.Contains("source material exists in the Source Library", content, StringComparison.Ordinal);
+        Assert.Contains("it is not part of the published rules", content, StringComparison.Ordinal);
+        Assert.Contains("Published rules remain separate from source material", content, StringComparison.Ordinal);
         Assert.Contains("Open Source Library", content, StringComparison.Ordinal);
     }
 
@@ -86,7 +136,7 @@ public sealed class RuleBrowserAssetTests
     [Fact]
     public void RulesBrowserInternalScrollChainingPreservesOrientation()
     {
-        var content = ReadWebAsset("rules-core.css");
+        var content = ReadWebAssets("rules-core.css", "rules-reference-browser-phase1.css");
 
         Assert.Contains("scrollbar-gutter: stable", content, StringComparison.Ordinal);
         Assert.Contains("overscroll-behavior: auto", content, StringComparison.Ordinal);
