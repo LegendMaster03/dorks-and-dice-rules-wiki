@@ -4,7 +4,7 @@ Rules Wiki is the human-facing Dorks & Dice Tool for the rules platform. The pre
 
 ## Request path
 
-Normal hosted traffic follows:
+Normal authenticated hosted traffic follows:
 
 `browser -> Site Tool Host -> rules-wiki -> Site delegation endpoint -> rules-core`
 
@@ -30,8 +30,16 @@ Rules Core remains the backend Tool identity `rules-core` for external API consu
 
 Historical persisted browser hrefs can still contain `/tools/rules-core/...`. Production rollout therefore also requires a Site compatibility redirect from the old browser mount to `/tools/rules-wiki/...`, preserving the trailing path and query string. The redirect is only for legacy browser navigation; backend `/tool-host/rules-core/api/upstream/...` traffic continues to target the Rules Core service.
 
+## Anonymous access
+
+The current Site Tool Host proxies anonymous browser requests directly to Tools that allow anonymous use, but it issues Tool-to-Tool delegation capabilities only from an authenticated introspection context. The repository implementation intentionally does not bypass that boundary. Therefore anonymous Rules Wiki API traffic can not reach Rules Core until Site provides a first-party anonymous delegation mechanism that carries no user identity or grants while retaining the delegation allowlist and normal upstream protections.
+
+This is a production compatibility gate if the existing anonymous Rules Library behavior is retained; it is not a reason to move source access or authorization state into Rules Wiki.
+
 ## Deployment gate
 
 Development and validation can proceed independently, but production merge/deployment is gated on Site support for an enabled headless/non-navigable Rules Core service registration. That registration must support an upstream backend, health/readiness, authentication/introspection, and delegation targeting without exposing a normal public Tool page or navigation entry.
 
 The public Rules Wiki registration is expected to use slug `rules-wiki`, Embedded Module v2, and a delegation target allowlist containing `rules-core`.
+
+Before rollout, Site must also provide the historical browser-route redirect above and resolve anonymous delegation if Rules Wiki remains anonymously accessible.
