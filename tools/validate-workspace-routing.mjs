@@ -5,6 +5,7 @@ import {
     replaceToolRoute
 } from "../src/RulesWiki.Web/wwwroot/rules-browser-routing.js";
 import {
+    browserColumnAriaSort,
     canSortBrowserDataset,
     normalizeBrowserSort,
     sortRulesForBrowser
@@ -139,6 +140,16 @@ assert(sorted.map(value => value.conceptKey).join(",")
 const normalized = normalizeBrowserSort("spell", { key: "not-a-column", direction: "desc" });
 assert(normalized.key === null && normalized.direction === "asc",
     "family changes must discard invalid sort columns");
+
+const pendingSort = { key: "cr", direction: "asc" };
+assert(browserColumnAriaSort("monster", pendingSort, "cr", false) === "none",
+    "requested sort on an incomplete dataset must not expose an applied aria-sort");
+assert(browserColumnAriaSort("monster", pendingSort, "cr", true) === "ascending",
+    "completed ascending sort must expose aria-sort=ascending");
+assert(browserColumnAriaSort("monster", { key: "cr", direction: "desc" }, "cr", true) === "descending",
+    "changing direction on an applied sort must expose aria-sort=descending");
+assert(browserColumnAriaSort("monster", pendingSort, "name", true) === "none",
+    "non-active columns must continue to expose aria-sort=none");
 
 assert(isCompactRulesBrowserWidth(900), "900px hosted width must use list/detail drill-in");
 assert(!isCompactRulesBrowserWidth(901), "wide hosted width must retain parallel list/detail panes");
