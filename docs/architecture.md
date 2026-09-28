@@ -28,6 +28,8 @@ The migrated frontend retains the existing `/api/*` browser contract. Rules Wiki
 
 Rules Core remains the backend Tool identity `rules-core` for external API consumers. Human-facing `browserLink` values emitted by Rules Core instead identify `rules-wiki` as the Tool slug while preserving the existing tool-relative route and canonical Rules Core route identity.
 
+Historical persisted browser hrefs can still contain `/tools/rules-core/...`. Production rollout therefore also requires a Site compatibility redirect from the old browser mount to `/tools/rules-wiki/...`, preserving the trailing path and query string. The redirect is only for legacy browser navigation; backend `/tool-host/rules-core/api/upstream/...` traffic continues to target the Rules Core service.
+
 ## Deployment gate
 
 Development and validation can proceed independently, but production merge/deployment is gated on Site support for an enabled headless/non-navigable Rules Core service registration. That registration must support an upstream backend, health/readiness, authentication/introspection, and delegation targeting without exposing a normal public Tool page or navigation entry.
