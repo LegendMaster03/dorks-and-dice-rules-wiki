@@ -19,79 +19,88 @@ export const RULE_FAMILY_TABS = [
     ["rule", "Other Rules"]
 ];
 
-const BROWSER_COLUMNS = new Map([
+export const BROWSER_COLUMNS = new Map([
     ["", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "entityType", label: "Type", width: "minmax(5rem, .8fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("entityType", "Type", "minmax(5rem, .8fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["monster", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "type", label: "Type", width: "minmax(5rem, .9fr)" },
-        { key: "cr", label: "CR", width: "minmax(2.5rem, .4fr)", align: "center" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("type", "Type", "minmax(5rem, .9fr)"),
+        column("cr", "CR", "minmax(2.5rem, .4fr)", "center"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["spell", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "level", label: "Level", width: "minmax(4.5rem, .6fr)" },
-        { key: "school", label: "School", width: "minmax(6rem, 1fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("level", "Level", "minmax(4.5rem, .6fr)"),
+        column("school", "School", "minmax(6rem, 1fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["class", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "hitDie", label: "Hit Die", width: "minmax(4rem, .55fr)", align: "center" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("hitDie", "Hit Die", "minmax(4rem, .55fr)", "center"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["subclass", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "parentClass", label: "Class", width: "minmax(6rem, 1fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("parentClass", "Class", "minmax(6rem, 1fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["prestigeClass", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["feat", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "category", label: "Category", width: "minmax(6rem, 1fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("category", "Category", "minmax(6rem, 1fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["background", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["optionalfeature", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["race", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "ability", label: "Ability", width: "minmax(7rem, 1.1fr)" },
-        { key: "size", label: "Size", width: "minmax(4rem, .65fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("ability", "Ability", "minmax(7rem, 1.1fr)"),
+        column("size", "Size", "minmax(4rem, .65fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["species", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "ability", label: "Ability", width: "minmax(7rem, 1.1fr)" },
-        { key: "size", label: "Size", width: "minmax(4rem, .65fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("ability", "Ability", "minmax(7rem, 1.1fr)"),
+        column("size", "Size", "minmax(4rem, .65fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["item", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "type", label: "Type", width: "minmax(5rem, .8fr)" },
-        { key: "rarity", label: "Rarity", width: "minmax(5rem, .8fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("type", "Type", "minmax(5rem, .8fr)"),
+        column("rarity", "Rarity", "minmax(5rem, .8fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["condition", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]],
     ["skill", [
-        { key: "name", label: "Name", width: "minmax(9rem, 2fr)" },
-        { key: "ability", label: "Ability", width: "minmax(4rem, .65fr)" },
-        { key: "source", label: "Base", width: "minmax(3.5rem, .55fr)" }
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("ability", "Ability", "minmax(4rem, .65fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
     ]]
 ]);
+
+const COLLATOR = new Intl.Collator(undefined, {
+    numeric: true,
+    sensitivity: "base"
+});
+
+function column(key, label, width, align = null) {
+    return { key, label, width, align, sortable: true };
+}
 
 export function libraryTitle(entityType) {
     const normalized = entityType ?? "";
@@ -99,21 +108,108 @@ export function libraryTitle(entityType) {
     return known?.[1] ?? humanizeEntityType(normalized);
 }
 
-function browserColumns(entityType) {
+export function getBrowserColumns(entityType) {
     return BROWSER_COLUMNS.get(entityType)
         ?? BROWSER_COLUMNS.get("")
         ?? [];
 }
 
-export function renderIndexHeader(container, entityType) {
-    const columns = browserColumns(entityType);
+export function normalizeBrowserSort(entityType, sort) {
+    const requestedKey = sort?.key ?? null;
+    if (!requestedKey) return { key: null, direction: "asc" };
+    const column = getBrowserColumns(entityType)
+        .find(value => value.key === requestedKey && value.sortable);
+    if (!column) return { key: null, direction: "asc" };
+    return {
+        key: requestedKey,
+        direction: sort?.direction === "desc" ? "desc" : "asc"
+    };
+}
+
+export function canSortBrowserDataset(loadedCount, totalCount) {
+    return Number.isFinite(Number(totalCount))
+        && Number(totalCount) >= 0
+        && Number(loadedCount) >= Number(totalCount);
+}
+
+export function sortRulesForBrowser(rules, entityType, sort) {
+    const normalized = normalizeBrowserSort(entityType, sort);
+    if (!normalized.key) return [...rules];
+    const direction = normalized.direction === "desc" ? -1 : 1;
+    return [...rules].sort((left, right) => {
+        const primary = compareBrowserValues(
+            normalized.key,
+            browserColumnValue(left, normalized.key),
+            browserColumnValue(right, normalized.key));
+        if (primary !== 0) return primary * direction;
+
+        const byName = COLLATOR.compare(left.displayName ?? "", right.displayName ?? "");
+        if (byName !== 0) return byName;
+        return COLLATOR.compare(left.conceptKey ?? "", right.conceptKey ?? "");
+    });
+}
+
+export function renderIndexHeader(
+    container,
+    entityType,
+    sort = null,
+    onSort = null,
+    { canSort = false } = {})
+{
+    const columns = getBrowserColumns(entityType);
+    const normalizedSort = normalizeBrowserSort(entityType, sort);
     container.replaceChildren();
-    container.style.gridTemplateColumns = columns.map(column => column.width).join(" ");
-    for (const column of columns) {
-        container.append(element("span", {
-            className: `rules-core-library-column-header${column.align === "center" ? " is-center" : ""}`,
-            text: column.label
-        }));
+    container.style.gridTemplateColumns = columns.map(value => value.width).join(" ");
+    container.setAttribute("role", "row");
+
+    for (const value of columns) {
+        const selected = normalizedSort.key === value.key;
+        const ariaSort = selected
+            ? normalizedSort.direction === "desc" ? "descending" : "ascending"
+            : "none";
+        const wrapper = element("span", {
+            className: `rules-core-library-column-header${value.align === "center" ? " is-center" : ""}`,
+            attributes: {
+                role: "columnheader",
+                "aria-sort": ariaSort
+            }
+        });
+
+        if (!value.sortable || !onSort) {
+            wrapper.textContent = value.label;
+            container.append(wrapper);
+            continue;
+        }
+
+        const disabled = !canSort;
+        const button = element("button", {
+            type: "button",
+            className: `rules-core-library-column-sort${selected ? " is-active" : ""}`,
+            disabled,
+            title: disabled
+                ? "Load all results before sorting. Incremental catalogs remain in authoritative server order."
+                : `Sort by ${value.label}`,
+            ariaLabel: disabled
+                ? `Sort by ${value.label}. Load all results first.`
+                : `Sort by ${value.label}${selected ? `, currently ${ariaSort}` : ""}`
+        },
+        element("span", { text: value.label }),
+        selected
+            ? element("span", {
+                className: "rules-core-library-sort-indicator",
+                text: normalizedSort.direction === "desc" ? "▼" : "▲",
+                attributes: { "aria-hidden": "true" }
+            })
+            : null);
+        button.addEventListener("click", () => {
+            if (disabled) return;
+            const direction = selected && normalizedSort.direction === "asc"
+                ? "desc"
+                : "asc";
+            onSort({ key: value.key, direction });
+        });
+        wrapper.append(button);
+        container.append(wrapper);
     }
 }
 
@@ -123,14 +219,14 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
         if (!append) {
             container.append(element("div", {
                 className: "rules-core-library-empty-list",
-                text: "No rules match the current filters."
+                text: "No rules match the current search or filters."
             }));
         }
         return;
     }
 
-    const columns = browserColumns(entityType);
-    const template = columns.map(column => column.width).join(" ");
+    const columns = getBrowserColumns(entityType);
+    const template = columns.map(value => value.width).join(" ");
     for (const rule of rules) {
         const row = element("button", {
             type: "button",
@@ -142,24 +238,24 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
             }
         });
         row.style.gridTemplateColumns = template;
-        for (const column of columns) {
-            row.append(renderRuleCell(rule, column));
+        for (const value of columns) {
+            row.append(renderRuleCell(rule, value));
         }
         row.addEventListener("click", () => onSelect(rule));
         container.append(row);
     }
 }
 
-function renderRuleCell(rule, column) {
-    const value = browserColumnValue(rule, column.key);
+function renderRuleCell(rule, columnDefinition) {
+    const value = browserColumnValue(rule, columnDefinition.key);
     const classNames = [
         "rules-core-library-cell",
-        column.key === "name" ? "rules-core-library-cell--name" : "",
-        column.key === "source" ? "rules-core-library-cell--source" : "",
-        column.align === "center" ? "is-center" : ""
+        columnDefinition.key === "name" ? "rules-core-library-cell--name" : "",
+        columnDefinition.key === "source" ? "rules-core-library-cell--source" : "",
+        columnDefinition.align === "center" ? "is-center" : ""
     ].filter(Boolean).join(" ");
 
-    if (column.key === "name") {
+    if (columnDefinition.key === "name") {
         return element("span", { className: classNames },
             element("span", {
                 className: "rules-core-library-row-name",
@@ -180,10 +276,15 @@ function renderRuleCell(rule, column) {
     });
 }
 
-function browserColumnValue(rule, key) {
-    if (key === "name") return rule.displayName;
+export function browserColumnValue(rule, key) {
+    if (key === "name") return rule.displayName ?? "";
     if (key === "entityType") return humanizeEntityType(rule.entityType);
-    if (key === "source") return rule.sourceCode || "D&D";
+    if (key === "source") {
+        return rule.editionDisplayName
+            || rule.sourceCode
+            || rule.packageDisplayName
+            || "";
+    }
     if (key === "parentClass") {
         return (rule.relationships ?? [])
             .filter(relationship =>
@@ -223,10 +324,40 @@ export function renderContinuousIndexFooter(
         type: "button",
         className: "btn btn-sm btn-outline-secondary",
         text: isLoadingMore ? "Loading…" : loadError ? "Retry" : "Load more",
-        disabled: isLoadingMore
+        disabled: isLoadingMore,
+        ariaLabel: isLoadingMore
+            ? `Loading more results. ${loadedCount} of ${totalCount} loaded.`
+            : `Load more results. ${loadedCount} of ${totalCount} loaded.`
     });
     button.addEventListener("click", onLoadMore);
     container.append(button);
+}
+
+function compareBrowserValues(key, left, right) {
+    const leftNumber = numericBrowserValue(key, left);
+    const rightNumber = numericBrowserValue(key, right);
+    if (leftNumber !== null && rightNumber !== null && leftNumber !== rightNumber) {
+        return leftNumber - rightNumber;
+    }
+    return COLLATOR.compare(String(left ?? ""), String(right ?? ""));
+}
+
+function numericBrowserValue(key, value) {
+    const text = String(value ?? "").trim().toLowerCase();
+    if (!text) return null;
+    if (key === "level" && text === "cantrip") return 0;
+    if (key === "hitDie") {
+        const match = /^d(\d+)$/.exec(text);
+        return match ? Number(match[1]) : null;
+    }
+    if (key !== "cr" && key !== "level") return null;
+    const fraction = /^(\d+)\s*\/\s*(\d+)$/.exec(text);
+    if (fraction) {
+        const denominator = Number(fraction[2]);
+        return denominator ? Number(fraction[1]) / denominator : null;
+    }
+    const number = Number(text);
+    return Number.isFinite(number) ? number : null;
 }
 
 function humanizeEntityType(entityType) {
