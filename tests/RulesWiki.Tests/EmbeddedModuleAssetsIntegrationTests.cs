@@ -83,7 +83,9 @@ public sealed class EmbeddedModuleAssetsIntegrationTests
             await GetAssetAsync(client, "/rules-browser.js", "javascript"),
             await GetAssetAsync(client, "/rules-browser-index.js", "javascript"),
             await GetAssetAsync(client, "/rules-browser-detail.js", "javascript"),
-            await GetAssetAsync(client, "/rules-browser-routing.js", "javascript"));
+            await GetAssetAsync(client, "/rules-browser-routing.js", "javascript"),
+            await GetAssetAsync(client, "/rules-browser-config.js", "javascript"),
+            await GetAssetAsync(client, "/rules-browser-filters.js", "javascript"));
         Assert.DoesNotContain("One concept per row", rulesBrowser, StringComparison.Ordinal);
         Assert.DoesNotContain("Press J/K to navigate", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("Press F or / to focus search. Use J/K to move through results.", rulesBrowser, StringComparison.Ordinal);
@@ -118,6 +120,10 @@ public sealed class EmbeddedModuleAssetsIntegrationTests
         Assert.Contains("BROWSER_COLUMNS", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("browserFields", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("parentClass", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("client-complete", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("workspace: \"class-family\"", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("getEntityBrowserConfig", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("normalizeBrowserFieldFilters", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("rules-core-library-workspace", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("getRuleVersions", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("Compare source versions", rulesBrowser, StringComparison.Ordinal);
