@@ -74,7 +74,8 @@ try {
 function installStylesheets() {
     for (const [id, filename] of [
         ["rules-core-module-styles", "./rules-core.css"],
-        ["rules-core-detail-styles", "./rules-core-detail.css"]
+        ["rules-core-detail-styles", "./rules-core-detail.css"],
+        ["rules-wiki-shell-styles", "./rules-wiki-shell.css"]
     ]) {
         if (document.getElementById(id)) continue;
         const link = document.createElement("link");
