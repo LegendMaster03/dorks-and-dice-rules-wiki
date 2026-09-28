@@ -24,6 +24,7 @@ import { alertNode, clear, describeError, element } from "./ui.js";
 const root = document.getElementById("tool-root");
 if (!root) throw new Error("Rules Wiki could not find the Dorks & Dice tool root.");
 
+window.dorksAndDiceToolHost?.setContentLayout?.("full-bleed");
 installStylesheets();
 clear(root);
 root.append(element("div", { className: "card card-body text-body-secondary", text: "Loading Rules Wiki…" }));
