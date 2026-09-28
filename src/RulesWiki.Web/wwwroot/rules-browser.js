@@ -1,35 +1,36 @@
 import {
-    alertNode,
-    badge,
     clear,
-    definitionList,
     describeError,
     element,
     formatDate,
-    setButtonBusy,
     DEFAULT_PAGE_SIZE
 } from "./ui.js";
 import { renderRuleDetailPane } from "./rules-browser-detail.js";
 import {
-    browserHref,
     catalogRouteForEntity,
     currentToolRoute,
     parseBrowserScopeFromLocation,
+    parseBrowserViewStateFromLocation,
     parseToolRoute,
-    pushToolRoute
+    pushToolRoute,
+    replaceToolRoute
 } from "./rules-browser-routing.js";
 import {
     RULE_FAMILY_TABS,
+    canSortBrowserDataset,
     libraryTitle,
+    normalizeBrowserSort,
     renderContinuousIndexFooter,
     renderIndexHeader,
-    renderRuleRows
+    renderRuleRows,
+    sortRulesForBrowser
 } from "./rules-browser-index.js";
 
 export { RULE_FAMILY_TABS } from "./rules-browser-index.js";
 
 const DORKS_MODE = "dorks-and-dice";
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
+const COMPACT_BROWSER_WIDTH = 900;
 const ENTITY_TYPES = [
     ["", "All"],
     ["monster", "Monsters"],
@@ -50,6 +51,7 @@ const ENTITY_TYPES = [
 ];
 
 export function installResolvedRulesBrowser(app) {
+    installReferenceBrowserStylesheet();
     app.canBrowseRules = app.hostContext.siteMode === DORKS_MODE;
     app.browserScope = "global";
     app.browserPage = 0;
@@ -59,6 +61,7 @@ export function installResolvedRulesBrowser(app) {
         sourceCode: "",
         overridesOnly: false
     };
+    app.browserSort = { key: null, direction: "asc" };
     app.browserDeepLink = null;
     app.browserSelectedConceptKey = null;
 
@@ -66,8 +69,14 @@ export function installResolvedRulesBrowser(app) {
     if (routeScope) app.browserScope = routeScope;
 
     const route = parseToolRoute(app.hostContext.toolRoute);
+    const routeViewState = parseBrowserViewStateFromLocation();
     app.browserRouteRequested = Boolean(route.entityType || route.conceptKey);
     if (route.entityType) app.browserFilters.entityType = route.entityType;
+    app.browserFilters.query = routeViewState.query;
+    app.browserSort = normalizeBrowserSort(app.browserFilters.entityType, {
+        key: routeViewState.sortKey,
+        direction: routeViewState.sortDirection
+    });
     if (route.conceptKey) {
         app.browserDeepLink = route.conceptKey;
         app.browserSelectedConceptKey = route.conceptKey;
@@ -83,25 +92,38 @@ export function installResolvedRulesBrowser(app) {
         app.libraryDeepLink = null;
         app.libraryRouteActive = false;
         app.browserFilters.entityType = nextEntityType;
+        app.browserSort = normalizeBrowserSort(nextEntityType, app.browserSort);
         app.activeView = "library";
         pushToolRoute(app, catalogRouteForEntity(nextEntityType), app.browserScope);
         await app.render();
     };
 
-    app.browserKeyboard ??= { focusSearch: null, selectRelative: null };
+    app.browserKeyboard ??= {
+        focusSearch: null,
+        selectRelative: null,
+        returnToList: null
+    };
     if (!app.browserKeyboardBound) {
         app.browserKeyboardBound = true;
         window.addEventListener("keydown", event => {
             if (app.activeView !== "library" || event.altKey || event.ctrlKey || event.metaKey) return;
-            if (isEditableTarget(event.target)) return;
 
             const key = String(event.key ?? "").toLowerCase();
-            if (key === "j") {
+            if (key === "escape" && app.browserKeyboard.returnToList?.()) {
+                event.preventDefault();
+                return;
+            }
+
+            const targetIsResultRow = event.target instanceof Element
+                && Boolean(event.target.closest(".rules-core-library-row"));
+            if (isEditableTarget(event.target) && !targetIsResultRow) return;
+
+            if (key === "j" || key === "arrowdown") {
                 event.preventDefault();
                 app.browserKeyboard.selectRelative?.(1);
                 return;
             }
-            if (key === "k") {
+            if (key === "k" || key === "arrowup") {
                 event.preventDefault();
                 app.browserKeyboard.selectRelative?.(-1);
                 return;
@@ -133,8 +155,14 @@ export function installResolvedRulesBrowser(app) {
         if (toolRoute === "/sources" || toolRoute.startsWith("/sources/")) return;
 
         const next = parseToolRoute(toolRoute);
+        const nextViewState = parseBrowserViewStateFromLocation();
         app.browserScope = parseBrowserScopeFromLocation(app) ?? "global";
         app.browserFilters.entityType = next.entityType ?? "";
+        app.browserFilters.query = nextViewState.query;
+        app.browserSort = normalizeBrowserSort(app.browserFilters.entityType, {
+            key: nextViewState.sortKey,
+            direction: nextViewState.sortDirection
+        });
         app.browserDeepLink = next.conceptKey ?? null;
         app.browserSelectedConceptKey = next.conceptKey ?? null;
         app.activeView = "library";
@@ -150,15 +178,15 @@ async function renderRulesBrowser(app, container) {
         className: "rules-core-library-title",
         text: libraryTitle(app.browserFilters.entityType)
     });
+    const revision = element("div", {
+        className: "rules-core-library-revision",
+        text: "Loading published rules…"
+    });
     const heading = element("div", { className: "rules-core-library-heading" },
         headingTitle,
-        element("div", {
-            className: "rules-core-library-revision",
-            text: "Loading published rules…"
-        }));
+        revision);
 
     const controls = element("div", { className: "rules-core-library-controls" });
-
     const scope = element("select", {
         className: "form-select form-select-sm rules-core-library-scope",
         ariaLabel: "Rules scope"
@@ -191,10 +219,7 @@ async function renderRulesBrowser(app, container) {
         if (currentEntityType
             && !knownEntityTypes.has(currentEntityType)
             && !dynamicTypes.some(value => value.entityType === currentEntityType)) {
-            dynamicTypes.unshift({
-                entityType: currentEntityType,
-                count: null
-            });
+            dynamicTypes.unshift({ entityType: currentEntityType, count: null });
         }
 
         moreTypes.replaceChildren(element("option", {
@@ -222,37 +247,36 @@ async function renderRulesBrowser(app, container) {
         className: "form-control form-control-sm rules-core-library-search",
         type: "search",
         value: app.browserFilters.query,
-        placeholder: "Search rules…",
+        placeholder: `Search ${libraryTitle(app.browserFilters.entityType).toLowerCase()}…`,
         ariaLabel: "Search rules",
         title: "Press F or / to focus search. Use J/K to move through results."
+    });
+    const clearSearch = element("button", {
+        type: "button",
+        className: "rules-core-library-search-clear",
+        text: "×",
+        ariaLabel: "Clear search",
+        title: "Clear search",
+        disabled: !search.value
     });
     const filterToggle = element("button", {
         type: "button",
         className: "btn btn-sm btn-outline-secondary rules-core-library-filter-toggle",
         text: "Filters",
-        attributes: {
-            "aria-expanded": "false"
-        }
-    });
-    const reset = element("button", {
-        type: "button",
-        className: "btn btn-sm btn-outline-secondary rules-core-library-reset",
-        text: "Reset"
+        attributes: { "aria-expanded": "false" }
     });
     const indexStatus = element("span", {
         className: "rules-core-library-search-status",
-        text: "Loading…"
+        text: "Loading…",
+        attributes: { "aria-live": "polite" }
     });
     const searchGroup = element("div", { className: "rules-core-library-search-group" },
         element("div", { className: "rules-core-library-search-wrap" },
-            search,
-            element("span", {
-                className: "rules-core-library-search-hint",
-                text: "F"
-            })),
+            element("div", { className: "rules-core-library-search-wrap" },
+                search,
+                clearSearch)),
         indexStatus,
-        filterToggle,
-        reset);
+        filterToggle);
 
     const sourceFilter = element("select", {
         className: "form-select form-select-sm",
@@ -272,7 +296,8 @@ async function renderRulesBrowser(app, container) {
     const filterBar = element("div", {
         className: "rules-core-library-filterbar",
         attributes: { hidden: "" }
-    }, element("label", { className: "rules-core-library-filter-field" },
+    },
+    element("label", { className: "rules-core-library-filter-field" },
         element("span", { text: "Source" }),
         sourceFilter),
     overrideFilter,
@@ -284,7 +309,6 @@ async function renderRulesBrowser(app, container) {
         ariaLabel: "Rules index"
     });
     const indexHeader = element("div", { className: "rules-core-library-index-header" });
-    renderIndexHeader(indexHeader, app.browserFilters.entityType);
     const list = element("div", {
         className: "rules-core-library-index-list",
         role: "listbox",
@@ -317,22 +341,82 @@ async function renderRulesBrowser(app, container) {
     let preserveDeepLink = Boolean(app.browserDeepLink);
     let loadMore = async () => [];
 
+    const canSortCurrentDataset = () =>
+        hasPublishedRuleset
+        && currentRules.length > 0
+        && canSortBrowserDataset(currentRules.length, totalCount);
+
+    const currentDisplayRules = () => canSortCurrentDataset()
+        ? sortRulesForBrowser(currentRules, app.browserFilters.entityType, app.browserSort)
+        : [...currentRules];
+
+    const syncSelectedRowState = conceptKey => {
+        for (const [key, row] of rowByConceptKey) {
+            const selected = key === conceptKey;
+            row.classList.toggle("is-selected", selected);
+            row.setAttribute("aria-selected", selected ? "true" : "false");
+        }
+    };
+
+    const selectRule = async rule => {
+        if (!rule) return;
+        preserveDeepLink = false;
+        pushToolRoute(app, rule.browserLink?.toolRelativePath);
+        await renderSelection(rule.conceptKey);
+    };
+
+    const rebuildRowMap = () => {
+        rowByConceptKey = new Map(
+            Array.from(list.querySelectorAll("[data-concept-key]"))
+                .map(row => [row.dataset.conceptKey, row]));
+        syncSelectedRowState(app.browserSelectedConceptKey);
+    };
+
+    const renderCurrentRows = ({ focusSelection = false } = {}) => {
+        renderRuleRows(
+            list,
+            currentDisplayRules(),
+            app.browserFilters.entityType,
+            selectRule);
+        rebuildRowMap();
+        if (focusSelection) {
+            rowByConceptKey.get(app.browserSelectedConceptKey)?.focus?.({ preventScroll: true });
+        }
+    };
+
+    const refreshIndexHeader = () => {
+        renderIndexHeader(
+            indexHeader,
+            app.browserFilters.entityType,
+            app.browserSort,
+            nextSort => {
+                app.browserSort = normalizeBrowserSort(app.browserFilters.entityType, nextSort);
+                pushToolRoute(app, currentToolRoute(app), app.browserScope);
+                renderCurrentRows({ focusSelection: true });
+                refreshIndexHeader();
+                refreshListState();
+            },
+            { canSort: canSortCurrentDataset() });
+    };
+
     app.browserKeyboard.focusSearch = () => {
         search.focus();
         search.select();
     };
     app.browserKeyboard.selectRelative = async direction => {
-        if (!currentRules.length) return;
+        const displayRules = currentDisplayRules();
+        if (!displayRules.length) return;
 
-        const currentIndex = currentRules.findIndex(rule =>
+        const currentIndex = displayRules.findIndex(rule =>
             rule.conceptKey === app.browserSelectedConceptKey);
-        if (direction > 0 && currentIndex === currentRules.length - 1 && hasMore) {
+        if (direction > 0 && currentIndex === displayRules.length - 1 && hasMore) {
             const added = await loadMore();
             if (added.length) {
                 const rule = added[0];
-                rowByConceptKey.get(rule.conceptKey)?.scrollIntoView?.({ block: "nearest" });
-                pushToolRoute(app, rule.browserLink?.toolRelativePath);
-                await renderSelection(rule.conceptKey);
+                await selectRule(rule);
+                const row = rowByConceptKey.get(rule.conceptKey);
+                row?.scrollIntoView?.({ block: "nearest" });
+                row?.focus?.({ preventScroll: true });
             }
             return;
         }
@@ -342,12 +426,13 @@ async function renderRulesBrowser(app, container) {
             : direction > 0 ? -1 : 0;
         const nextIndex = Math.max(
             0,
-            Math.min(currentRules.length - 1, startIndex + direction));
-        const rule = currentRules[nextIndex];
+            Math.min(displayRules.length - 1, startIndex + direction));
+        const rule = displayRules[nextIndex];
         if (!rule || rule.conceptKey === app.browserSelectedConceptKey) return;
-        rowByConceptKey.get(rule.conceptKey)?.scrollIntoView?.({ block: "nearest" });
-        pushToolRoute(app, rule.browserLink?.toolRelativePath);
-        await renderSelection(rule.conceptKey);
+        await selectRule(rule);
+        const row = rowByConceptKey.get(rule.conceptKey);
+        row?.scrollIntoView?.({ block: "nearest" });
+        row?.focus?.({ preventScroll: true });
     };
 
     const syncFilterControls = () => {
@@ -362,6 +447,7 @@ async function renderRulesBrowser(app, container) {
             + (campaignScope && overrideFilter.querySelector("input").checked ? 1 : 0);
         filterToggle.textContent = activeCount ? `Filters (${activeCount})` : "Filters";
         filterToggle.classList.toggle("is-active", activeCount > 0);
+        clearSearch.disabled = !search.value;
     };
 
     const populateSourceFacets = facets => {
@@ -389,20 +475,19 @@ async function renderRulesBrowser(app, container) {
     };
 
     const showIndexOnCompactViewport = () => {
+        if (!isCompactLibraryViewport(shell)) return false;
         workspace.classList.remove("has-selection");
-        pushToolRoute(app, catalogRouteForEntity(app.browserFilters.entityType));
+        pushToolRoute(app, catalogRouteForEntity(app.browserFilters.entityType), app.browserScope);
         const selectedRow = rowByConceptKey.get(app.browserSelectedConceptKey);
-        selectedRow?.scrollIntoView?.({ block: "nearest" });
-        selectedRow?.focus?.({ preventScroll: true });
-    };
-
-    const syncSelectedRowState = conceptKey => {
-        for (const [key, row] of rowByConceptKey) {
-            const selected = key === conceptKey;
-            row.classList.toggle("is-selected", selected);
-            row.setAttribute("aria-selected", selected ? "true" : "false");
+        if (selectedRow) {
+            selectedRow.scrollIntoView?.({ block: "nearest" });
+            selectedRow.focus?.({ preventScroll: true });
+        } else {
+            search.focus?.({ preventScroll: true });
         }
+        return true;
     };
+    app.browserKeyboard.returnToList = showIndexOnCompactViewport;
 
     const renderSelection = async conceptKey => {
         const serial = ++detailSerial;
@@ -418,16 +503,19 @@ async function renderRulesBrowser(app, container) {
             () => detailSerial,
             showIndexOnCompactViewport);
 
-        if (isCompactLibraryViewport() && serial === detailSerial) {
+        if (isCompactLibraryViewport(shell) && serial === detailSerial) {
             detail.focus({ preventScroll: true });
             detail.scrollIntoView({ block: "start" });
         }
     };
 
     const refreshListState = () => {
-        indexStatus.textContent = hasPublishedRuleset
-            ? `${currentRules.length} / ${totalCount}`
-            : "No published rules";
+        if (!hasPublishedRuleset) {
+            indexStatus.textContent = "Nothing published";
+        } else {
+            const sortPending = Boolean(app.browserSort.key) && !canSortCurrentDataset();
+            indexStatus.textContent = `${currentRules.length} of ${totalCount}${sortPending ? " · sort after full load" : ""}`;
+        }
         renderContinuousIndexFooter(
             indexFooter,
             currentRules.length,
@@ -436,6 +524,7 @@ async function renderRulesBrowser(app, container) {
             isLoadingMore,
             loadMoreError,
             () => void loadMore());
+        refreshIndexHeader();
     };
 
     loadMore = async () => {
@@ -471,25 +560,21 @@ async function renderRulesBrowser(app, container) {
             currentRules.push(...added);
             totalCount = requested.totalCount ?? totalCount;
             hasMore = currentRules.length < totalCount;
-            renderRuleRows(
-                list,
-                added,
-                app.browserFilters.entityType,
-                async rule => {
-                    preserveDeepLink = false;
-                    pushToolRoute(app, rule.browserLink?.toolRelativePath);
-                    await renderSelection(rule.conceptKey);
-                },
-                { append: true });
-            for (const row of list.querySelectorAll("[data-concept-key]")) {
-                rowByConceptKey.set(row.dataset.conceptKey, row);
+
+            if (canSortCurrentDataset() && app.browserSort.key) {
+                renderCurrentRows();
+            } else {
+                renderRuleRows(
+                    list,
+                    added,
+                    app.browserFilters.entityType,
+                    selectRule,
+                    { append: true });
+                rebuildRowMap();
             }
-            syncSelectedRowState(app.browserSelectedConceptKey);
             return added;
         } catch (error) {
-            if (serial === loadSerial) {
-                loadMoreError = describeError(error);
-            }
+            if (serial === loadSerial) loadMoreError = describeError(error);
             return [];
         } finally {
             if (serial === loadSerial) {
@@ -517,13 +602,12 @@ async function renderRulesBrowser(app, container) {
             overridesOnly: scope.value.startsWith("campaign:")
                 && overrideFilter.querySelector("input").checked
         };
+        app.browserSort = normalizeBrowserSort(app.browserFilters.entityType, app.browserSort);
         syncFilterControls();
 
-        list.replaceChildren(element("div", {
-            className: "rules-core-library-loading",
-            text: "Loading rules…"
-        }));
+        list.replaceChildren(renderIndexState("Loading rules…", "Searching the published reference."));
         indexFooter.replaceChildren();
+        refreshIndexHeader();
 
         try {
             const filters = {
@@ -549,42 +633,46 @@ async function renderRulesBrowser(app, container) {
             hasPublishedRuleset = Boolean(requested.revisionNumber);
             hasMore = hasPublishedRuleset && currentRules.length < totalCount;
 
-            heading.querySelector(".rules-core-library-revision").textContent = requested.revisionNumber
-                ? `${scopeLabel(app, app.browserScope)} · published #${requested.revisionNumber} · ${formatDate(requested.publishedAt)}`
-                : `${scopeLabel(app, app.browserScope)} · no published ruleset`;
-            indexStatus.textContent = requested.revisionNumber
-                ? `${currentRules.length} / ${totalCount}`
-                : "No published rules";
-            renderIndexHeader(indexHeader, app.browserFilters.entityType);
+            revision.textContent = requested.revisionNumber
+                ? `${scopeLabel(app, app.browserScope)} · Published #${requested.revisionNumber} · ${formatDate(requested.publishedAt)}`
+                : `${scopeLabel(app, app.browserScope)} · Nothing published`;
 
-            renderRuleRows(
-                list,
-                rules,
-                app.browserFilters.entityType,
-                async rule => {
-                    preserveDeepLink = false;
-                    pushToolRoute(app, rule.browserLink?.toolRelativePath);
-                    await renderSelection(rule.conceptKey);
-                });
-            rowByConceptKey = new Map(
-                Array.from(list.querySelectorAll("[data-concept-key]"))
-                    .map(row => [row.dataset.conceptKey, row]));
+            renderCurrentRows();
             refreshListState();
 
             if (!requested.revisionNumber) {
                 const message = app.browserScope === "global"
-                    ? "No global ruleset has been published yet."
-                    : "This campaign has no published ruleset yet.";
-                list.replaceChildren(renderEmptyIndexState(message));
+                    ? "No Dorks & Dice rules have been published yet."
+                    : "No rules have been published for this campaign yet.";
+                list.replaceChildren(renderIndexState(message, "Published rules will appear here when they are available."));
+                app.browserSelectedConceptKey = null;
+                workspace.classList.remove("has-selection");
                 detail.replaceChildren(renderEmptyDetail(message));
                 return;
             }
+
             if (!rules.length) {
                 const emptyState = await resolvePublishedEmptyState(app);
                 if (serial !== loadSerial) return;
-                list.replaceChildren(renderEmptyIndexState(
+                list.replaceChildren(renderIndexState(
                     emptyState.message,
+                    emptyState.note,
                     emptyState.showSourceLibrary ? renderSourceLibraryAction(app) : null));
+
+                if (keepSelection && app.browserSelectedConceptKey) {
+                    const remainsAvailable = await isRuleAvailableInScope(
+                        app,
+                        app.browserSelectedConceptKey,
+                        app.browserScope);
+                    if (serial !== loadSerial) return;
+                    if (remainsAvailable) {
+                        await renderSelection(app.browserSelectedConceptKey);
+                        return;
+                    }
+                }
+
+                app.browserSelectedConceptKey = null;
+                workspace.classList.remove("has-selection");
                 detail.replaceChildren(renderEmptyDetail(
                     emptyState.message,
                     emptyState.showSourceLibrary ? renderSourceLibraryAction(app) : null,
@@ -607,7 +695,7 @@ async function renderRulesBrowser(app, container) {
                     app.browserScope);
                 if (serial !== loadSerial) return;
                 if (!remainsAvailable) {
-                    conceptKey = isCompactLibraryViewport() ? null : currentRules[0].conceptKey;
+                    conceptKey = isCompactLibraryViewport(shell) ? null : currentRules[0].conceptKey;
                     app.browserSelectedConceptKey = conceptKey;
                     pushToolRoute(
                         app,
@@ -615,7 +703,7 @@ async function renderRulesBrowser(app, container) {
                         app.browserScope);
                 }
             } else if (!conceptKey) {
-                conceptKey = isCompactLibraryViewport() ? null : currentRules[0].conceptKey;
+                conceptKey = isCompactLibraryViewport(shell) ? null : currentDisplayRules()[0]?.conceptKey;
             }
 
             if (conceptKey) {
@@ -626,9 +714,13 @@ async function renderRulesBrowser(app, container) {
             }
         } catch (error) {
             if (serial !== loadSerial) return;
-            list.replaceChildren(alertNode("danger", describeError(error)));
+            loadMoreError = null;
+            list.replaceChildren(renderIndexError(error, () => void load({ keepSelection: true })));
             indexFooter.replaceChildren();
-            detail.replaceChildren(renderEmptyDetail("The rule list could not be loaded."));
+            indexStatus.textContent = "Load failed";
+            if (!app.browserSelectedConceptKey) {
+                detail.replaceChildren(renderEmptyDetail("The rule list could not be loaded."));
+            }
         }
     };
 
@@ -647,6 +739,7 @@ async function renderRulesBrowser(app, container) {
         syncFilterControls();
         await load({ keepSelection: true });
     });
+
     const changeEntityType = async value => {
         if (app.browserFilters.entityType === value) return;
         preserveDeepLink = false;
@@ -658,66 +751,71 @@ async function renderRulesBrowser(app, container) {
         if (!moreTypes.value) return;
         void changeEntityType(moreTypes.value);
     });
-    reset.addEventListener("click", async () => {
+
+    clearSearch.addEventListener("click", async () => {
+        if (!search.value) return;
         preserveDeepLink = false;
         if (searchTimer) clearTimeout(searchTimer);
         search.value = "";
-        moreTypes.value = "";
-        sourceFilter.value = "";
-        overrideFilter.querySelector("input").checked = false;
-        filterBar.hidden = true;
-        filterToggle.setAttribute("aria-expanded", "false");
-        syncFilterControls();
-        app.browserSelectedConceptKey = null;
         app.browserFilters.query = "";
-        app.browserFilters.sourceCode = "";
-        app.browserFilters.overridesOnly = false;
-        await app.navigateRuleFamily("");
+        clearSearch.disabled = true;
+        replaceToolRoute(app, currentToolRoute(app), app.browserScope);
+        await load({ keepSelection: true });
+        search.focus();
     });
+
     filterToggle.addEventListener("click", () => {
         filterBar.hidden = !filterBar.hidden;
         filterToggle.setAttribute("aria-expanded", filterBar.hidden ? "false" : "true");
     });
     sourceFilter.addEventListener("change", async () => {
         syncFilterControls();
-        app.browserSelectedConceptKey = null;
-        await load();
+        await load({ keepSelection: true });
     });
     overrideFilter.querySelector("input").addEventListener("change", async () => {
         syncFilterControls();
-        app.browserSelectedConceptKey = null;
-        await load();
+        await load({ keepSelection: true });
     });
     clearFilters.addEventListener("click", async () => {
         sourceFilter.value = "";
         overrideFilter.querySelector("input").checked = false;
         syncFilterControls();
-        app.browserSelectedConceptKey = null;
-        await load();
+        await load({ keepSelection: true });
     });
 
     search.addEventListener("input", () => {
         preserveDeepLink = false;
+        clearSearch.disabled = !search.value;
+        app.browserFilters.query = search.value.trim();
+        replaceToolRoute(app, currentToolRoute(app), app.browserScope);
         if (searchTimer) clearTimeout(searchTimer);
         searchTimer = setTimeout(async () => {
-            app.browserSelectedConceptKey = null;
-            await load();
-        }, 220);
+            await load({ keepSelection: true });
+        }, 180);
     });
     search.addEventListener("keydown", async event => {
         if (event.key !== "Enter") return;
         event.preventDefault();
         if (searchTimer) clearTimeout(searchTimer);
         preserveDeepLink = false;
-        app.browserSelectedConceptKey = null;
-        await load();
+        app.browserFilters.query = search.value.trim();
+        replaceToolRoute(app, currentToolRoute(app), app.browserScope);
+        await load({ keepSelection: true });
     });
 
     await load({ keepSelection: true });
 }
 
-function isCompactLibraryViewport() {
-    return window.matchMedia?.("(max-width: 900px)")?.matches ?? false;
+export function isCompactRulesBrowserWidth(width) {
+    const numericWidth = Number(width);
+    return Number.isFinite(numericWidth) && numericWidth <= COMPACT_BROWSER_WIDTH;
+}
+
+function isCompactLibraryViewport(shell) {
+    const containerWidth = shell?.getBoundingClientRect?.().width
+        || shell?.clientWidth
+        || window.innerWidth;
+    return isCompactRulesBrowserWidth(containerWidth);
 }
 
 function isEditableTarget(target) {
@@ -735,8 +833,8 @@ async function resolvePublishedEmptyState(app) {
 
     if (hasFilters) {
         return {
-            message: `No published ${family} match the current filters.`,
-            note: "Clear or change the filters to inspect other published rules in this scope.",
+            message: `No published ${family} match the current search or filters.`,
+            note: "Clear or change the search or filters to inspect other published rules in this scope.",
             showSourceLibrary: false
         };
     }
@@ -753,33 +851,52 @@ async function resolvePublishedEmptyState(app) {
         sourceAvailability = null;
     }
 
-    const message = `No ${family} are published in this ruleset for the current account.`;
+    const message = `No published ${family} are available in this scope.`;
     if (sourceAvailability === true) {
         return {
             message,
-            note: `Accessible ${family} source records exist in the Source Library, but imported/source material is not published until a Rules Layer decision is included in a published ruleset.`,
+            note: `Accessible ${family} source material exists in the Source Library, but it is not part of the published rules.`,
             showSourceLibrary: true
         };
     }
     if (sourceAvailability === false) {
         return {
             message,
-            note: `The Source Library returned no accessible ${entityType ? family : "source"} records. Published catalogs are filtered by source access, so inaccessible material is not counted here.`,
+            note: `No accessible ${entityType ? family : "source material"} is available in the Source Library.`,
             showSourceLibrary: Boolean(app.canBrowseSourceLibrary)
         };
     }
     return {
         message,
-        note: "Source Layer availability could not be checked. Imported/source material remains separate from published content.",
+        note: "Source availability could not be checked. Published rules remain separate from source material.",
         showSourceLibrary: Boolean(app.canBrowseSourceLibrary)
     };
 }
 
-function renderEmptyIndexState(message, action = null) {
-    const node = element("div", { className: "rules-core-library-empty-list" },
-        element("p", { className: "mb-2", text: message }));
+function renderIndexState(message, detail = null, action = null) {
+    const node = element("div", { className: "rules-core-library-state" },
+        element("p", { className: "rules-core-library-state-title", text: message }));
+    if (detail) {
+        node.append(element("p", {
+            className: "rules-core-library-state-detail",
+            text: detail
+        }));
+    }
     if (action) node.append(action);
     return node;
+}
+
+function renderIndexError(error, onRetry) {
+    const retry = element("button", {
+        type: "button",
+        className: "btn btn-sm btn-outline-primary",
+        text: "Retry"
+    });
+    retry.addEventListener("click", onRetry);
+    return renderIndexState(
+        "Could not load rules.",
+        describeError(error),
+        retry);
 }
 
 function renderEmptyDetail(message, action = null, note = null) {
@@ -846,4 +963,14 @@ function humanizeEntityType(entityType) {
     return value
         .replace(/([a-z])([A-Z])/g, "$1 $2")
         .replace(/^./, match => match.toUpperCase());
+}
+
+function installReferenceBrowserStylesheet() {
+    const id = "rules-wiki-reference-browser-phase-1-styles";
+    if (document.getElementById(id)) return;
+    const link = document.createElement("link");
+    link.id = id;
+    link.rel = "stylesheet";
+    link.href = new URL("./rules-reference-browser-phase1.css", import.meta.url).href;
+    document.head.append(link);
 }
