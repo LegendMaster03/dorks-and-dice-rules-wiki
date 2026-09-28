@@ -1,0 +1,13 @@
+/* Rules Wiki-specific full-bleed shell adjustments. These selectors are scoped to the Rules Wiki DOM and do not alter the Site host or other Tools. */
+
+.rules-core-main {
+    padding-bottom: 0;
+}
+
+.rules-core-main[data-rules-view="library"] {
+    padding-top: 0;
+}
+
+.rules-core-main[data-rules-view="library"] .rules-core-library-heading {
+    display: none;
+}
