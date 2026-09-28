@@ -12,6 +12,7 @@ import {
     formatAlignment,
     formatArmorClass,
     formatCreatureType,
+    formatChallenge,
     formatDetailValue,
     formatHitPoints,
     formatInitiative,
