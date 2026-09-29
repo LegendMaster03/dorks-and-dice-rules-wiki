@@ -20,23 +20,30 @@ The Wiki endpoints remain source-access scoped. Anonymous requests see only publ
 
 The index shows one logical reference row for one accessible canonical history. Cross-edition source variations remain behind that row rather than becoming parallel rows solely because they came from different editions or packages.
 
-Rules Core groups canonical entities connected by `revision` or `rename` relationships into the same evolving history. `variant` and `reprint` relationships remain related but distinct references. Source-native type remains attached to every variation, so a history may legitimately cross categories, for example:
+Rules Core groups canonical entities connected by `revision` or `rename` relationships into the same evolving history. `variant` and `reprint` relationships remain related but distinct references.
+
+A variation has one canonical mechanical category. Legacy naming aliases such as Race/Species and Subrace/Subspecies normalize to the same category. Genuine mechanical category changes, such as Prestige Class to Subclass, remain distinct in history. A history may therefore legitimately contain:
 
 - 3.5e `prestigeClass`
 - 5e `subclass`
 - 5.5e `subclass`
 
-A reference does not require a published `RuleConcept`. Source-only histories receive a stable Core-owned `referenceIdentity` and use `/references/{referenceIdentity}` for deep links. Published concept keys remain valid identities and continue to use their normal entity-family routes.
+The immutable source record still preserves the original source terminology and raw data; the Wiki reference contract does not expose a second presentation-level `NativeEntityType` for the same category.
+
+A reference does not require a published `RuleConcept`. Source-only histories receive a stable Core-owned `referenceIdentity` and use `/references/{referenceIdentity}` for deep links. Published concept keys remain valid aliases and continue to use their normal entity-family routes when an effective RuleConcept exists.
 
 ## Effective/default variation
 
 The detail pane always distinguishes the displayed effective/default variation from source history.
 
-1. If the selected global or campaign Rules Layer publication resolves the reference to an accessible source revision, that published selection is effective.
-2. In campaign scope, an explicit campaign override wins over the inherited global baseline according to the existing campaign publication semantics.
-3. If no published Rules Layer selection applies, Rules Core chooses a deterministic newest accessible variation from authoritative publication date and edition metadata.
+1. If a logical history contains one or more published Rules Layer concepts, Rules Core chooses the representative effective variation from explicit published Rules Layer decisions, not from source publication recency.
+2. When the history spans mechanically distinct categories, the most recently authored published global decision among the accessible candidate concepts determines the global representative category and variation.
+3. In campaign scope, an explicit published campaign override for a candidate concept takes precedence over inherited global candidates. If several candidate concepts have campaign overrides, the most recently authored published campaign decision determines the representative.
+4. If no published Rules Layer selection applies, Rules Core chooses a deterministic newest accessible variation from authoritative publication date and edition metadata.
 
-The third case is an `unresolved-fallback`. It is a browsing default only. Reading it does not create or modify a Rules Layer decision, and the UI must not label it as a published ruling.
+The fourth case is an `unresolved-fallback`. It is a browsing default only. Reading it does not create or modify a Rules Layer decision, and the UI must not label it as a published ruling.
+
+This representative selection does not merge mechanically distinct RuleConcepts. A 3.5e Prestige Class concept remains `prestigeClass`, a 5e Subclass concept remains `subclass`, and each Rules Layer binding retains its existing entity-type validation. Changing which published decision is representative changes only the effective category for the logical reference in that scope; historical categories are unchanged.
 
 ## Category membership
 
@@ -73,13 +80,13 @@ Normal navigation exposes **Species** and **Subspecies**. It does not expose a p
 
 For reference browsing:
 
-- source-native `race` content is categorized under Species;
-- source-native `subrace` content is categorized under Subspecies;
-- native source type is still preserved on each variation;
+- `race` and `species` both canonicalize to the mechanical category `species`;
+- `subrace` and `subspecies` both canonicalize to the mechanical category `subspecies`;
+- immutable source records retain their original source terminology;
 - legacy `/races/...` links resolve to Species;
 - legacy `/subraces/...` links resolve to Subspecies.
 
-This is a browser taxonomy normalization, not a rewrite of immutable source records.
+This is reference-category normalization, not a rewrite of immutable source records.
 
 ## Generic families
 
@@ -88,5 +95,9 @@ Known entity families use their configured columns, type-specific filters, and r
 ## Read versus mutation authority
 
 Ordinary users may inspect every accessible variation in a reference history and use read-only semantic comparison. This does not grant Rules Lawyer or campaign-DM authority.
+
+When the effective/default variation has a real Rules Layer `RuleConcept` target, an authorized global Rules Lawyer receives **Edit Dorks & Dice rule** and an authorized campaign DM receives **Edit campaign rule**. Those controls open the existing adjudication workflows; the Wiki browser does not implement a second mutation path.
+
+Source-only references remain read-only when no legitimate RuleConcept target exists. The client preserves `ruleConceptId = null` rather than fabricating an ID from `referenceIdentity` merely to display an edit control.
 
 Rules Layer mutation, source administration, normalization, publication, and campaign authoring continue to use their existing authorization gates. Source grants remain independent from mutation authority.

@@ -50,7 +50,7 @@ export async function renderRuleDetailPane(
             key: "effective",
             label: effectiveLabel,
             title: "Effective/default variation in the selected rules scope",
-            render: () => renderEffectiveReference(body, detail, campaignId)
+            render: () => renderEffectiveReference(app, body, detail, campaignId)
         }];
         for (const variation of variations) {
             tabs.push({
@@ -65,7 +65,7 @@ export async function renderRuleDetailPane(
                 key: "compare",
                 label: "Compare",
                 title: "Compare accessible source variations",
-                render: () => renderComparison(body, app, reference, variations)
+                render: () => renderComparison(body, app, reference, variations, campaignId)
             });
         }
 
@@ -118,11 +118,11 @@ export async function renderRuleDetailPane(
     }
 }
 
-function renderEffectiveReference(container, detail, campaignId) {
+function renderEffectiveReference(app, container, detail, campaignId) {
     clear(container);
     const reference = detail.reference;
     const effective = reference.effectiveVariation;
-    container.append(renderResolutionStatus(reference, campaignId));
+    container.append(renderResolutionStatus(app, reference, campaignId));
     container.append(element("section", { className: "rules-core-effective-rule" },
         renderResolvedRule(reference.effectiveCategory, detail.effectiveDocument, {
             displayName: reference.displayName,
@@ -157,7 +157,7 @@ function renderEffectiveReference(container, detail, campaignId) {
     }
 }
 
-function renderResolutionStatus(reference, campaignId) {
+function renderResolutionStatus(app, reference, campaignId) {
     const state = reference.resolutionState;
     let title;
     let detail;
@@ -179,12 +179,14 @@ function renderResolutionStatus(reference, campaignId) {
         element("div", {},
             element("div", { className: "rules-core-ruling-status-title", text: title }),
             element("div", { className: "small text-body-secondary", text: detail })),
-        badge(campaignId ? "Campaign scope" : "Global scope", state === "unresolved-fallback" ? "secondary" : "primary"));
+        element("div", { className: "d-flex align-items-center gap-2" },
+            badge(campaignId ? "Campaign scope" : "Global scope", state === "unresolved-fallback" ? "secondary" : "primary"),
+            adjudicationButton(app, reference.ruleConceptId, campaignId)));
 }
 
 function renderVariation(container, reference, variation) {
     clear(container);
-    const category = variation.category || variation.nativeEntityType || reference.effectiveCategory;
+    const category = variation.category || reference.effectiveCategory;
     container.append(element("div", { className: "rules-core-source-version-heading" },
         element("div", {},
             element("div", { className: "rules-core-eyebrow", text: "SOURCE VARIATION" }),
@@ -193,7 +195,7 @@ function renderVariation(container, reference, variation) {
                 className: "text-body-secondary",
                 text: [
                     variation.editionDisplayName,
-                    humanizeEntityType(variation.nativeEntityType),
+                    humanizeEntityType(variation.category),
                     variation.sourceCode,
                     variation.publicationDisplayName
                 ].filter(Boolean).join(" · ")
@@ -212,7 +214,7 @@ function renderVariation(container, reference, variation) {
         element("div", { className: "rules-core-context-disclosure-body" },
             definitionList([
                 ["Edition", variation.editionDisplayName],
-                ["Source-native category", humanizeEntityType(variation.nativeEntityType)],
+                ["Category", humanizeEntityType(variation.category)],
                 ["Source", variation.sourceCode],
                 ["Publication", variation.publicationDisplayName],
                 ["Publication date", variation.publicationDate],
@@ -222,7 +224,7 @@ function renderVariation(container, reference, variation) {
     container.append(provenance);
 }
 
-function renderComparison(container, app, reference, variations) {
+function renderComparison(container, app, reference, variations, campaignId) {
     clear(container);
     container.append(element("div", { className: "rules-core-comparison-heading" },
         element("div", {},
@@ -274,6 +276,19 @@ function renderComparison(container, app, reference, variations) {
                 leftLabel: leftVariation ? variationLabel(leftVariation) : "Left",
                 rightLabel: rightVariation ? variationLabel(rightVariation) : "Right"
             });
+            const adjudication = adjudicationButton(app, reference.ruleConceptId, campaignId);
+            if (adjudication) {
+                result.append(element("div", { className: "rules-core-comparison-adjudication" },
+                    element("div", {},
+                        element("strong", { text: "Need a ruling?" }),
+                        element("div", {
+                            className: "small text-body-secondary",
+                            text: campaignId
+                                ? "Open this reference in the campaign rule editor."
+                                : "Open this reference in the global Rules Lawyer editor."
+                        })),
+                    adjudication));
+            }
         } catch (error) {
             result.replaceChildren(alertNode("danger", describeError(error)));
         } finally {
@@ -281,6 +296,40 @@ function renderComparison(container, app, reference, variations) {
         }
     });
     compare.click();
+}
+
+function adjudicationButton(app, ruleConceptId, campaignId) {
+    if (!ruleConceptId) return null;
+    const campaignCanEdit = campaignId
+        && app.dmCampaigns?.some(value => String(value.id) === String(campaignId));
+    if (!campaignId && !app.canEditGlobal) return null;
+    if (campaignId && !campaignCanEdit) return null;
+
+    return element("button", {
+        type: "button",
+        className: "btn btn-sm btn-outline-primary",
+        text: campaignId ? "Edit campaign rule" : "Edit Dorks & Dice rule",
+        onClick: async () => openAdjudication(app, ruleConceptId, campaignId)
+    });
+}
+
+async function openAdjudication(app, ruleConceptId, campaignId) {
+    if (campaignId) {
+        app.activeView = "campaign";
+        app.activeCampaignId = campaignId;
+    } else {
+        app.activeView = "global";
+    }
+
+    await app.render();
+    const body = app.root.querySelector(".rules-core-main");
+    if (!body) return;
+
+    if (campaignId) {
+        await app.renderCampaignConcept(body, ruleConceptId);
+    } else {
+        await app.renderGlobalConcept(body, ruleConceptId);
+    }
 }
 
 function comparisonField(label, control) {
@@ -294,7 +343,7 @@ function variationTabLabel(variation, variations) {
     const sameEdition = variations.filter(value =>
         String(value.editionDisplayName ?? "").trim().toLowerCase() === edition.toLowerCase()).length;
     if (edition && sameEdition === 1) return edition;
-    return [edition, variation.sourceCode, humanizeEntityType(variation.nativeEntityType)]
+    return [edition, variation.sourceCode, humanizeEntityType(variation.category)]
         .filter(Boolean)
         .join(" · ");
 }
@@ -302,7 +351,7 @@ function variationTabLabel(variation, variations) {
 function variationLabel(variation) {
     return [
         variation.editionDisplayName,
-        humanizeEntityType(variation.nativeEntityType),
+        humanizeEntityType(variation.category),
         variation.sourceCode,
         variation.publicationDisplayName,
         `rev. ${variation.sourceRevisionNumber}`

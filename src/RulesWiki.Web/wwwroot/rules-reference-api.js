@@ -59,7 +59,7 @@ function projectReferenceCatalog(catalog) {
     const rules = (catalog.references ?? catalog.rules ?? []).map(reference => ({
         ...reference,
         conceptKey: reference.referenceIdentity,
-        ruleConceptId: reference.ruleConceptId ?? reference.referenceIdentity,
+        ruleConceptId: reference.ruleConceptId ?? null,
         entityType: reference.effectiveCategory ?? reference.entityType,
         editionKey: reference.effectiveEditionKey ?? reference.editionKey ?? "",
         editionDisplayName: reference.effectiveEditionDisplayName ?? reference.editionDisplayName ?? "",
@@ -100,8 +100,8 @@ function projectEffectiveReference(detail) {
     const effective = reference.effectiveVariation;
     return {
         ...reference,
-        ruleConceptId: reference.referenceIdentity,
-        conceptKey: reference.referenceIdentity,
+        ruleConceptId: reference.ruleConceptId ?? null,
+        conceptKey: reference.conceptKey ?? reference.referenceIdentity,
         entityType: reference.effectiveCategory,
         displayName: reference.displayName,
         sourceEntityId: effective.sourceEntityId,
@@ -123,15 +123,15 @@ function projectEffectiveReference(detail) {
 function projectReferenceVersions(detail) {
     const reference = detail.reference;
     return {
-        ruleConceptId: reference.referenceIdentity,
-        conceptKey: reference.referenceIdentity,
+        ruleConceptId: reference.ruleConceptId ?? null,
+        conceptKey: reference.conceptKey ?? reference.referenceIdentity,
         entityType: reference.effectiveCategory,
         displayName: reference.displayName,
         versions: (detail.variations ?? []).map(variation => ({
             ...variation,
             sourceEntityName: variation.name,
             gameEdition: variation.editionDisplayName,
-            formatKey: variation.nativeEntityType,
+            formatKey: variation.category,
             releaseKind: null,
             importedAt: null,
             equivalentRepresentationCount: 1

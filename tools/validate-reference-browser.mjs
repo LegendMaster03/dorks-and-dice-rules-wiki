@@ -65,6 +65,7 @@ const sourceOnlyReference = {
         sourceEntityRevisionId: "source-revision",
         sourceRevisionNumber: 1,
         name: "Source Only Fixture",
+        category: "subclass",
         sourceCode: "NONSRD",
         packageKey: "third-party",
         packageDisplayName: "Third Party",
@@ -99,7 +100,6 @@ const fakeApi = {
                         sourceEntityRevisionId: "source-revision",
                         sourceRevisionNumber: 1,
                         name: "Source Only Fixture",
-                        nativeEntityType: "subclass",
                         category: "subclass",
                         sourceCode: "NONSRD",
                         packageKey: "third-party",
@@ -147,6 +147,7 @@ assert(calls[0].path.includes("package=third-party"), "Package filters should be
 assert(calls[0].path.includes("edition=5e"), "Edition filters should be sent to the server reference API.");
 assert(globalCatalog.rules.length === 1, "One logical reference should project to one browser row.");
 assert(globalCatalog.rules[0].conceptKey === "canonical:0123", "Source-only references should remain selectable without a RuleConcept.");
+assert(globalCatalog.rules[0].ruleConceptId === null, "Source-only references must not fabricate a RuleConcept ID.");
 assert(globalCatalog.rules[0].sourceCode === "NONSRD", "Effective source metadata should project into the reusable Phase 2 columns.");
 assert(globalCatalog.rules[0].editionDisplayName === "5e", "Effective edition metadata should remain the row value even when history filters are active.");
 assert(globalCatalog.entityTypeFacets[0].entityType === "subclass", "Core entity facets should project into the reusable Type control contract.");
@@ -159,12 +160,15 @@ assert(sortRulesForBrowser(globalCatalog.rules, "prestigeClass", { key: "name", 
 
 const detail = await fakeApi.getWikiReferenceDetail("canonical:0123");
 assert(detail.reference.referenceIdentity === "canonical:0123", "Reference detail should preserve logical identity.");
-assert(detail.variations.length === 1 && detail.variations[0].nativeEntityType === "subclass", "Detail should expose source-native variation category.");
+assert(detail.variations.length === 1 && detail.variations[0].category === "subclass", "Detail should expose one canonical mechanical category per variation.");
+assert(!("nativeEntityType" in detail.variations[0]), "Detail must not expose a redundant source-native category field.");
 assert(detail.reference.resolutionState === "unresolved-fallback", "Unresolved fallback state must remain distinct from a ruling.");
 
 const projectedVersions = await fakeApi.getRuleVersions("canonical:0123");
+assert(projectedVersions.ruleConceptId === null, "Source-only version history must not fabricate an adjudication target.");
 assert(projectedVersions.versions.length === 1, "Normal readers should obtain accessible reference history through the Wiki detail API.");
 assert(projectedVersions.versions[0].gameEdition === "5e", "Version projection should use authoritative edition metadata.");
+assert(projectedVersions.versions[0].formatKey === "subclass", "Version compatibility projection should use the canonical category.");
 
 await fakeApi.compareRuleVersions({
     referenceIdentity: "canonical:0123",
