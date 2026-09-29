@@ -1,3 +1,5 @@
+const REFERENCE_CATALOG_SENTINEL = "reference-catalog";
+
 export function installWikiReferenceApi(api) {
     api.getGlobalRulesCatalog = filters => getCatalog(api, null, filters);
     api.getCampaignRulesCatalog = (campaignId, filters) => getCatalog(api, campaignId, filters);
@@ -25,11 +27,12 @@ export function installWikiReferenceApi(api) {
 
 function getCatalog(api, campaignId, filters = {}) {
     const parameters = new URLSearchParams();
+    const routedFacets = referenceFacetFilters();
     if (filters.entityType) parameters.set("entityType", filters.entityType);
     if (filters.query) parameters.set("q", filters.query);
     if (filters.sourceCode) parameters.set("source", filters.sourceCode);
-    if (filters.packageKey) parameters.set("package", filters.packageKey);
-    if (filters.edition) parameters.set("edition", filters.edition);
+    if (filters.packageKey ?? routedFacets.package) parameters.set("package", filters.packageKey ?? routedFacets.package);
+    if (filters.edition ?? routedFacets.edition) parameters.set("edition", filters.edition ?? routedFacets.edition);
     if (campaignId && filters.overridesOnly) parameters.set("overridesOnly", "true");
     parameters.set("categoryMode", referenceCategoryMode());
     parameters.set("limit", String(filters.limit ?? 200));
@@ -38,22 +41,38 @@ function getCatalog(api, campaignId, filters = {}) {
     const path = campaignId
         ? `/api/campaigns/${encodeURIComponent(campaignId)}/wiki/references`
         : "/api/wiki/references";
-    return api.backend(`${path}?${parameters.toString()}`).then(projectReferenceCatalog);
+    return api.backend(`${path}?${parameters.toString()}`).then(catalog =>
+        projectReferenceCatalog(catalog, routedFacets));
 }
 
-function projectReferenceCatalog(catalog) {
+function projectReferenceCatalog(catalog, routedFacets = {}) {
     const rules = (catalog.references ?? catalog.rules ?? []).map(reference => ({
         ...reference,
         conceptKey: reference.referenceIdentity,
         ruleConceptId: reference.ruleConceptId ?? reference.referenceIdentity,
         entityType: reference.effectiveCategory ?? reference.entityType,
         editionKey: reference.effectiveEditionKey ?? reference.editionKey ?? "",
-        editionDisplayName: reference.effectiveEditionDisplayName ?? reference.editionDisplayName ?? "",
+        editionDisplayName: routedFacets.edition
+            ?? reference.effectiveEditionDisplayName
+            ?? reference.editionDisplayName
+            ?? "",
         sourceCode: reference.sourceCode ?? reference.effectiveVariation?.sourceCode ?? "",
         packageKey: reference.packageKey ?? reference.effectiveVariation?.packageKey ?? "",
-        packageDisplayName: reference.packageDisplayName ?? reference.effectiveVariation?.packageDisplayName ?? ""
+        packageDisplayName: routedFacets.package
+            ?? reference.packageDisplayName
+            ?? reference.effectiveVariation?.packageDisplayName
+            ?? ""
     }));
-    return { ...catalog, rules, references: rules };
+    return {
+        ...catalog,
+        rules,
+        references: rules,
+        // The Phase 2 shell historically used a truthy revision number as a proxy for
+        // "a browseable catalog exists." The Wiki catalog exists independently of a
+        // published Rules Layer revision, so use an internal presentation sentinel.
+        revisionNumber: catalog.revisionNumber ?? REFERENCE_CATALOG_SENTINEL,
+        wikiReferencePublicationRevision: catalog.revisionNumber ?? null
+    };
 }
 
 function projectEffectiveReference(detail) {
@@ -103,4 +122,16 @@ function projectReferenceVersions(detail) {
 export function referenceCategoryMode(search = window.location.search) {
     const requested = new URLSearchParams(search).get("category");
     return requested === "effective" ? "effective" : "any";
+}
+
+export function referenceFacetFilters(search = window.location.search) {
+    const parameters = new URLSearchParams(search);
+    return {
+        package: (parameters.get("f.package") ?? "").trim(),
+        edition: (parameters.get("f.edition") ?? "").trim()
+    };
+}
+
+export function isReferenceCatalogSentinel(value) {
+    return value === REFERENCE_CATALOG_SENTINEL;
 }
