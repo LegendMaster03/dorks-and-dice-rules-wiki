@@ -7,7 +7,7 @@ const COLLATOR = new Intl.Collator(undefined, {
 
 export function normalizeBrowserFieldFilters(entityType, values = {}) {
     const allowed = new Set(
-        getClientBrowserFilterDefinitions(entityType)
+        getRoutedBrowserFilterDefinitions(entityType)
             .map(definition => definition.key));
     const normalized = {};
     for (const [key, value] of Object.entries(values ?? {})) {
@@ -27,10 +27,10 @@ export function normalizeBrowserFieldFiltersForEntityTransition(
         destinationEntityType,
         sourceNormalized);
     const sourceDefinitions = new Map(
-        getClientBrowserFilterDefinitions(sourceEntityType)
+        getRoutedBrowserFilterDefinitions(sourceEntityType)
             .map(definition => [definition.key, definition]));
     const destinationDefinitions = new Map(
-        getClientBrowserFilterDefinitions(destinationEntityType)
+        getRoutedBrowserFilterDefinitions(destinationEntityType)
             .map(definition => [definition.key, definition]));
     const normalized = {};
 
@@ -82,8 +82,7 @@ export function activeBrowserFilterSummaries(entityType, state = {}) {
         });
     }
 
-    for (const definition of getBrowserFilterDefinitions(entityType)) {
-        if (definition.mode !== "client-complete") continue;
+    for (const definition of getRoutedBrowserFilterDefinitions(entityType)) {
         const value = normalized.fieldFilters[definition.key];
         if (!value) continue;
         summaries.push({
@@ -119,7 +118,10 @@ export function clearBrowserFilters(entityType) {
 }
 
 export function hasClientBrowserFilters(entityType, fieldFilters = {}) {
-    return Object.keys(normalizeBrowserFieldFilters(entityType, fieldFilters)).length > 0;
+    const normalized = normalizeBrowserFieldFilters(entityType, fieldFilters);
+    const clientKeys = new Set(
+        getClientBrowserFilterDefinitions(entityType).map(definition => definition.key));
+    return Object.keys(normalized).some(key => clientKeys.has(key));
 }
 
 export async function loadCompleteBrowserDataset({
@@ -163,12 +165,12 @@ export function resolveBrowserFilterApplication(
 
 export function filterRulesForBrowser(rules, entityType, fieldFilters = {}) {
     const normalized = normalizeBrowserFieldFilters(entityType, fieldFilters);
-    const active = Object.entries(normalized);
-    if (!active.length) return [...rules];
-
     const definitions = new Map(
         getClientBrowserFilterDefinitions(entityType)
             .map(definition => [definition.key, definition]));
+    const active = Object.entries(normalized)
+        .filter(([key]) => definitions.has(key));
+    if (!active.length) return [...rules];
 
     return rules.filter(rule => active.every(([key, expected]) => {
         const definition = definitions.get(key);
@@ -210,6 +212,13 @@ export function browserFilterValues(rule, definition) {
     return [];
 }
 
+function getRoutedBrowserFilterDefinitions(entityType) {
+    return getBrowserFilterDefinitions(entityType)
+        .filter(definition =>
+            definition.mode === "client-complete"
+            || definition.mode === "server-reference");
+}
+
 function getClientBrowserFilterDefinitions(entityType) {
     return getBrowserFilterDefinitions(entityType)
         .filter(definition => definition.mode === "client-complete");
@@ -228,6 +237,7 @@ function browserFilterDefinitionsEquivalent(left, right) {
     return leftValue.kind === rightValue.kind
         && leftValue.property === rightValue.property
         && leftValue.field === rightValue.field
+        && leftValue.facet === rightValue.facet
         && leftValue.relationshipKind === rightValue.relationshipKind
         && leftValue.relatedEntityType === rightValue.relatedEntityType;
 }
