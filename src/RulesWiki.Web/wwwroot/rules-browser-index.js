@@ -1,125 +1,38 @@
 import { element } from "./ui.js";
+import {
+    RULE_FAMILY_TABS,
+    getEntityBrowserConfig,
+    getKnownEntityBrowserConfigs
+} from "./rules-browser-config.js";
 
-export const RULE_FAMILY_TABS = [
-    ["", "All Content"],
-    ["monster", "Bestiary"],
-    ["spell", "Spells"],
-    ["class", "Classes"],
-    ["subclass", "Subclasses"],
-    ["prestigeClass", "Prestige Classes"],
-    ["feat", "Feats"],
-    ["background", "Backgrounds"],
-    ["optionalfeature", "Options & Features"],
-    ["race", "Races"],
-    ["species", "Species"],
-    ["item", "Items"],
-    ["condition", "Conditions"],
-    ["skill", "Skills"],
-    ["houseRule", "House Rules"],
-    ["rule", "Other Rules"]
-];
+export { RULE_FAMILY_TABS } from "./rules-browser-config.js";
 
-export const BROWSER_COLUMNS = new Map([
-    ["", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("entityType", "Type", "minmax(5rem, .8fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["monster", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("type", "Type", "minmax(5rem, .9fr)"),
-        column("cr", "CR", "minmax(2.5rem, .4fr)", "center"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["spell", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("level", "Level", "minmax(4.5rem, .6fr)"),
-        column("school", "School", "minmax(6rem, 1fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["class", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("hitDie", "Hit Die", "minmax(4rem, .55fr)", "center"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["subclass", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("parentClass", "Class", "minmax(6rem, 1fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["prestigeClass", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["feat", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("category", "Category", "minmax(6rem, 1fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["background", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["optionalfeature", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["race", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("ability", "Ability", "minmax(7rem, 1.1fr)"),
-        column("size", "Size", "minmax(4rem, .65fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["species", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("ability", "Ability", "minmax(7rem, 1.1fr)"),
-        column("size", "Size", "minmax(4rem, .65fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["item", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("type", "Type", "minmax(5rem, .8fr)"),
-        column("rarity", "Rarity", "minmax(5rem, .8fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["condition", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]],
-    ["skill", [
-        column("name", "Name", "minmax(9rem, 2fr)"),
-        column("ability", "Ability", "minmax(4rem, .65fr)"),
-        column("source", "Source", "minmax(4rem, .65fr)")
-    ]]
-]);
+export const BROWSER_COLUMNS = new Map(
+    getKnownEntityBrowserConfigs().map(configuration => [
+        configuration.entityType,
+        configuration.columns
+    ]));
 
 const COLLATOR = new Intl.Collator(undefined, {
     numeric: true,
     sensitivity: "base"
 });
 
-function column(key, label, width, align = null) {
-    return { key, label, width, align, sortable: true };
-}
-
 export function libraryTitle(entityType) {
-    const normalized = entityType ?? "";
-    const known = RULE_FAMILY_TABS.find(([value]) => value === normalized);
-    return known?.[1] ?? humanizeEntityType(normalized);
+    return getEntityBrowserConfig(entityType).label;
 }
 
 export function getBrowserColumns(entityType) {
-    return BROWSER_COLUMNS.get(entityType)
-        ?? BROWSER_COLUMNS.get("")
-        ?? [];
+    return getEntityBrowserConfig(entityType).columns;
 }
 
 export function normalizeBrowserSort(entityType, sort) {
     const requestedKey = sort?.key ?? null;
     if (!requestedKey) return { key: null, direction: "asc" };
-    const columnDefinition = getBrowserColumns(entityType)
-        .find(value => value.key === requestedKey && value.sortable);
-    if (!columnDefinition) return { key: null, direction: "asc" };
+    const configuration = getEntityBrowserConfig(entityType);
+    if (!configuration.sortFields.includes(requestedKey)) {
+        return { key: null, direction: "asc" };
+    }
     return {
         key: requestedKey,
         direction: sort?.direction === "desc" ? "desc" : "asc"
@@ -234,7 +147,8 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
         return;
     }
 
-    const columns = getBrowserColumns(entityType);
+    const configuration = getEntityBrowserConfig(entityType);
+    const columns = configuration.columns;
     const template = columns.map(value => value.width).join(" ");
     for (const rule of rules) {
         const row = element("button", {
@@ -248,14 +162,14 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
         });
         row.style.gridTemplateColumns = template;
         for (const value of columns) {
-            row.append(renderRuleCell(rule, value));
+            row.append(renderRuleCell(rule, value, configuration));
         }
         row.addEventListener("click", () => onSelect(rule));
         container.append(row);
     }
 }
 
-function renderRuleCell(rule, columnDefinition) {
+function renderRuleCell(rule, columnDefinition, configuration) {
     const value = browserColumnValue(rule, columnDefinition.key);
     const classNames = [
         "rules-core-library-cell",
@@ -265,11 +179,22 @@ function renderRuleCell(rule, columnDefinition) {
     ].filter(Boolean).join(" ");
 
     if (columnDefinition.key === "name") {
+        const summary = configuration.rowSummaryFields
+            .map(key => browserColumnValue(rule, key))
+            .filter(Boolean)
+            .filter((entry, index, values) => values.indexOf(entry) === index)
+            .join(" · ");
         return element("span", { className: classNames },
             element("span", {
                 className: "rules-core-library-row-name",
                 text: rule.displayName
             }),
+            summary
+                ? element("span", {
+                    className: "rules-core-library-row-summary",
+                    text: summary
+                })
+                : null,
             rule.hasCampaignOverride
                 ? element("span", {
                     className: "rules-core-library-row-override",
@@ -294,6 +219,7 @@ export function browserColumnValue(rule, key) {
             || rule.editionDisplayName
             || "";
     }
+    if (key === "edition") return rule.editionDisplayName ?? "";
     if (key === "parentClass") {
         return (rule.relationships ?? [])
             .filter(relationship =>

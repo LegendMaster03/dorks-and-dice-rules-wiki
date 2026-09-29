@@ -17,6 +17,7 @@ import {
     renderSpell,
     renderSubclass
 } from "./rule-renderers-specialized.js";
+import { getEntityBrowserConfig } from "./rules-browser-config.js";
 
 const renderers = new Map([
     ["monster", renderMonster],
@@ -35,8 +36,9 @@ const renderers = new Map([
 ]);
 
 export function renderResolvedRule(entityType, document, options = {}) {
-    const renderer = renderers.get(String(entityType ?? "").toLowerCase())
-        ?? renderGeneric;
+    const configuration = getEntityBrowserConfig(entityType);
+    const rendererKey = String(configuration.renderer ?? entityType ?? "").toLowerCase();
+    const renderer = renderers.get(rendererKey) ?? renderGeneric;
     return renderer(document, options);
 }
 

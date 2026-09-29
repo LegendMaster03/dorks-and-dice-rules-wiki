@@ -69,6 +69,47 @@ public sealed class RuleBrowserAssetTests
     }
 
     [Fact]
+    public void BrowserRendersVisibleRemovableActiveFilterSummary()
+    {
+        var content = ReadWebAssets(
+            "rules-browser.js",
+            "rules-browser-filters.js",
+            "rules-reference-browser-phase1.css");
+
+        Assert.Contains("rules-core-library-active-filters", content, StringComparison.Ordinal);
+        Assert.Contains("activeBrowserFilterSummaries", content, StringComparison.Ordinal);
+        Assert.Contains("Remove ${summary.label} filter: ${summary.value}", content, StringComparison.Ordinal);
+        Assert.Contains("Clear all active filters", content, StringComparison.Ordinal);
+        Assert.Contains("removeBrowserFilter", content, StringComparison.Ordinal);
+        Assert.Contains("clearBrowserFilters", content, StringComparison.Ordinal);
+        Assert.Contains("replaceToolRoute", content, StringComparison.Ordinal);
+        Assert.Contains("rules-core-library-active-filter-label", content, StringComparison.Ordinal);
+        Assert.Contains("focus-visible", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ClientCompleteFilterFailureKeepsPartialRowsOffTheResultSurface()
+    {
+        var content = ReadWebAssets("rules-browser.js", "rules-browser-filters.js");
+
+        Assert.Contains("resolveBrowserFilterApplication", content, StringComparison.Ordinal);
+        Assert.Contains("state: \"pending\", rules: []", content, StringComparison.Ordinal);
+        Assert.Contains("Could not apply the active filters.", content, StringComparison.Ordinal);
+        Assert.Contains("The complete catalog is required before these filters can be applied", content, StringComparison.Ordinal);
+        Assert.Contains("Retry complete catalog load", content, StringComparison.Ordinal);
+        Assert.Contains("Active filters waiting for complete catalog", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void EditionFilterConsumesCatalogEditionMetadataWithoutFormatInference()
+    {
+        var content = ReadWebAssets("rules-browser-config.js", "rules-browser-filters.js");
+
+        Assert.Contains("property: \"editionDisplayName\"", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("formatKey", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void SourceLibraryConsumesStableEntityRoutingContract()
     {
         var content = ReadWebAsset("source-library.js");
