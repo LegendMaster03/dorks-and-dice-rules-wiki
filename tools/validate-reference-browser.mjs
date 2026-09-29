@@ -16,6 +16,10 @@ import {
     browserColumnValue,
     sortRulesForBrowser
 } from "../src/RulesWiki.Web/wwwroot/rules-browser-index.js";
+import {
+    openReferenceAdjudication,
+    referenceAdjudicationTarget
+} from "../src/RulesWiki.Web/wwwroot/rules-browser-detail.js";
 
 function assert(condition, message) {
     if (!condition) throw new Error(message);
@@ -190,6 +194,70 @@ await fakeApi.getCampaignRulesCatalog("campaign-1", {
 const campaignCall = calls.at(-1).path;
 assert(campaignCall.startsWith("/api/campaigns/campaign-1/wiki/references?"), "Campaign browsing should use the campaign Wiki reference contract.");
 assert(campaignCall.includes("overridesOnly=true"), "Campaign override filtering should remain server-backed.");
+
+const globalLawyerTarget = referenceAdjudicationTarget(
+    { canEditGlobal: true, dmCampaigns: [] },
+    "concept-1",
+    null);
+assert(globalLawyerTarget?.scope === "global", "Rules Lawyer should receive a global adjudication target.");
+assert(globalLawyerTarget?.label === "Edit Dorks & Dice rule", "Global adjudication target should use the existing Rules Lawyer action.");
+assert(referenceAdjudicationTarget(
+    { canEditGlobal: false, dmCampaigns: [] },
+    "concept-1",
+    null) === null, "Ordinary global readers must not receive mutation controls.");
+
+const campaignDmTarget = referenceAdjudicationTarget(
+    { canEditGlobal: false, dmCampaigns: [{ id: "campaign-1" }] },
+    "concept-1",
+    "campaign-1");
+assert(campaignDmTarget?.scope === "campaign", "Campaign DM should receive a campaign adjudication target.");
+assert(campaignDmTarget?.label === "Edit campaign rule", "Campaign adjudication target should use the existing DM action.");
+assert(referenceAdjudicationTarget(
+    { canEditGlobal: false, dmCampaigns: [] },
+    "concept-1",
+    "campaign-1") === null, "Campaign Player must not receive mutation controls.");
+assert(referenceAdjudicationTarget(
+    { canEditGlobal: true, dmCampaigns: [{ id: "campaign-1" }] },
+    null,
+    null) === null, "Source-only references must remain read-only even for a Rules Lawyer.");
+assert(referenceAdjudicationTarget(
+    { canEditGlobal: true, dmCampaigns: [{ id: "campaign-1" }] },
+    null,
+    "campaign-1") === null, "Source-only references must remain read-only even for a campaign DM.");
+
+const globalTransitions = [];
+const globalBody = { id: "global-body" };
+const globalApp = {
+    activeView: "reference",
+    activeCampaignId: "old-campaign",
+    root: { querySelector: selector => selector === ".rules-core-main" ? globalBody : null },
+    async render() { globalTransitions.push(["render", this.activeView, this.activeCampaignId]); },
+    async renderGlobalConcept(body, conceptId) { globalTransitions.push(["global", body, conceptId]); },
+    async renderCampaignConcept() { throw new Error("Global transition must not open campaign editor."); }
+};
+await openReferenceAdjudication(globalApp, "concept-1", null);
+assert(globalApp.activeView === "global", "Global adjudication transition should restore the global authoring view.");
+assert(globalTransitions.some(value => value[0] === "global" && value[1] === globalBody && value[2] === "concept-1"),
+    "Global adjudication transition should open the existing editor for the same RuleConcept.");
+
+const campaignTransitions = [];
+const campaignBody = { id: "campaign-body" };
+const campaignApp = {
+    activeView: "reference",
+    activeCampaignId: null,
+    root: { querySelector: selector => selector === ".rules-core-main" ? campaignBody : null },
+    async render() { campaignTransitions.push(["render", this.activeView, this.activeCampaignId]); },
+    async renderGlobalConcept() { throw new Error("Campaign transition must not open global editor."); },
+    async renderCampaignConcept(body, conceptId) { campaignTransitions.push(["campaign", body, conceptId, this.activeCampaignId]); }
+};
+await openReferenceAdjudication(campaignApp, "concept-1", "campaign-1");
+assert(campaignApp.activeView === "campaign", "Campaign adjudication transition should restore campaign authoring view.");
+assert(campaignApp.activeCampaignId === "campaign-1", "Campaign adjudication transition must preserve the selected campaign scope.");
+assert(campaignTransitions.some(value => value[0] === "campaign"
+    && value[1] === campaignBody
+    && value[2] === "concept-1"
+    && value[3] === "campaign-1"),
+    "Campaign adjudication transition should open the existing editor for the same concept and selected campaign.");
 
 const unknown = getEntityBrowserConfig("importedMysteryFamily");
 assert(unknown.renderer === "generic", "Imported/unknown families must retain generic fallback rendering.");
