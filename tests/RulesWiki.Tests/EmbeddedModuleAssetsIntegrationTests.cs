@@ -18,6 +18,10 @@ public sealed class EmbeddedModuleAssetsIntegrationTests
         Assert.Contains("./workspace-routing.js", app, StringComparison.Ordinal);
         Assert.Contains("./authoring.js", app, StringComparison.Ordinal);
         Assert.Contains("./rules-browser.js", app, StringComparison.Ordinal);
+        Assert.Contains("./rules-reference-api.js", app, StringComparison.Ordinal);
+        Assert.Contains("./rules-reference-browser-enhancements.js", app, StringComparison.Ordinal);
+        Assert.Contains("installWikiReferenceApi", app, StringComparison.Ordinal);
+        Assert.Contains("installWikiReferenceNavigation", app, StringComparison.Ordinal);
         Assert.Contains("./scope-control.js", app, StringComparison.Ordinal);
         Assert.Contains("./semantic-comparison.js", app, StringComparison.Ordinal);
         Assert.Contains("./campaign-baseline-authoring.js", app, StringComparison.Ordinal);
@@ -66,6 +70,16 @@ public sealed class EmbeddedModuleAssetsIntegrationTests
         Assert.Contains("getCampaignBaselineCandidates", api, StringComparison.Ordinal);
         Assert.Contains("previewCampaignBaseline", api, StringComparison.Ordinal);
 
+        var referenceApi = await GetAssetAsync(client, "/rules-reference-api.js", "javascript");
+        Assert.Contains("/api/wiki/references", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("/wiki/references", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("getWikiReferenceDetail", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("categoryMode", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("referenceIdentity", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("effectiveVariation", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("/api/wiki/references/comparison", referenceApi, StringComparison.Ordinal);
+        Assert.DoesNotContain("getGlobalRulesCatalog = filters => api.backend(\"/api/rules", referenceApi, StringComparison.Ordinal);
+
         var sourceAdd = await GetAssetAsync(client, "/source-add.js", "javascript");
         Assert.Contains("Add Source", sourceAdd, StringComparison.Ordinal);
         Assert.Contains("Upload file", sourceAdd, StringComparison.Ordinal);
@@ -85,7 +99,9 @@ public sealed class EmbeddedModuleAssetsIntegrationTests
             await GetAssetAsync(client, "/rules-browser-detail.js", "javascript"),
             await GetAssetAsync(client, "/rules-browser-routing.js", "javascript"),
             await GetAssetAsync(client, "/rules-browser-config.js", "javascript"),
-            await GetAssetAsync(client, "/rules-browser-filters.js", "javascript"));
+            await GetAssetAsync(client, "/rules-browser-filters.js", "javascript"),
+            referenceApi,
+            await GetAssetAsync(client, "/rules-reference-browser-enhancements.js", "javascript"));
         Assert.DoesNotContain("One concept per row", rulesBrowser, StringComparison.Ordinal);
         Assert.DoesNotContain("Press J/K to navigate", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("Press F or / to focus search. Use J/K to move through results.", rulesBrowser, StringComparison.Ordinal);
@@ -125,18 +141,31 @@ public sealed class EmbeddedModuleAssetsIntegrationTests
         Assert.Contains("getEntityBrowserConfig", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("normalizeBrowserFieldFilters", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("rules-core-library-workspace", rulesBrowser, StringComparison.Ordinal);
-        Assert.Contains("getRuleVersions", rulesBrowser, StringComparison.Ordinal);
-        Assert.Contains("Compare source versions", rulesBrowser, StringComparison.Ordinal);
-        Assert.Contains("sourceVersionTabLabel", rulesBrowser, StringComparison.Ordinal);
-        Assert.Contains("gameEdition", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("getWikiReferenceDetail", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("Compare accessible source variations", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("variationTabLabel", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("nativeEntityType", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("Publication date", rulesBrowser, StringComparison.Ordinal);
-        Assert.Contains("Edit Dorks & Dice rule", rulesBrowser, StringComparison.Ordinal);
-        Assert.Contains("Edit campaign rule", rulesBrowser, StringComparison.Ordinal);
-        Assert.Contains("Inherited from Dorks & Dice", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("Unresolved default", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("Campaign override", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("Inherited Dorks & Dice ruling", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("rules-core-ruling-status", rulesBrowser, StringComparison.Ordinal);
-        Assert.Contains("browserLink", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("referenceIdentity", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("/references/", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("/tools/rules-wiki", rulesBrowser, StringComparison.Ordinal);
         Assert.DoesNotContain("/tools/rules-core", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("Category: any variation", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("Category: effective in this scope", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("Effective:", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("subspecies", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("[\"races\", \"species\"]", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("[\"subraces\", \"subspecies\"]", rulesBrowser, StringComparison.Ordinal);
+
+        var navigationEnhancement = await GetAssetAsync(client, "/rules-reference-browser-enhancements.js", "javascript");
+        Assert.Contains("Races", navigationEnhancement, StringComparison.Ordinal);
+        Assert.Contains("button.remove()", navigationEnhancement, StringComparison.Ordinal);
+        Assert.Contains("Subspecies", navigationEnhancement, StringComparison.Ordinal);
+        Assert.Contains("navigateRuleFamily?.(\"subspecies\")", navigationEnhancement, StringComparison.Ordinal);
 
         var uxShell = await GetAssetAsync(client, "/ux-shell.js", "javascript");
         Assert.Contains("RULE_FAMILY_TABS", uxShell, StringComparison.Ordinal);
