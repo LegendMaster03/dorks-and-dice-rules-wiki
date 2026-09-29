@@ -9,7 +9,8 @@ import {
 } from "../src/RulesWiki.Web/wwwroot/rules-browser-routing.js";
 import {
     installWikiReferenceApi,
-    referenceCategoryMode
+    referenceCategoryMode,
+    referenceFacetFilters
 } from "../src/RulesWiki.Web/wwwroot/rules-reference-api.js";
 import {
     browserColumnValue,
@@ -30,7 +31,9 @@ globalThis.window = {
 assert(referenceCategoryMode() === "effective", "Category mode should restore from browser history/query state.");
 window.location.search = "";
 assert(referenceCategoryMode() === "any", "Historical any-variation mode should be the default.");
-window.location.search = "?category=effective";
+window.location.search = "?category=effective&f.package=third-party&f.edition=5e";
+assert(referenceFacetFilters().package === "third-party", "Package reference filters should restore from route state.");
+assert(referenceFacetFilters().edition === "5e", "Edition reference filters should restore from route state.");
 
 assert(!RULE_FAMILY_TABS.some(([entityType]) => entityType === "race"), "Race must not remain a standalone normal browser family.");
 assert(RULE_FAMILY_TABS.some(([entityType]) => entityType === "species"), "Species must remain a normal browser family.");
@@ -140,10 +143,17 @@ assert(!calls[0].path.startsWith("/api/rules"), "Primary global index must not u
 assert(calls[0].path.includes("entityType=prestigeClass"), "Historical category should be sent to Core.");
 assert(calls[0].path.includes("categoryMode=effective"), "Selected effective-category mode should be sent to Core.");
 assert(calls[0].path.includes("source=NONSRD"), "Source filters should remain server-backed.");
+assert(calls[0].path.includes("package=third-party"), "Package filters should be sent to the server reference API.");
+assert(calls[0].path.includes("edition=5e"), "Edition filters should be sent to the server reference API.");
 assert(globalCatalog.rules.length === 1, "One logical reference should project to one browser row.");
 assert(globalCatalog.rules[0].conceptKey === "canonical:0123", "Source-only references should remain selectable without a RuleConcept.");
 assert(globalCatalog.rules[0].sourceCode === "NONSRD", "Effective source metadata should project into the reusable Phase 2 columns.");
-assert(globalCatalog.rules[0].editionDisplayName === "5e", "Authoritative edition metadata should project directly rather than representation format.");
+assert(globalCatalog.rules[0].editionDisplayName === "5e", "Effective edition metadata should remain the row value even when history filters are active.");
+assert(globalCatalog.entityTypeFacets[0].entityType === "subclass", "Core entity facets should project into the reusable Type control contract.");
+assert(globalCatalog.sourceFacets[0].sourceCode === "NONSRD", "Core source facets should project into the reusable Source control contract.");
+assert(fakeApi.referenceFacets.package[0].value === "third-party", "Package facet values should remain Core-owned package identities.");
+assert(fakeApi.referenceFacets.package[0].displayName === "Third Party", "Package facets should retain human-readable labels.");
+assert(fakeApi.referenceFacets.edition[0].value === "5e", "Edition facet values should remain authoritative edition keys.");
 assert(browserColumnValue(globalCatalog.rules[0], "entityType") === "Subclass", "Effective category should drive the row's current type column.");
 assert(sortRulesForBrowser(globalCatalog.rules, "prestigeClass", { key: "name", direction: "asc" }).length === 1, "Source-only references should participate in reusable sorting.");
 
