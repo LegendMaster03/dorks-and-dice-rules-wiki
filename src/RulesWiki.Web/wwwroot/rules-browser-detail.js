@@ -298,22 +298,35 @@ function renderComparison(container, app, reference, variations, campaignId) {
     compare.click();
 }
 
-function adjudicationButton(app, ruleConceptId, campaignId) {
+export function referenceAdjudicationTarget(app, ruleConceptId, campaignId) {
     if (!ruleConceptId) return null;
+
     const campaignCanEdit = campaignId
         && app.dmCampaigns?.some(value => String(value.id) === String(campaignId));
     if (!campaignId && !app.canEditGlobal) return null;
     if (campaignId && !campaignCanEdit) return null;
 
+    return {
+        ruleConceptId,
+        campaignId: campaignId ?? null,
+        scope: campaignId ? "campaign" : "global",
+        label: campaignId ? "Edit campaign rule" : "Edit Dorks & Dice rule"
+    };
+}
+
+function adjudicationButton(app, ruleConceptId, campaignId) {
+    const target = referenceAdjudicationTarget(app, ruleConceptId, campaignId);
+    if (!target) return null;
+
     return element("button", {
         type: "button",
         className: "btn btn-sm btn-outline-primary",
-        text: campaignId ? "Edit campaign rule" : "Edit Dorks & Dice rule",
-        onClick: async () => openAdjudication(app, ruleConceptId, campaignId)
+        text: target.label,
+        onClick: async () => openReferenceAdjudication(app, target.ruleConceptId, target.campaignId)
     });
 }
 
-async function openAdjudication(app, ruleConceptId, campaignId) {
+export async function openReferenceAdjudication(app, ruleConceptId, campaignId) {
     if (campaignId) {
         app.activeView = "campaign";
         app.activeCampaignId = campaignId;
