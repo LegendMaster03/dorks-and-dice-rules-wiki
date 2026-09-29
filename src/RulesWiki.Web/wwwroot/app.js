@@ -7,7 +7,10 @@ import { installHostedSourceAuthoring } from "./hosted-source-authoring.js";
 import { installMechanicalRelationships } from "./mechanical-relationships.js";
 import { installResolvedRulesBrowser } from "./rules-browser.js";
 import { installWikiReferenceApi } from "./rules-reference-api.js";
-import { installWikiReferenceBrowserEnhancements } from "./rules-reference-browser-enhancements.js";
+import {
+    installWikiReferenceBrowserEnhancements,
+    installWikiReferenceNavigation
+} from "./rules-reference-browser-enhancements.js";
 import { installAdjudicationScopeControl } from "./scope-control.js";
 import { installSemanticComparison } from "./semantic-comparison.js";
 import { installSourceAccessAdministration } from "./source-access-admin.js";
@@ -66,6 +69,7 @@ try {
     }
     installWorkspaceRouting(app);
     installRulesCoreUx(app);
+    installWikiReferenceNavigation(app);
     await app.render();
 } catch (error) {
     console.error("Rules Wiki failed to initialize.", error);
