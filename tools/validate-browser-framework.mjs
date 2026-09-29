@@ -11,6 +11,7 @@ import {
     filterRulesForBrowser,
     loadCompleteBrowserDataset,
     normalizeBrowserFieldFilters,
+    normalizeBrowserFieldFiltersForEntityTransition,
     removeBrowserFilter,
     resolveBrowserFilterApplication
 } from "../src/RulesWiki.Web/wwwroot/rules-browser-filters.js";
@@ -112,6 +113,67 @@ assert(!("size" in normalizedUnknown), "Unknown families should not acquire unre
 assert(normalizedUnknown.package === "Third Party", "Shared package filter should remain available to unknown families.");
 assert(normalizedUnknown.edition === "5e", "Shared edition filter should remain available to unknown families.");
 
+const monsterToSpell = normalizeBrowserFieldFiltersForEntityTransition(
+    "monster",
+    "spell",
+    {
+        package: "SRD 5.2",
+        edition: "5.5e",
+        size: "Large",
+        cr: "3"
+    });
+assert(monsterToSpell.package === "SRD 5.2", "Monster to Spell should preserve Package.");
+assert(monsterToSpell.edition === "5.5e", "Monster to Spell should preserve Edition.");
+assert(!("size" in monsterToSpell), "Monster to Spell should discard monster-only Size.");
+assert(!("cr" in monsterToSpell), "Monster to Spell should discard monster-only CR.");
+
+const spellToItem = normalizeBrowserFieldFiltersForEntityTransition(
+    "spell",
+    "item",
+    {
+        package: "SRD 5.2",
+        edition: "5.5e",
+        level: "3",
+        school: "Evocation"
+    });
+assert(spellToItem.package === "SRD 5.2" && spellToItem.edition === "5.5e", "Spell to Item should retain shared filters.");
+assert(!("level" in spellToItem) && !("school" in spellToItem), "Spell to Item should discard spell-only filters.");
+
+const knownToUnknown = normalizeBrowserFieldFiltersForEntityTransition(
+    "monster",
+    "thirdPartyMystery",
+    {
+        package: "SRD 5.2",
+        edition: "5.5e",
+        size: "Large",
+        cr: "3"
+    });
+assert(knownToUnknown.package === "SRD 5.2" && knownToUnknown.edition === "5.5e", "Known to generic should preserve safe shared filters.");
+assert(!("size" in knownToUnknown) && !("cr" in knownToUnknown), "Known to generic should discard specialized source-family filters.");
+
+const unknownToKnown = normalizeBrowserFieldFiltersForEntityTransition(
+    "thirdPartyMystery",
+    "monster",
+    {
+        package: "Third Party",
+        edition: "5e",
+        size: "Large",
+        unrecognized: "mystery"
+    });
+assert(unknownToKnown.package === "Third Party" && unknownToKnown.edition === "5e", "Generic to known should preserve shared filters.");
+assert(!("size" in unknownToKnown) && !("unrecognized" in unknownToKnown), "Generic to known should not invent destination-specific or unrecognized filters.");
+
+const raceToSpecies = normalizeBrowserFieldFiltersForEntityTransition(
+    "race",
+    "species",
+    {
+        package: "SRD 5.2",
+        edition: "5.5e",
+        size: "Medium",
+        ability: "Dexterity"
+    });
+assert(raceToSpecies.size === "Medium" && raceToSpecies.ability === "Dexterity", "Equivalent family filter definitions should survive a transition.");
+
 const routeState = parseBrowserViewState(
     "?q=dragon&sort=cr&dir=desc&source=PHB&overrides=1&f.package=SRD%205.2&f.edition=5.5e&f.size=Large&f.untrusted=bad",
     "monster");
@@ -140,7 +202,7 @@ assert(cleared.sourceCode === "" && !cleared.overridesOnly && Object.keys(cleare
 
 globalThis.window = {
     location: {
-        search: "?q=dragon&source=PHB&overrides=1&f.package=SRD%205.2&f.edition=5.5e&f.size=Large"
+        search: "?q=dragon&source=PHB&overrides=1&f.package=SRD%205.2&f.edition=5.5e&f.size=Large&f.cr=3"
     }
 };
 const routedApp = {
@@ -166,6 +228,32 @@ routedApp.browserFilters = {
 };
 const clearedHref = browserHref(routedApp, "/monsters", routedApp.browserScope);
 assert(!clearedHref.includes("source=") && !clearedHref.includes("overrides=1") && !clearedHref.includes("f."), "Clear-all should update route state consistently.");
+
+const spellTransitionApp = {
+    hostContext: { toolBasePath: "/tools/rules-wiki" },
+    browserScope: "campaign:campaign-1",
+    browserSort: { key: null, direction: "asc" },
+    browserFilters: {
+        entityType: "spell",
+        query: "dragon",
+        sourceCode: "PHB",
+        overridesOnly: true,
+        fieldFilters: monsterToSpell
+    }
+};
+const spellHref = browserHref(spellTransitionApp, "/spells", spellTransitionApp.browserScope);
+assert(spellHref.includes("f.package=SRD+5.2") && spellHref.includes("f.edition=5.5e"), "Destination route should retain preserved shared filters.");
+assert(!spellHref.includes("f.size=") && !spellHref.includes("f.cr="), "Destination route must omit invalid source-family filters.");
+assert(spellHref.includes("q=dragon") && spellHref.includes("source=PHB") && spellHref.includes("overrides=1"), "Family switching should preserve search and server-backed filters.");
+const spellRestored = parseBrowserViewState(new URL(spellHref, "https://rules.example").search, "spell");
+assert(spellRestored.fieldFilters.package === "SRD 5.2" && spellRestored.fieldFilters.edition === "5.5e", "Refresh or Back/Forward should restore preserved destination filters.");
+assert(!("size" in spellRestored.fieldFilters) && !("cr" in spellRestored.fieldFilters), "Refresh or Back/Forward must not restore stale source-family filters.");
+
+const directSpellRestore = parseBrowserViewState(
+    "?f.package=SRD%205.2&f.edition=5.5e&f.size=Large&f.cr=3",
+    "spell");
+assert(directSpellRestore.fieldFilters.package === "SRD 5.2" && directSpellRestore.fieldFilters.edition === "5.5e", "Destination route parsing should retain valid shared filters.");
+assert(!("size" in directSpellRestore.fieldFilters) && !("cr" in directSpellRestore.fieldFilters), "Destination route parsing should discard stale family-specific parameters.");
 
 const pending = resolveBrowserFilterApplication(
     rules.slice(0, 2),

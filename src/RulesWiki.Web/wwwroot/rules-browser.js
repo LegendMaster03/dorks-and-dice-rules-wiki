@@ -36,6 +36,7 @@ import {
     countActiveBrowserFilters,
     hasClientBrowserFilters,
     normalizeBrowserFieldFilters,
+    normalizeBrowserFieldFiltersForEntityTransition,
     removeBrowserFilter,
     resolveBrowserFilterApplication
 } from "./rules-browser-filters.js";
@@ -86,13 +87,18 @@ export function installResolvedRulesBrowser(app) {
 
     app.ruleFamilyTabs = RULE_FAMILY_TABS;
     app.navigateRuleFamily = async entityType => {
+        const previousEntityType = app.browserFilters.entityType ?? "";
         const nextEntityType = entityType ?? "";
+        const nextFieldFilters = normalizeBrowserFieldFiltersForEntityTransition(
+            previousEntityType,
+            nextEntityType,
+            app.browserFilters.fieldFilters);
         app.browserDeepLink = null;
         app.browserSelectedConceptKey = null;
         app.libraryDeepLink = null;
         app.libraryRouteActive = false;
         app.browserFilters.entityType = nextEntityType;
-        app.browserFilters.fieldFilters = {};
+        app.browserFilters.fieldFilters = nextFieldFilters;
         app.browserSort = normalizeBrowserSort(nextEntityType, app.browserSort);
         app.activeView = "library";
         pushToolRoute(app, catalogRouteForEntity(nextEntityType), app.browserScope);

@@ -7,13 +7,39 @@ const COLLATOR = new Intl.Collator(undefined, {
 
 export function normalizeBrowserFieldFilters(entityType, values = {}) {
     const allowed = new Set(
-        getBrowserFilterDefinitions(entityType)
-            .filter(definition => definition.mode === "client-complete")
+        getClientBrowserFilterDefinitions(entityType)
             .map(definition => definition.key));
     const normalized = {};
     for (const [key, value] of Object.entries(values ?? {})) {
         const text = String(value ?? "").trim();
         if (allowed.has(key) && text) normalized[key] = text;
+    }
+    return normalized;
+}
+
+export function normalizeBrowserFieldFiltersForEntityTransition(
+    sourceEntityType,
+    destinationEntityType,
+    values = {})
+{
+    const sourceNormalized = normalizeBrowserFieldFilters(sourceEntityType, values);
+    const destinationNormalized = normalizeBrowserFieldFilters(
+        destinationEntityType,
+        sourceNormalized);
+    const sourceDefinitions = new Map(
+        getClientBrowserFilterDefinitions(sourceEntityType)
+            .map(definition => [definition.key, definition]));
+    const destinationDefinitions = new Map(
+        getClientBrowserFilterDefinitions(destinationEntityType)
+            .map(definition => [definition.key, definition]));
+    const normalized = {};
+
+    for (const [key, value] of Object.entries(destinationNormalized)) {
+        if (browserFilterDefinitionsEquivalent(
+            sourceDefinitions.get(key),
+            destinationDefinitions.get(key))) {
+            normalized[key] = value;
+        }
     }
     return normalized;
 }
@@ -141,8 +167,7 @@ export function filterRulesForBrowser(rules, entityType, fieldFilters = {}) {
     if (!active.length) return [...rules];
 
     const definitions = new Map(
-        getBrowserFilterDefinitions(entityType)
-            .filter(definition => definition.mode === "client-complete")
+        getClientBrowserFilterDefinitions(entityType)
             .map(definition => [definition.key, definition]));
 
     return rules.filter(rule => active.every(([key, expected]) => {
@@ -183,6 +208,28 @@ export function browserFilterValues(rule, definition) {
             .flatMap(relationship => normalizeValues(relationship.relatedDisplayName));
     }
     return [];
+}
+
+function getClientBrowserFilterDefinitions(entityType) {
+    return getBrowserFilterDefinitions(entityType)
+        .filter(definition => definition.mode === "client-complete");
+}
+
+function browserFilterDefinitionsEquivalent(left, right) {
+    if (!left || !right) return false;
+    if (left.key !== right.key
+        || left.label !== right.label
+        || left.mode !== right.mode) {
+        return false;
+    }
+
+    const leftValue = left.value ?? {};
+    const rightValue = right.value ?? {};
+    return leftValue.kind === rightValue.kind
+        && leftValue.property === rightValue.property
+        && leftValue.field === rightValue.field
+        && leftValue.relationshipKind === rightValue.relationshipKind
+        && leftValue.relatedEntityType === rightValue.relatedEntityType;
 }
 
 function normalizeValues(value) {
