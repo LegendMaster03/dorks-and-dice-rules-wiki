@@ -11,6 +11,39 @@ export function installWikiReferenceBrowserEnhancements(app) {
     };
 }
 
+export function installWikiReferenceNavigation(app) {
+    const renderNavigation = app.renderNavigation.bind(app);
+    app.renderNavigation = () => {
+        const navigation = renderNavigation();
+        const buttons = [...navigation.querySelectorAll(".rules-core-nav-menu-item")];
+        for (const button of buttons) {
+            if (button.textContent?.trim() === "Races") button.remove();
+        }
+
+        const species = [...navigation.querySelectorAll(".rules-core-nav-menu-item")]
+            .find(button => button.textContent?.trim() === "Species");
+        if (species && ![...navigation.querySelectorAll(".rules-core-nav-menu-item")]
+            .some(button => button.textContent?.trim() === "Subspecies")) {
+            const active = app.activeView === "library"
+                && (app.browserFilters?.entityType ?? "") === "subspecies";
+            const subspecies = element("button", {
+                type: "button",
+                className: `rules-core-nav-menu-item${active ? " is-active" : ""}`,
+                text: "Subspecies",
+                attributes: {
+                    role: "menuitem",
+                    ...(active ? { "aria-current": "page" } : {})
+                },
+                onClick: async () => {
+                    if (!active) await app.navigateRuleFamily?.("subspecies");
+                }
+            });
+            species.insertAdjacentElement("afterend", subspecies);
+        }
+        return navigation;
+    };
+}
+
 function installCategoryModeControl(app, container) {
     const controls = container.querySelector(".rules-core-library-controls");
     if (!controls || controls.querySelector(".rules-wiki-category-mode")) return;
