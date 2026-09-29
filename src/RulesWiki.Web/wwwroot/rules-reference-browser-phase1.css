@@ -69,6 +69,80 @@
     opacity: .32;
 }
 
+.rules-core-library-active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .25rem;
+    padding: .2rem .4rem .35rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--bs-border-color) 72%, transparent);
+}
+
+.rules-core-library-active-filters[hidden] {
+    display: none;
+}
+
+.rules-core-library-active-filter {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: .18rem;
+    padding: .16rem .35rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .3rem;
+    background: color-mix(in srgb, var(--bs-body-bg) 88%, var(--bs-secondary-bg));
+    color: var(--bs-body-color);
+    font-size: .68rem;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.rules-core-library-active-filter:hover,
+.rules-core-library-active-filter:focus-visible {
+    border-color: color-mix(in srgb, var(--bs-primary) 60%, var(--bs-border-color));
+    background: color-mix(in srgb, var(--bs-primary) 8%, var(--bs-body-bg));
+}
+
+.rules-core-library-active-filter:focus-visible,
+.rules-core-library-active-filter-clear:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 1px;
+}
+
+.rules-core-library-active-filter-label {
+    flex: 0 0 auto;
+    font-weight: 700;
+}
+
+.rules-core-library-active-filter-value {
+    overflow: hidden;
+    min-width: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rules-core-library-active-filter-remove {
+    flex: 0 0 auto;
+    font-size: .82rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.rules-core-library-active-filter-clear {
+    padding: .12rem .2rem;
+    border: 0;
+    background: transparent;
+    color: var(--bs-secondary-color);
+    font-size: .68rem;
+    text-decoration: underline;
+    text-underline-offset: .12rem;
+}
+
+.rules-core-library-active-filter-clear:hover,
+.rules-core-library-active-filter-clear:focus-visible {
+    color: var(--bs-body-color);
+}
+
 .rules-core-library-filter-fields {
     display: contents;
 }
@@ -298,7 +372,9 @@
 @media (prefers-reduced-motion: reduce) {
     .rules-core-library-row,
     .rules-core-library-column-sort,
-    .rules-core-library-search-clear {
+    .rules-core-library-search-clear,
+    .rules-core-library-active-filter,
+    .rules-core-library-active-filter-clear {
         scroll-behavior: auto;
         transition: none;
     }

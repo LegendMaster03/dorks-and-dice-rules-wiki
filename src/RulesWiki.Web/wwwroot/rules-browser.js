@@ -30,11 +30,14 @@ import {
     getKnownEntityBrowserConfigs
 } from "./rules-browser-config.js";
 import {
+    activeBrowserFilterSummaries,
     browserFilterOptions,
+    clearBrowserFilters,
     countActiveBrowserFilters,
-    filterRulesForBrowser,
     hasClientBrowserFilters,
-    normalizeBrowserFieldFilters
+    normalizeBrowserFieldFilters,
+    removeBrowserFilter,
+    resolveBrowserFilterApplication
 } from "./rules-browser-filters.js";
 
 export { RULE_FAMILY_TABS } from "./rules-browser-index.js";
@@ -286,6 +289,11 @@ async function renderRulesBrowser(app, container) {
             clearSearch),
         indexStatus,
         filterToggle);
+    const activeFilterSummary = element("div", {
+        className: "rules-core-library-active-filters",
+        ariaLabel: "Active filters",
+        attributes: { hidden: "" }
+    });
 
     const routedSourceCode = app.browserFilters.sourceCode ?? "";
     const sourceFilter = element("select", {
@@ -341,7 +349,7 @@ async function renderRulesBrowser(app, container) {
         ariaLabel: "Published rules"
     });
     const indexFooter = element("div", { className: "rules-core-library-index-footer" });
-    index.append(searchGroup, filterBar, indexHeader, list, indexFooter);
+    index.append(searchGroup, activeFilterSummary, filterBar, indexHeader, list, indexFooter);
 
     const detail = element("section", {
         className: "rules-core-library-detail",
@@ -366,6 +374,7 @@ async function renderRulesBrowser(app, container) {
     let searchTimer = null;
     let preserveDeepLink = Boolean(app.browserDeepLink);
     let loadMore = async () => [];
+    let load = async () => {};
 
     const hasCompleteDataset = () =>
         hasPublishedRuleset
@@ -375,15 +384,37 @@ async function renderRulesBrowser(app, container) {
         hasCompleteDataset() && currentRules.length > 0;
 
     const currentDisplayRules = () => {
-        const filtered = hasCompleteDataset()
-            ? filterRulesForBrowser(
-                currentRules,
-                app.browserFilters.entityType,
-                app.browserFilters.fieldFilters)
-            : [...currentRules];
+        const application = resolveBrowserFilterApplication(
+            currentRules,
+            app.browserFilters.entityType,
+            app.browserFilters.fieldFilters,
+            hasCompleteDataset());
         return canSortCurrentDataset()
-            ? sortRulesForBrowser(filtered, app.browserFilters.entityType, app.browserSort)
-            : filtered;
+            ? sortRulesForBrowser(application.rules, app.browserFilters.entityType, app.browserSort)
+            : application.rules;
+    };
+
+    const currentFilterState = () => ({
+        sourceCode: sourceFilter.value,
+        overridesOnly: scope.value.startsWith("campaign:") && overrideInput.checked,
+        fieldFilters: app.browserFilters.fieldFilters
+    });
+
+    const applyFilterStateToControls = state => {
+        if (state.sourceCode
+            && !Array.from(sourceFilter.options).some(option => option.value === state.sourceCode)) {
+            sourceFilter.append(element("option", {
+                value: state.sourceCode,
+                text: state.sourceCode
+            }));
+        }
+        sourceFilter.value = state.sourceCode;
+        overrideInput.checked = scope.value.startsWith("campaign:") && state.overridesOnly;
+        app.browserFilters.sourceCode = sourceFilter.value;
+        app.browserFilters.overridesOnly = overrideInput.checked;
+        app.browserFilters.fieldFilters = normalizeBrowserFieldFilters(
+            app.browserFilters.entityType,
+            state.fieldFilters);
     };
 
     const syncSelectedRowState = conceptKey => {
@@ -435,6 +466,62 @@ async function renderRulesBrowser(app, container) {
             { canSort: canSortCurrentDataset() });
     };
 
+    const renderActiveFilterSummary = () => {
+        const summaries = activeBrowserFilterSummaries(
+            app.browserFilters.entityType,
+            currentFilterState());
+        activeFilterSummary.replaceChildren();
+        activeFilterSummary.hidden = summaries.length === 0;
+        if (!summaries.length) return;
+
+        for (const summary of summaries) {
+            const button = element("button", {
+                type: "button",
+                className: "rules-core-library-active-filter",
+                ariaLabel: `Remove ${summary.label} filter: ${summary.value}`,
+                title: `Remove ${summary.label} filter: ${summary.value}`
+            },
+            element("span", {
+                className: "rules-core-library-active-filter-label",
+                text: `${summary.label}:`
+            }),
+            element("span", {
+                className: "rules-core-library-active-filter-value",
+                text: summary.value
+            }),
+            element("span", {
+                className: "rules-core-library-active-filter-remove",
+                text: "×",
+                attributes: { "aria-hidden": "true" }
+            }));
+            button.addEventListener("click", async () => {
+                const next = removeBrowserFilter(
+                    app.browserFilters.entityType,
+                    currentFilterState(),
+                    summary.key);
+                applyFilterStateToControls(next);
+                replaceToolRoute(app, currentToolRoute(app), app.browserScope);
+                syncFilterControls();
+                await load({ keepSelection: true });
+            });
+            activeFilterSummary.append(button);
+        }
+
+        const clearAll = element("button", {
+            type: "button",
+            className: "rules-core-library-active-filter-clear",
+            text: "Clear all filters",
+            ariaLabel: "Clear all active filters"
+        });
+        clearAll.addEventListener("click", async () => {
+            applyFilterStateToControls(clearBrowserFilters(app.browserFilters.entityType));
+            replaceToolRoute(app, currentToolRoute(app), app.browserScope);
+            syncFilterControls();
+            await load({ keepSelection: true });
+        });
+        activeFilterSummary.append(clearAll);
+    };
+
     const syncFilterControls = () => {
         const campaignScope = scope.value.startsWith("campaign:");
         overrideFilter.hidden = !campaignScope;
@@ -442,15 +529,16 @@ async function renderRulesBrowser(app, container) {
             overrideInput.checked = false;
             app.browserFilters.overridesOnly = false;
         }
+        app.browserFilters.sourceCode = sourceFilter.value;
+        app.browserFilters.overridesOnly = campaignScope && overrideInput.checked;
 
-        const activeCount = countActiveBrowserFilters(app.browserFilters.entityType, {
-            sourceCode: sourceFilter.value,
-            overridesOnly: campaignScope && overrideInput.checked,
-            fieldFilters: app.browserFilters.fieldFilters
-        });
+        const activeCount = countActiveBrowserFilters(
+            app.browserFilters.entityType,
+            currentFilterState());
         filterToggle.textContent = activeCount ? `Filters (${activeCount})` : "Filters";
         filterToggle.classList.toggle("is-active", activeCount > 0);
         clearSearch.disabled = !search.value;
+        renderActiveFilterSummary();
     };
 
     const populateSourceFacets = facets => {
@@ -488,6 +576,7 @@ async function renderRulesBrowser(app, container) {
         app.browserFilters.fieldFilters = normalized;
 
         for (const definition of definitions) {
+            const selectedValue = normalized[definition.key] ?? "";
             const select = element("select", {
                 className: "form-select form-select-sm",
                 ariaLabel: `Filter by ${definition.label.toLowerCase()}`,
@@ -497,12 +586,21 @@ async function renderRulesBrowser(app, container) {
                 value: "",
                 text: complete ? `All ${definition.label.toLowerCase()}` : "Load all results to filter"
             }));
-            if (complete) {
-                for (const value of browserFilterOptions(currentRules, definition)) {
-                    select.append(element("option", { value, text: value }));
-                }
+            const options = complete
+                ? browserFilterOptions(currentRules, definition)
+                : [];
+            for (const value of options) {
+                select.append(element("option", { value, text: value }));
             }
-            select.value = normalized[definition.key] ?? "";
+            if (selectedValue && !options.includes(selectedValue)) {
+                select.append(element("option", {
+                    value: selectedValue,
+                    text: complete
+                        ? `${selectedValue} (no matches)`
+                        : `${selectedValue} (waiting for complete catalog)`
+                }));
+            }
+            select.value = selectedValue;
             select.addEventListener("change", () => {
                 const next = { ...app.browserFilters.fieldFilters };
                 if (select.value) next[definition.key] = select.value;
@@ -523,7 +621,7 @@ async function renderRulesBrowser(app, container) {
         const unavailable = definitions.length > 0 && !complete;
         filterAvailability.hidden = !unavailable;
         filterAvailability.textContent = unavailable
-            ? "Type-specific and edition filters become available after the complete result set is loaded."
+            ? "Package, edition, and type-specific filters require the complete result set."
             : "";
         syncFilterControls();
     };
@@ -663,12 +761,11 @@ async function renderRulesBrowser(app, container) {
             totalCount = requested.totalCount ?? totalCount;
             hasMore = currentRules.length < totalCount;
 
-            if (hasCompleteDataset() || app.browserSort.key
-                || hasClientBrowserFilters(
-                    app.browserFilters.entityType,
-                    app.browserFilters.fieldFilters)) {
+            if (hasCompleteDataset() || app.browserSort.key) {
                 renderCurrentRows();
-            } else {
+            } else if (!hasClientBrowserFilters(
+                app.browserFilters.entityType,
+                app.browserFilters.fieldFilters)) {
                 renderRuleRows(
                     list,
                     added,
@@ -700,7 +797,7 @@ async function renderRulesBrowser(app, container) {
         }
     };
 
-    const load = async ({ keepSelection = false } = {}) => {
+    load = async ({ keepSelection = false } = {}) => {
         const serial = ++loadSerial;
         app.browserPage = 0;
         isLoadingMore = false;
@@ -758,6 +855,30 @@ async function renderRulesBrowser(app, container) {
 
             await loadCompleteDatasetForActiveClientFilters(serial);
             if (serial !== loadSerial) return;
+
+            const clientFiltersActive = hasClientBrowserFilters(
+                app.browserFilters.entityType,
+                app.browserFilters.fieldFilters);
+            if (hasPublishedRuleset && clientFiltersActive && !hasCompleteDataset()) {
+                const retry = element("button", {
+                    type: "button",
+                    className: "btn btn-sm btn-outline-primary",
+                    text: "Retry complete catalog load"
+                });
+                retry.addEventListener("click", () => void load({ keepSelection: true }));
+                list.replaceChildren(renderIndexState(
+                    "Could not apply the active filters.",
+                    loadMoreError
+                        ? `The complete catalog is required before these filters can be applied. ${loadMoreError}`
+                        : "The complete catalog is required before these filters can be applied, but loading stopped before every result was available.",
+                    retry));
+                indexFooter.replaceChildren();
+                indexStatus.textContent = "Active filters waiting for complete catalog";
+                refreshIndexHeader();
+                renderConfiguredFilters();
+                return;
+            }
+
             renderCurrentRows();
             refreshListState();
 
@@ -908,11 +1029,7 @@ async function renderRulesBrowser(app, container) {
         await load({ keepSelection: true });
     });
     clearFilters.addEventListener("click", async () => {
-        sourceFilter.value = "";
-        overrideInput.checked = false;
-        app.browserFilters.sourceCode = "";
-        app.browserFilters.overridesOnly = false;
-        app.browserFilters.fieldFilters = {};
+        applyFilterStateToControls(clearBrowserFilters(app.browserFilters.entityType));
         replaceToolRoute(app, currentToolRoute(app), app.browserScope);
         syncFilterControls();
         await load({ keepSelection: true });

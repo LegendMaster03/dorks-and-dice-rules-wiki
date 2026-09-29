@@ -18,18 +18,121 @@ export function normalizeBrowserFieldFilters(entityType, values = {}) {
     return normalized;
 }
 
-export function countActiveBrowserFilters(entityType, {
+export function normalizeBrowserFilterState(entityType, {
     sourceCode = "",
     overridesOnly = false,
     fieldFilters = {}
 } = {}) {
-    return (sourceCode ? 1 : 0)
-        + (overridesOnly ? 1 : 0)
-        + Object.keys(normalizeBrowserFieldFilters(entityType, fieldFilters)).length;
+    return {
+        sourceCode: String(sourceCode ?? "").trim(),
+        overridesOnly: Boolean(overridesOnly),
+        fieldFilters: normalizeBrowserFieldFilters(entityType, fieldFilters)
+    };
+}
+
+export function countActiveBrowserFilters(entityType, state = {}) {
+    return activeBrowserFilterSummaries(entityType, state).length;
+}
+
+export function activeBrowserFilterSummaries(entityType, state = {}) {
+    const normalized = normalizeBrowserFilterState(entityType, state);
+    const definitions = new Map(
+        getBrowserFilterDefinitions(entityType)
+            .map(definition => [definition.key, definition]));
+    const summaries = [];
+
+    if (normalized.sourceCode) {
+        summaries.push({
+            key: "sourceCode",
+            label: definitions.get("sourceCode")?.label ?? "Source",
+            value: normalized.sourceCode
+        });
+    }
+    if (normalized.overridesOnly) {
+        summaries.push({
+            key: "overridesOnly",
+            label: definitions.get("overridesOnly")?.label ?? "Campaign state",
+            value: "Overrides only"
+        });
+    }
+
+    for (const definition of getBrowserFilterDefinitions(entityType)) {
+        if (definition.mode !== "client-complete") continue;
+        const value = normalized.fieldFilters[definition.key];
+        if (!value) continue;
+        summaries.push({
+            key: definition.key,
+            label: definition.label,
+            value
+        });
+    }
+    return summaries;
+}
+
+export function removeBrowserFilter(entityType, state = {}, key) {
+    const normalized = normalizeBrowserFilterState(entityType, state);
+    if (key === "sourceCode") {
+        normalized.sourceCode = "";
+        return normalized;
+    }
+    if (key === "overridesOnly") {
+        normalized.overridesOnly = false;
+        return normalized;
+    }
+
+    const fieldFilters = { ...normalized.fieldFilters };
+    delete fieldFilters[key];
+    return {
+        ...normalized,
+        fieldFilters: normalizeBrowserFieldFilters(entityType, fieldFilters)
+    };
+}
+
+export function clearBrowserFilters(entityType) {
+    return normalizeBrowserFilterState(entityType);
 }
 
 export function hasClientBrowserFilters(entityType, fieldFilters = {}) {
     return Object.keys(normalizeBrowserFieldFilters(entityType, fieldFilters)).length > 0;
+}
+
+export async function loadCompleteBrowserDataset({
+    hasMore,
+    loadMore,
+    getLength,
+    getError
+}) {
+    while (hasMore()) {
+        const before = getLength();
+        await loadMore();
+        const error = getError();
+        if (error) {
+            return { complete: false, error };
+        }
+        if (getLength() === before) {
+            return { complete: false, error: null };
+        }
+    }
+    return { complete: true, error: null };
+}
+
+export function resolveBrowserFilterApplication(
+    rules,
+    entityType,
+    fieldFilters = {},
+    completeDataset = false)
+{
+    const active = hasClientBrowserFilters(entityType, fieldFilters);
+    if (!active) {
+        return { state: "inactive", rules: [...(rules ?? [])] };
+    }
+    if (!completeDataset) {
+        return { state: "pending", rules: [] };
+    }
+    return {
+        state: "applied",
+        rules: filterRulesForBrowser(rules, entityType, fieldFilters)
+    };
 }
 
 export function filterRulesForBrowser(rules, entityType, fieldFilters = {}) {
