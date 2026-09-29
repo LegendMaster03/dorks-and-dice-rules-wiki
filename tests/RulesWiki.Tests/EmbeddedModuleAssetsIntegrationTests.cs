@@ -144,7 +144,10 @@ public sealed class EmbeddedModuleAssetsIntegrationTests
         Assert.Contains("getWikiReferenceDetail", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("Compare accessible source variations", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("variationTabLabel", rulesBrowser, StringComparison.Ordinal);
-        Assert.Contains("nativeEntityType", rulesBrowser, StringComparison.Ordinal);
+        Assert.DoesNotContain("nativeEntityType", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("variation.category", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("Edit Dorks & Dice rule", rulesBrowser, StringComparison.Ordinal);
+        Assert.Contains("Edit campaign rule", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("Publication date", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("Unresolved default", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("Campaign override", rulesBrowser, StringComparison.Ordinal);
