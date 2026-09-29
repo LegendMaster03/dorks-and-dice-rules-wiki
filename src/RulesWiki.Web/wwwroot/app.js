@@ -32,14 +32,26 @@ root.append(element("div", { className: "card card-body text-body-secondary", te
 try {
     const hostContext = await loadToolHostContext(root);
     const api = new RulesCoreApi(hostContext);
-    const [session, campaigns] = await Promise.all([
+    const [session, campaigns, workspaceScopes] = await Promise.all([
         api.getOptionalSession(),
-        api.getOptionalCampaigns()
+        api.getOptionalCampaigns(),
+        api.backend("/api/workspace/scopes")
     ]);
     const effectiveSession = session ?? {
         user: null,
         globalRoles: []
     };
+
+    // Existing Rules Wiki feature modules consume canEditGlobal through the session-shaped
+    // Rules Lawyer flag. Derive that compatibility flag from Rules Core's authoritative workspace
+    // capability rather than from the Site's global-role list, because Rules Lawyer is mode-scoped.
+    const globalRoles = (effectiveSession.globalRoles ?? [])
+        .filter(role => role !== "Rules Lawyer");
+    const canAdjudicateGlobal = Array.isArray(workspaceScopes?.scopes)
+        && workspaceScopes.scopes.some(scope => scope.kind === "global" && scope.canAdjudicate === true);
+    if (canAdjudicateGlobal) globalRoles.push("Rules Lawyer");
+    effectiveSession.globalRoles = globalRoles;
+
     const app = new RulesAuthoringApp(root, api, hostContext, effectiveSession, campaigns);
     installResolvedRulesBrowser(app);
     installAdjudicationScopeControl(app);
