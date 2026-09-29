@@ -92,11 +92,11 @@ const FAMILY_CONFIGS = [
         column("name", "Name", "minmax(9rem, 2fr)"),
         column("source", "Source", "minmax(4rem, .65fr)")
     ], [], { rowSummaryFields: ["edition"], renderer: "generic" }),
-    config("race", "Races", "races", speciesColumns(), [
+    config("species", "Species", "species", speciesColumns(), [
         fieldFilter("size", "Size"),
         fieldFilter("ability", "Ability")
     ], { rowSummaryFields: ["speed", "edition"], renderer: "species" }),
-    config("species", "Species", "species", speciesColumns(), [
+    config("subspecies", "Subspecies", "subspecies", speciesColumns(), [
         fieldFilter("size", "Size"),
         fieldFilter("ability", "Ability")
     ], { rowSummaryFields: ["speed", "edition"], renderer: "species" }),
@@ -136,16 +136,24 @@ const CONFIG_BY_ENTITY_TYPE = new Map(FAMILY_CONFIGS.map(value => [value.entityT
 const CONFIG_BY_ROUTE = new Map(FAMILY_CONFIGS
     .filter(value => value.routeFamily)
     .map(value => [value.routeFamily, value]));
+const LEGACY_ROUTE_ENTITY_TYPES = new Map([
+    ["races", "species"],
+    ["subraces", "subspecies"]
+]);
 
 export const RULE_FAMILY_TABS = FAMILY_CONFIGS.map(value => [value.entityType, value.label]);
 
 export function getEntityBrowserConfig(entityType = "") {
-    const normalized = String(entityType ?? "");
+    const normalized = normalizeEntityType(entityType);
     return CONFIG_BY_ENTITY_TYPE.get(normalized) ?? genericConfig(normalized);
 }
 
 export function getEntityBrowserConfigForRoute(routeFamily) {
-    return CONFIG_BY_ROUTE.get(String(routeFamily ?? "")) ?? null;
+    const route = String(routeFamily ?? "");
+    const direct = CONFIG_BY_ROUTE.get(route);
+    if (direct) return direct;
+    const alias = LEGACY_ROUTE_ENTITY_TYPES.get(route);
+    return alias ? getEntityBrowserConfig(alias) : null;
 }
 
 export function getKnownEntityBrowserConfigs() {
@@ -205,6 +213,13 @@ function speciesColumns() {
         column("size", "Size", "minmax(4rem, .65fr)"),
         column("source", "Source", "minmax(4rem, .65fr)")
     ];
+}
+
+function normalizeEntityType(entityType) {
+    const value = String(entityType ?? "");
+    if (value === "race") return "species";
+    if (value === "subrace") return "subspecies";
+    return value;
 }
 
 function humanizeEntityType(entityType) {
