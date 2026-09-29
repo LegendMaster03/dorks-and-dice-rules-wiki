@@ -75,7 +75,8 @@ function installCategoryModeControl(app, container) {
 function clarifyReferenceCatalogStatus(container) {
     const revision = container.querySelector(".rules-core-library-revision");
     if (!revision) return;
-    if (revision.textContent?.includes("No published rules")) {
-        revision.textContent = "Accessible source references";
+    if (revision.textContent?.includes("Published #reference-catalog")
+        || revision.textContent?.includes("No published rules")) {
+        revision.textContent = "Accessible source references · no published Rules Layer revision";
     }
 }
