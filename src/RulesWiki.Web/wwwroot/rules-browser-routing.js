@@ -24,6 +24,9 @@ export function parseToolRoute(toolRoute) {
     if (segments.length === 2 && segments[0] === "rules") {
         return { conceptKey: decodeURIComponent(segments[1]) };
     }
+    if (segments.length === 2 && segments[0] === "references") {
+        return { conceptKey: decodeURIComponent(segments[1]) };
+    }
     return {};
 }
 
