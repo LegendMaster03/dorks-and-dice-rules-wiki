@@ -49,28 +49,23 @@ function getCatalog(api, campaignId, filters = {}) {
                 package: projectFacetOptions(catalog.packageFacets),
                 edition: projectFacetOptions(catalog.editionFacets)
             };
+            api.onReferenceFacetsChanged?.(api.referenceFacets);
         }
-        return projectReferenceCatalog(catalog, routedFacets);
+        return projectReferenceCatalog(catalog);
     });
 }
 
-function projectReferenceCatalog(catalog, routedFacets = {}) {
+function projectReferenceCatalog(catalog) {
     const rules = (catalog.references ?? catalog.rules ?? []).map(reference => ({
         ...reference,
         conceptKey: reference.referenceIdentity,
         ruleConceptId: reference.ruleConceptId ?? reference.referenceIdentity,
         entityType: reference.effectiveCategory ?? reference.entityType,
         editionKey: reference.effectiveEditionKey ?? reference.editionKey ?? "",
-        editionDisplayName: routedFacets.edition
-            || reference.effectiveEditionDisplayName
-            || reference.editionDisplayName
-            || "",
+        editionDisplayName: reference.effectiveEditionDisplayName ?? reference.editionDisplayName ?? "",
         sourceCode: reference.sourceCode ?? reference.effectiveVariation?.sourceCode ?? "",
         packageKey: reference.packageKey ?? reference.effectiveVariation?.packageKey ?? "",
-        packageDisplayName: routedFacets.package
-            || reference.packageDisplayName
-            || reference.effectiveVariation?.packageDisplayName
-            || ""
+        packageDisplayName: reference.packageDisplayName ?? reference.effectiveVariation?.packageDisplayName ?? ""
     }));
     return {
         ...catalog,
