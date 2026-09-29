@@ -103,17 +103,18 @@ public sealed class RuleBrowserAssetTests
     [Fact]
     public void EditionFilterUsesAuthoritativeReferenceFacetWithoutFormatInference()
     {
-        var content = ReadWebAssets(
+        var filterContent = ReadWebAssets(
             "rules-browser-config.js",
-            "rules-browser-filters.js",
+            "rules-browser-filters.js");
+        var referenceContent = ReadWebAssets(
             "rules-reference-api.js",
             "rules-reference-browser-enhancements.js");
 
-        Assert.Contains("\"server-reference\"", content, StringComparison.Ordinal);
-        Assert.Contains("facet: \"edition\"", content, StringComparison.Ordinal);
-        Assert.Contains("editionFacets", content, StringComparison.Ordinal);
-        Assert.Contains("referenceFacets", content, StringComparison.Ordinal);
-        Assert.DoesNotContain("formatKey", content, StringComparison.Ordinal);
+        Assert.Contains("\"server-reference\"", filterContent, StringComparison.Ordinal);
+        Assert.Contains("facet: \"edition\"", filterContent, StringComparison.Ordinal);
+        Assert.Contains("editionFacets", referenceContent, StringComparison.Ordinal);
+        Assert.Contains("referenceFacets", referenceContent, StringComparison.Ordinal);
+        Assert.DoesNotContain("formatKey", filterContent, StringComparison.Ordinal);
     }
 
     [Fact]
