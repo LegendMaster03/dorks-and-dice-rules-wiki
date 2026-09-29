@@ -6,6 +6,8 @@ import { installConceptSourceAuthoring } from "./concept-source-authoring.js";
 import { installHostedSourceAuthoring } from "./hosted-source-authoring.js";
 import { installMechanicalRelationships } from "./mechanical-relationships.js";
 import { installResolvedRulesBrowser } from "./rules-browser.js";
+import { installWikiReferenceApi } from "./rules-reference-api.js";
+import { installWikiReferenceBrowserEnhancements } from "./rules-reference-browser-enhancements.js";
 import { installAdjudicationScopeControl } from "./scope-control.js";
 import { installSemanticComparison } from "./semantic-comparison.js";
 import { installSourceAccessAdministration } from "./source-access-admin.js";
@@ -32,6 +34,7 @@ root.append(element("div", { className: "card card-body text-body-secondary", te
 try {
     const hostContext = await loadToolHostContext(root);
     const api = new RulesCoreApi(hostContext);
+    installWikiReferenceApi(api);
     const [session, campaigns] = await Promise.all([
         api.getOptionalSession(),
         api.getOptionalCampaigns()
@@ -42,6 +45,7 @@ try {
     };
     const app = new RulesAuthoringApp(root, api, hostContext, effectiveSession, campaigns);
     installResolvedRulesBrowser(app);
+    installWikiReferenceBrowserEnhancements(app);
     installAdjudicationScopeControl(app);
     installSemanticComparison(app);
     installMechanicalRelationships(app);
