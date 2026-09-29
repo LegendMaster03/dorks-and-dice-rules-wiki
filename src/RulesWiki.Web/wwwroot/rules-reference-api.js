@@ -1,6 +1,7 @@
 const REFERENCE_CATALOG_SENTINEL = "reference-catalog";
 
 export function installWikiReferenceApi(api) {
+    api.referenceFacets = { package: [], edition: [] };
     api.getGlobalRulesCatalog = filters => getCatalog(api, null, filters);
     api.getCampaignRulesCatalog = (campaignId, filters) => getCatalog(api, campaignId, filters);
 
@@ -28,6 +29,7 @@ export function installWikiReferenceApi(api) {
 function getCatalog(api, campaignId, filters = {}) {
     const parameters = new URLSearchParams();
     const routedFacets = referenceFacetFilters();
+    const offset = Math.max(0, filters.offset ?? 0);
     if (filters.entityType) parameters.set("entityType", filters.entityType);
     if (filters.query) parameters.set("q", filters.query);
     if (filters.sourceCode) parameters.set("source", filters.sourceCode);
@@ -36,13 +38,20 @@ function getCatalog(api, campaignId, filters = {}) {
     if (campaignId && filters.overridesOnly) parameters.set("overridesOnly", "true");
     parameters.set("categoryMode", referenceCategoryMode());
     parameters.set("limit", String(filters.limit ?? 200));
-    parameters.set("offset", String(Math.max(0, filters.offset ?? 0)));
+    parameters.set("offset", String(offset));
 
     const path = campaignId
         ? `/api/campaigns/${encodeURIComponent(campaignId)}/wiki/references`
         : "/api/wiki/references";
-    return api.backend(`${path}?${parameters.toString()}`).then(catalog =>
-        projectReferenceCatalog(catalog, routedFacets));
+    return api.backend(`${path}?${parameters.toString()}`).then(catalog => {
+        if (offset === 0) {
+            api.referenceFacets = {
+                package: projectFacetOptions(catalog.packageFacets),
+                edition: projectFacetOptions(catalog.editionFacets)
+            };
+        }
+        return projectReferenceCatalog(catalog, routedFacets);
+    });
 }
 
 function projectReferenceCatalog(catalog, routedFacets = {}) {
@@ -67,12 +76,28 @@ function projectReferenceCatalog(catalog, routedFacets = {}) {
         ...catalog,
         rules,
         references: rules,
+        entityTypeFacets: (catalog.entityTypeFacets ?? []).map(facet => ({
+            entityType: facet.value,
+            count: facet.count
+        })),
+        sourceFacets: (catalog.sourceFacets ?? []).map(facet => ({
+            sourceCode: facet.value,
+            count: facet.count
+        })),
         // The Phase 2 shell historically used a truthy revision number as a proxy for
         // "a browseable catalog exists." The Wiki catalog exists independently of a
         // published Rules Layer revision, so use an internal presentation sentinel.
         revisionNumber: catalog.revisionNumber ?? REFERENCE_CATALOG_SENTINEL,
         wikiReferencePublicationRevision: catalog.revisionNumber ?? null
     };
+}
+
+function projectFacetOptions(facets = []) {
+    return facets.map(facet => ({
+        value: facet.value,
+        displayName: facet.displayName || facet.value,
+        count: facet.count
+    }));
 }
 
 function projectEffectiveReference(detail) {
