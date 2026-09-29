@@ -672,6 +672,32 @@ If missing facets/sort contracts are discovered, coordinate additive Rules Core 
 
 Unknown entity families must continue through generic fallback configuration.
 
+### Phase 2.5 — accessible reference catalog and cross-edition history
+
+Goal: make the normal browser operate on the complete source-accessible logical-reference catalog before specialized family work continues.
+
+Required work:
+
+- move primary Rules Wiki browse/search/detail/history from the resolved `/api/rules` consumer boundary to first-party Rules Core `/api/wiki/references` contracts;
+- preserve `/api/rules` and campaign equivalents as the effective consumer APIs used by game Tools;
+- show one logical reference row across accessible `revision`/`rename` history while keeping variants and reprints distinct;
+- support stable source-only reference identities and deep links before a Rules Layer concept or publication exists;
+- allow ordinary users to inspect accessible history and read-only semantic comparison without granting Rules Lawyer or campaign-DM mutation authority;
+- use an explicit published global/campaign selection when one exists, otherwise a deterministic non-persisting accessible fallback that is clearly not a ruling;
+- preserve campaign inheritance/override semantics;
+- support histories whose source-native category changes across editions, including prestige-class to subclass cases;
+- provide both any-variation and effective-category filtering for cross-category histories;
+- make Source, Package, Edition, category, campaign-override search/facets/counts server-authoritative over the complete accessible reference set;
+- expose Species and Subspecies as the normal navigation taxonomy while preserving legacy race/subrace deep links and source-native types;
+- prove visible/groupable/filterable 3e, 3.5e, 5e, and 5.5e history plus generic fallback for unknown imported families;
+- preserve source grants as a hard boundary for rows, counts, facets, detail, history, and comparison.
+
+Phase 2.5 non-goals:
+
+- no Phase 3 class-family workspace redesign;
+- no broad specialized renderer completion from later phases;
+- no new rules engine, comparison semantics, or authorization state in Rules Wiki.
+
 ### Phase 3 — class, subclass, and prestige-class workspace
 
 Goal: make class-family content ready for human acceptance testing, beginning with 5e and 5.5e while establishing an edition-flexible workspace.
