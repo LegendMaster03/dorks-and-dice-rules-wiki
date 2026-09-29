@@ -53,15 +53,15 @@ function projectReferenceCatalog(catalog, routedFacets = {}) {
         entityType: reference.effectiveCategory ?? reference.entityType,
         editionKey: reference.effectiveEditionKey ?? reference.editionKey ?? "",
         editionDisplayName: routedFacets.edition
-            ?? reference.effectiveEditionDisplayName
-            ?? reference.editionDisplayName
-            ?? "",
+            || reference.effectiveEditionDisplayName
+            || reference.editionDisplayName
+            || "",
         sourceCode: reference.sourceCode ?? reference.effectiveVariation?.sourceCode ?? "",
         packageKey: reference.packageKey ?? reference.effectiveVariation?.packageKey ?? "",
         packageDisplayName: routedFacets.package
-            ?? reference.packageDisplayName
-            ?? reference.effectiveVariation?.packageDisplayName
-            ?? ""
+            || reference.packageDisplayName
+            || reference.effectiveVariation?.packageDisplayName
+            || ""
     }));
     return {
         ...catalog,
