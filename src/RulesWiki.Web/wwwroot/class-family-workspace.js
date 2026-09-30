@@ -32,8 +32,7 @@ export async function renderClassFamilyReferenceDetail(
     installClassFamilyStylesheet();
 
     const tabBar = element("div", {
-        className: "rules-core-version-tabs class-family-view-tabs",
-        attributes: { role: "tablist", "aria-label": "Class-family reference views" }
+        className: "rules-core-version-tabs class-family-view-tabs"
     });
     tabBar.append(element("button", {
         type: "button",
@@ -46,8 +45,18 @@ export async function renderClassFamilyReferenceDetail(
         text: "View"
     }));
 
+    const tabList = element("div", {
+        className: "class-family-view-tablist",
+        attributes: { role: "tablist", "aria-label": "Class-family reference views" }
+    });
+    const viewPanelId = "class-family-view-panel";
     const body = element("div", {
-        className: "rules-core-library-detail-body class-family-detail-body"
+        className: "rules-core-library-detail-body class-family-detail-body",
+        attributes: {
+            id: viewPanelId,
+            role: "tabpanel",
+            tabindex: "0"
+        }
     });
     const effectiveLabel = campaignId ? campaignName(app, campaignId) : "Dorks & Dice";
     const tabs = [{
@@ -105,28 +114,32 @@ export async function renderClassFamilyReferenceDetail(
             button.classList.toggle("is-active", selected);
             button.setAttribute("aria-selected", selected ? "true" : "false");
             button.tabIndex = selected ? 0 : -1;
+            if (selected) body.setAttribute("aria-labelledby", button.id);
         }
         tab.render();
         app.presentRenderedFragment?.(body);
     };
 
-    for (const tab of tabs) {
+    for (const [index, tab] of tabs.entries()) {
+        const buttonId = `class-family-view-tab-${index}`;
         const button = element("button", {
             type: "button",
             className: "rules-core-version-tab",
             text: tab.label,
             title: tab.title,
             attributes: {
+                id: buttonId,
                 role: "tab",
                 "aria-selected": tab.key === "effective" ? "true" : "false",
+                "aria-controls": viewPanelId,
                 tabindex: tab.key === "effective" ? "0" : "-1"
             }
         });
         button.addEventListener("click", () => activate(tab.key));
         buttons.set(tab.key, button);
-        tabBar.append(button);
+        tabList.append(button);
     }
-    wireHorizontalTablist(tabBar, () => [...buttons.keys()], activate, key => buttons.get(key));
+    wireHorizontalTablist(tabList, () => [...buttons.keys()], activate, key => buttons.get(key));
 
     const viewContext = element("div", { className: "rules-core-version-tabs-context" },
         badge(humanizeClassFamilyType(reference.effectiveCategory), "secondary"));
@@ -136,7 +149,7 @@ export async function renderClassFamilyReferenceDetail(
             text: `${variations.length} accessible variations`
         }));
     }
-    tabBar.append(viewContext);
+    tabBar.append(tabList, viewContext);
 
     container.replaceChildren(tabBar, body);
     activate("effective");
@@ -321,34 +334,25 @@ function renderFamilyNavigation(app, reference, context, kind) {
         if (context.subclasses.length) {
             const siblings = element("div", {
                 className: "class-family-subclass-tabs",
-                attributes: { role: "tablist", "aria-label": "Sibling subclasses" }
+                attributes: { role: "list", "aria-label": "Sibling subclasses" }
             });
-            const keys = [];
-            const controls = new Map();
             for (const subclass of context.subclasses) {
-                const key = subclass.referenceIdentity ?? subclass.conceptKey;
                 const selected = sameReference(subclass, reference);
-                keys.push(key);
                 const button = element("button", {
                     type: "button",
                     className: `class-family-subclass-tab${selected ? " is-active" : ""}`,
                     text: subclass.displayName,
                     attributes: {
-                        role: "tab",
-                        "aria-selected": selected ? "true" : "false",
-                        tabindex: selected ? "0" : "-1"
+                        "aria-current": selected ? "page" : null
                     }
                 });
                 button.addEventListener("click", () => {
                     if (!selected) void navigateToReference(app, subclass);
                 });
-                controls.set(key, button);
-                siblings.append(button);
+                siblings.append(element("span", {
+                    attributes: { role: "listitem" }
+                }, button));
             }
-            wireHorizontalTablist(siblings, () => keys, key => {
-                const target = context.subclasses.find(value => (value.referenceIdentity ?? value.conceptKey) === key);
-                if (target && !sameReference(target, reference)) void navigateToReference(app, target);
-            }, key => controls.get(key));
             nav.append(siblings);
         }
         return nav;
