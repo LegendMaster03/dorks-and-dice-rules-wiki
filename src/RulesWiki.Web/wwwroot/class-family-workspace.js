@@ -3,7 +3,6 @@ import { renderRuleContent } from "./rule-renderer-support.js";
 import { renderSemanticComparison } from "./semantic-comparison.js";
 import { normalizeBrowserFieldFiltersForEntityTransition } from "./rules-browser-filters.js";
 import { pushToolRoute } from "./rules-browser-routing.js";
-import { referenceCategoryMode } from "./rules-reference-api.js";
 import {
     classFamilyIdentityFields,
     classFamilyKind,
@@ -12,13 +11,10 @@ import {
     findParentClassRelationship,
     humanizeClassFamilyType,
     isClassFamilyReference,
-    progressionSurfaces,
-    subclassesForClass
+    progressionSurfaces
 } from "./class-family-model.js";
 
 export { isClassFamilyReference } from "./class-family-model.js";
-
-const PAGE_SIZE = 200;
 
 export async function renderClassFamilyReferenceDetail(
     app,
@@ -89,7 +85,13 @@ export async function renderClassFamilyReferenceDetail(
             key: "compare",
             label: "Compare",
             title: "Compare accessible class-family source variations",
-            render: () => renderClassFamilyComparison(body, app, reference, variations)
+            render: () => renderClassFamilyComparison(
+                body,
+                app,
+                reference,
+                variations,
+                campaignId,
+                renderResolutionStatus)
         });
     }
 
@@ -149,16 +151,16 @@ async function loadClassFamilyContext(app, reference, campaignId) {
     };
 
     try {
-        if (kind === "class") {
-            context.subclasses = await loadSubclassesForClass(app, reference, campaignId);
-            return context;
-        }
+        const identity = reference.referenceIdentity ?? reference.conceptKey;
+        if (!identity || (kind !== "class" && kind !== "subclass")) return context;
+        const relations = await app.api.getClassFamilyRelations(identity, campaignId);
+        context.subclasses = relations?.subclasses ?? [];
 
         if (kind === "subclass") {
-            const parent = findParentClassRelationship(reference);
-            if (!parent?.relatedConceptKey) return context;
-            context.parentDetail = await app.api.getWikiReferenceDetail(parent.relatedConceptKey, campaignId);
-            context.subclasses = await loadSubclassesForClass(app, context.parentDetail.reference, campaignId);
+            const parent = relations?.parentClasses?.[0];
+            if (parent?.referenceIdentity) {
+                context.parentDetail = await app.api.getWikiReferenceDetail(parent.referenceIdentity, campaignId);
+            }
             if (!context.subclasses.some(value => sameReference(value, reference))) {
                 context.subclasses.unshift(reference);
             }
@@ -167,49 +169,6 @@ async function loadClassFamilyContext(app, reference, campaignId) {
         context.error = describeError(error);
     }
     return context;
-}
-
-async function loadSubclassesForClass(app, classReference, campaignId) {
-    const filters = {
-        entityType: "subclass",
-        query: null,
-        sourceCode: app.browserFilters?.sourceCode || null,
-        packageKey: app.browserFilters?.fieldFilters?.package || null,
-        edition: app.browserFilters?.fieldFilters?.edition || null,
-        overridesOnly: Boolean(campaignId && app.browserFilters?.overridesOnly),
-        limit: PAGE_SIZE,
-        offset: 0
-    };
-    const references = [];
-    let offset = 0;
-    let totalCount = Number.POSITIVE_INFINITY;
-
-    while (offset < totalCount) {
-        filters.offset = offset;
-        const page = await loadClassFamilyCatalogPage(app, campaignId, filters);
-        const rows = page.references ?? page.rules ?? [];
-        references.push(...rows);
-        totalCount = Number.isFinite(Number(page.totalCount)) ? Number(page.totalCount) : references.length;
-        if (!rows.length || references.length >= totalCount) break;
-        offset = references.length;
-    }
-    return subclassesForClass(references, classReference);
-}
-
-async function loadClassFamilyCatalogPage(app, campaignId, filters) {
-    const parameters = new URLSearchParams();
-    parameters.set("entityType", filters.entityType);
-    parameters.set("categoryMode", referenceCategoryMode());
-    parameters.set("limit", String(filters.limit ?? PAGE_SIZE));
-    parameters.set("offset", String(filters.offset ?? 0));
-    if (filters.sourceCode) parameters.set("source", filters.sourceCode);
-    if (filters.packageKey) parameters.set("package", filters.packageKey);
-    if (filters.edition) parameters.set("edition", filters.edition);
-    if (campaignId && filters.overridesOnly) parameters.set("overridesOnly", "true");
-    const path = campaignId
-        ? `/api/campaigns/${encodeURIComponent(campaignId)}/wiki/references`
-        : "/api/wiki/references";
-    return app.api.backend(`${path}?${parameters.toString()}`);
 }
 
 function renderClassFamilyDocumentView(app, container, detail, options) {
@@ -328,7 +287,7 @@ function renderFamilyNavigation(app, reference, context, kind) {
         } else {
             nav.append(element("span", {
                 className: "small text-body-secondary",
-                text: "No accessible subclasses are related to this class under the current source, edition, and campaign filters."
+                text: "No accessible subclasses are related to this class under the current source access and campaign scope."
             }));
         }
         nav.append(familyCollectionButton(app, "prestigeClass", "Browse prestige classes"));
@@ -592,7 +551,14 @@ function renderCategoryHistory(history) {
     return section;
 }
 
-function renderClassFamilyComparison(container, app, reference, variations) {
+function renderClassFamilyComparison(
+    container,
+    app,
+    reference,
+    variations,
+    campaignId,
+    renderResolutionStatus)
+{
     clear(container);
     container.append(element("div", { className: "rules-core-comparison-heading" },
         element("div", {},
@@ -641,6 +607,19 @@ function renderClassFamilyComparison(container, app, reference, variations) {
                 leftLabel: leftVariation ? variationLabel(leftVariation) : "Left",
                 rightLabel: rightVariation ? variationLabel(rightVariation) : "Right"
             });
+
+            if (renderResolutionStatus) {
+                result.append(element("section", {
+                    className: "rules-core-comparison-adjudication class-family-comparison-adjudication"
+                },
+                element("div", {},
+                    element("strong", { text: "Need a ruling?" }),
+                    element("div", {
+                        className: "small text-body-secondary",
+                        text: "Continue through the same authority-aware ruling or source-normalization action used by the reference browser."
+                    })),
+                renderResolutionStatus(reference, campaignId)));
+            }
         } catch (error) {
             result.replaceChildren(alertNode("danger", describeError(error)));
         } finally {
