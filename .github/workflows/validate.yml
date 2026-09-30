@@ -36,6 +36,7 @@ jobs:
           node tools/validate-render-lifecycle.mjs
           node tools/validate-workspace-routing.mjs
           node tools/validate-browser-framework.mjs
+          node tools/validate-reference-browser.mjs
           if grep -R '/tools/rules-core' -n src/RulesWiki.Web/wwwroot tools; then
             echo "Rules Wiki presentation still contains the old Tool mount."
             exit 1

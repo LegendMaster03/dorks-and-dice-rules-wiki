@@ -1,142 +1,110 @@
-# Rules Library workspace
+# Rules Wiki reference browser
 
-Rules Core is the canonical browser for the resolved Dorks & Dice ruleset. The resolved Dorks & Dice result is the primary content; source material remains immutable evidence and provenance behind that result.
+Rules Wiki is the human-facing browser for rules and source history. Its primary browsing boundary is the Rules Core Wiki-reference API, not the resolved consumer catalog.
 
-## Stable browser routes
+## API ownership
 
-Rules Wiki owns a **tool-relative** browser route. The Dorks & Dice Tool Host owns the mount point. The browser therefore treats these as separate values:
+Rules Wiki uses these first-party read contracts:
 
-- Tool Host mount: `/tools/rules-wiki`
-- Rules Core route: `/monsters/ancient-red-dragon`
-- Site URL assembled by the host/browser: `/tools/rules-wiki/monsters/ancient-red-dragon`
+- `GET /api/wiki/references`
+- `GET /api/wiki/references/{referenceIdentity}`
+- `GET /api/campaigns/{campaignId}/wiki/references`
+- `GET /api/campaigns/{campaignId}/wiki/references/{referenceIdentity}`
+- `POST /api/wiki/references/comparison`
 
-The module consumes the host-provided `toolBasePath` and `toolRoute` values. Rules Core does not hard-code MVC routes or assume that `/tools/rules-wiki` is its permanent deployment prefix.
+`GET /api/rules` and the campaign `/rules` equivalents remain the effective consumer API for Character Sheet, Block Initiative, Hex Crawl, and other game Tools. Rules Wiki does not reinterpret those consumer results as the complete reference catalog.
 
-Every catalog item and resolved rule exposes a `browserLink` API contract containing:
+The Wiki endpoints remain source-access scoped. Anonymous requests see only public packages. Authenticated requests additionally see restricted packages for which the current stable Dorks & Dice user ID has a Rules Core source grant. Inaccessible material is omitted from rows, history, facets, counts, detail, and comparison.
 
-- `toolSlug`;
-- `toolRelativePath`;
-- `routeIdentity`.
+## One logical reference per row
 
-`routeIdentity` is the stable Rules Layer concept key. The path is derived from that identity, not mutable display text. Known families use readable paths such as `/monsters/{identity}` and `/spells/{identity}`; unrecognized entity families use `/rules/{conceptKey}`. Other Dorks & Dice tools should consume this contract rather than reconstructing Rules Core URLs.
+The index shows one logical reference row for one accessible source history. Cross-edition source variations remain behind that row rather than becoming parallel rows solely because they came from different editions or packages.
 
-Collection routes include `/monsters`, `/spells`, `/classes`, `/subclasses`, `/prestige-classes`, `/feats`, `/backgrounds`, `/optional-features`, `/races`, `/species`, `/items`, `/conditions`, and `/skills`. A direct deep link resolves independently of authoring authority and defaults to the published global rule. Browser back/forward navigation reparses the current tool-relative route and rerenders through the normal explicit application lifecycle.
+Rules Core groups canonical entities connected through the transitive `revision`/`rename` history into the same evolving logical history. Direction does not prevent an older or newer history member from participating. `variant` and `reprint` relationships remain related but do not grant same-history resolution semantics and do not collapse into that evolving reference.
 
-The normal Rules Core browser uses a persistent list/detail workspace directly beneath the application-level rule-family navigation: compact type/search/scope controls above a dense concept list on the left, with the selected rule on the right. The active family name remains visible as the page heading, matching the category-page pattern used by 5e.tools, while persistent instructional prose is omitted so the list and detail panes receive the available viewport height. Keyboard help remains discoverable on the search control. The list is concept-based rather than source-record-based, so a rule that exists in several editions still appears once. The effective Dorks & Dice rule is the default detail tab; accessible source versions appear as adjacent tabs. Version tabs prefer canonical game-edition labels (for example 3e, 3.5e, 5e, and 5.5e), adding the source code only when more than one accessible version shares the same edition. The effective-rule view also shows whether the rule is the Dorks & Dice ruling, a campaign override, or inherited from Dorks & Dice. Users with the relevant Rules Lawyer or campaign-DM authority receive a direct edit action from that status bar; read-only users see the same state without an edit control. Version comparison labels each side with its edition/source identity and presents primitive differences side by side; structured values remain available in compact code blocks. Import, source acquisition, and source-record inspection do not occupy this workspace. They live under the separate `/sources` Sources view. The index uses incremental loading rather than numbered pages: the first slice is fetched immediately, additional slices load as the user approaches the end of the list, and a visible Load more control remains as an explicit fallback. Rule-family switching is part of the top-level Rules Core navigation rather than a tab nested inside a Library workspace. The hosted UI follows the same broad hierarchy as 5e.tools: Players, Rules, and Dungeon Masters are primary content menus, while Sources and Adjudication expose Rules Core-specific workflows according to authorization. Individual families such as Species, Classes, Feats, Options & Features, Backgrounds, Spells, Bestiary, Conditions, and House Rules live directly in those top menus. When Rules Core is hosted by Dorks & Dice, the Tool Host owns the visible tool title chrome, so Rules Core does not render a second branded header beneath it. A compact `More rule types…` selector appears only when catalog facets expose dynamically imported or third-party entity types that do not belong to the known navigation set. Unknown families use the generic `/types/{entityType}` collection route so their browser views remain addressable and survive browser navigation. Campaign scope is carried in the browser URL as a `scope=campaign:{id}` query parameter, so refresh, back/forward navigation, and shared rule links do not silently fall back to the global Dorks & Dice ruleset. Changing scope preserves the currently selected concept even when that concept lies beyond the first incrementally loaded list page; if its row is loaded later, the list selection state catches up without replacing the detail view. If the concept does not exist in the target published scope, the browser returns to that family's collection state instead of leaving a dead detail URL. Additional filtering is collapsed behind a Filters button inside the list pane; the first filters are source code and campaign-overrides-only, so filtering does not consume a permanent sidebar. On narrow viewports the workspace becomes a list/detail drill-in rather than stacking the entire list above the selected rule: collection routes land on the list, selecting a rule opens the detail pane, and Back to list preserves the active family and filters.
+Accessible imported occurrences that are intentionally left without a canonical entity because reconciliation is unresolved are still browseable. Rules Core gives each such occurrence a deterministic provisional identity of the form `occurrence:{canonicalSourceOccurrenceId}`. These provisional references do not use name-based grouping and remain stable across search, detail, refresh, and deep linking while reconciliation is unresolved.
 
-The catalog also returns compact browser-index fields derived from the published effective mechanical document without returning the document itself. The list chooses columns by entity family, for example monster Type/CR, spell Level/School, class Hit Die, race/species Ability/Size, and skill Ability. Subclasses use the published `parent-class` relationship for their Class column. The response includes the filtered total count so the search strip can show the visible range without loading the complete catalog.
+A variation has one canonical mechanical category. Terminology aliases such as Race -> Species and Subrace -> Subspecies normalize into one canonical mechanical category. Immutable source records retain their original source terminology, but the Wiki contract exposes only canonical `Category`; it does not expose a redundant presentation-level `NativeEntityType`.
 
-## Global catalog
+A logical concept history may span mechanically distinct categories such as Prestige Class and Subclass. Those categories remain distinct. A history may therefore legitimately contain:
 
-`GET /api/rules` returns the latest published global ruleset revision and the rules from that revision whose effective source package is accessible to the current request identity. Optional `entityType`, `q`, `source`, `limit`, and `offset` parameters filter/page the catalog. Entity-type and source facets are populated on the first page (`offset=0`); incremental pages omit the repeated facet payload.
+- 3.5e `prestigeClass`
+- 5e `subclass`
+- 5.5e `subclass`
 
-A direct or anonymous request can list rules backed by public source packages. A hosted Dorks & Dice request may additionally list restricted rules for which the stable authenticated user ID has an explicit Rules Core source grant.
+A reference does not require a published `RuleConcept`. Canonical source-only histories receive a stable Core-owned `canonical:{id}` identity; unresolved reconciliation occurrences receive a stable `occurrence:{id}` identity. Both use `/references/{referenceIdentity}` for deep links. Source-only references retain `ruleConceptId = null` until an authorized Rules Lawyer deliberately accepts the existing source-normalization workflow. Published concept keys remain valid aliases and continue to use their normal entity-family routes when a Rules Layer concept exists.
 
-The catalog returns stable rule identity, browser link target, effective decision kind, source revision identity, and accessible source provenance. It deliberately does not duplicate the resolved document. `GET /api/rules/{conceptKey}` performs the same independent source-access check before returning the full resolved document and its `browserLink`.
+## Rules Layer identity and effective/default variation
 
-`GET /api/rules/{conceptKey}/versions` returns the accessible bound source versions for that same stable concept. Equivalent source representations of one canonical version are collapsed to one version entry rather than becoming duplicate browser tabs. Each returned version includes its latest immutable mechanical document and source revision identity; normal source grants still determine which versions the caller may see.
+Reference browsing and Rules Layer resolution are separate facts. The reference browser exposes accessible history; the Rules Layer chooses the effective/default variation for a rules scope.
 
-## Campaign catalog and baseline
+Direct source bindings remain mechanically type-coherent. Rules Core does not make an arbitrary `subclass` source directly bindable to a `prestigeClass` RuleConcept merely because their names match.
 
-Campaign lifecycle is owned outside Rules Core. Rules Core does not create campaigns, accept join requests, issue invitations, or assign DM/Player membership. The Dorks & Dice Tool Host supplies the authenticated account's campaign memberships and roles through the host API; Rules Core consumes that context for browsing and authorization. If the host supplies no memberships, campaign scopes are simply absent and global browsing continues independently.
+A mechanically different variation can nevertheless participate in the same Rules Layer concept when authoritative canonical `revision` or `rename` evidence establishes that it is part of that concept's evolving history. `variant` or `reprint` evidence alone does not make a variation selectable as an interchangeable effective version.
 
-`GET /api/campaigns/{campaignId}/rules` returns the latest **published** campaign ruleset. It never reflects an unpublished baseline selection or unpublished campaign decision. It accepts the same `entityType`, `q`, `source`, `limit`, and `offset` catalog controls as the global endpoint, plus `overridesOnly=true` for a campaign-override-only view. Facets are returned on the first page and omitted from subsequent incremental pages.
+When a revision/rename history contains legacy data with more than one RuleConcept binding, the history representative is selected from the directed canonical-history structure rather than from decision creation timestamps. A RuleConcept bound to a root canonical entity is the authoritative anchor; stable concept-key ordering is used only as a deterministic compatibility fallback when legacy data does not provide a unique rooted binding. Editing a secondary concept later therefore does not silently change the Wiki's effective category.
 
-Campaign catalog access requires normal campaign membership from the Dorks & Dice Tool Host context. Members may browse the campaign's published rules even when they can not adjudicate that campaign. Nonmembers receive not-found behavior and anonymous requests are unauthorized.
+When a published global decision on the authoritative history anchor selects an exact variation, that selected variation determines the effective category. Selecting the 3.5e variation therefore yields `prestigeClass`; selecting the 5e or 5.5e variation yields `subclass`. The historical categories remain unchanged, and the RuleConcept's original entity type remains stable anchor metadata rather than overriding the selected variation's category.
 
-When campaign scope is active, the detail page distinguishes three facts:
+Campaign scope resolves against the campaign's pinned global baseline. A published campaign `select-source` override may choose another authoritative revision/rename-history member of the same concept, including a variation in a different mechanical category. The campaign effective category follows that selected variation. An inherited campaign continues to follow its pinned global baseline and is not silently migrated by a later global publication.
 
-1. the campaign publication's pinned global baseline;
-2. the campaign-specific decision/override, when present;
-3. the resulting effective campaign rule.
+If no published Rules Layer selection applies, Rules Core chooses a deterministic newest accessible applicable variation from authoritative publication/version metadata. This is an `unresolved-fallback`: a browsing/default result only. Reading it does not create or modify a Rules Layer decision, and its effective category is the category of the selected fallback variation.
 
-`GET /api/campaigns/{campaignId}/rules/{conceptKey}/global-baseline` resolves the exact global baseline pinned by the published campaign revision. It does not substitute the latest global publication. The endpoint independently rechecks access to the baseline source and all recorded consolidation contributions. If the effective campaign override is visible but its underlying global baseline is restricted, the baseline endpoint returns not-found rather than leaking the restricted document.
+## Category membership
 
-Source access remains independent from campaign membership and adjudication authority. A campaign may contain a restricted rule that one member can read and another can not. The inaccessible rule is omitted from that member's catalog, and inaccessible baseline/source content is not exposed through provenance views.
+Cross-category histories have two browser modes:
 
-## Entity renderers
+- **Any variation** — include a reference when any accessible variation belongs to the selected category.
+- **Effective in this scope** — include a reference only when its current effective/default variation belongs to the selected category.
 
-The browser uses a renderer registry over the common resolved-rule contract. Entity families are not forced through one presentation component.
+The selected mode is stored in the `category` query parameter. The default is `any`; `category=effective` selects effective-category mode.
 
-The first specialized vertical slice is **monsters**. The renderer adopts the 5.5e monster-stat-block information hierarchy as a presentation grammar while continuing to render the effective mechanical document supplied by Rules Core. It does not reinterpret source editions or perform cross-edition normalization in JavaScript.
+The row continues to display the effective category while exposing category history so a historical match is not mistaken for the current type. In Any-variation mode, source/edition metadata and family-specific browser fields come from a variation that matched the requested historical category. The effective category remains visible separately. This prevents, for example, Prestige-Class filters and columns from inspecting a 5e Subclass document merely because the Subclass is effective in the selected scope.
 
-The monster presentation includes, when available:
+## Search, facets, and filters
 
-- name, size, creature type, descriptive tags, and alignment;
-- Armor Class, Hit Points, Speed, and Initiative;
-- STR, DEX, CON, INT, WIS, and CHA in a compact grid showing score, modifier, and save for every ability;
-- skills, senses, languages, Challenge Rating, XP, proficiency bonus, vulnerabilities, resistances, immunities, condition immunities, and gear;
-- traits and spellcasting;
-- actions and bonus actions;
-- reactions, legendary actions, mythic actions, lair actions, and regional effects.
+Search and shared reference filters are authoritative in Rules Core and operate over the complete accessible logical-reference catalog, not only the page currently loaded in the browser.
 
-Fields that do not fit those headings are not dropped. Unknown rule-bearing fields are shown as additional mechanics. Source-specific `_rulesCore.pcgen` mechanics are exposed separately, and Dorks & Dice extension mechanics remain available without being coerced into 5.5e semantics. A `legendaryGroup` or other unfamiliar structural reference is therefore still visible even when the renderer does not yet have a specialized component for it.
+Server-backed filters are:
 
-Renderer-tag markup used by native 5e.tools content is reduced to readable display text for common attacks, hits, DCs, recharge notation, dice/damage, and entity references. That formatting does not change the underlying mechanical document.
+- Source
+- Package
+- Edition
+- campaign override state
+- category membership mode and entity category
 
-Published monster pages put the playable stat block first. Rules Layer scope, publication revision, decision information, selected source, package, notes, and consolidation contributions move into a secondary **Rule context and provenance** disclosure. Campaign overlay and pinned-baseline behavior remain unchanged.
+Source, Package, Edition, entity-type, and campaign-override counts come from the reference API. Package and Edition query state remains encoded as `f.package` and `f.edition` so refresh and Back/Forward navigation preserve the filter state.
 
-The separate Sources workspace uses the same monster presentation primitives against a source entity's Rules Core mechanical document while separately exposing the exact source-native record. There is no legacy prose parser, skill conversion table, or Dexterity-to-initiative fallback in the frontend.
+Entity-family-specific fields such as monster Size/CR or spell Level/School still use the reusable Phase 2 `client-complete` filter path. Those filters are applied only after the complete server-filtered result set has loaded. In Any-variation mode, Rules Core projects those fields from the matching historical variation; in Effective mode, it projects them from the effective variation. A server-backed historical Package or Edition match is likewise not re-filtered against unrelated effective-row metadata.
 
-Reusable presentation primitives introduced by this slice include the entity header, compact statistic, ability-score grid, labeled details, named rule entry, rules-text section, tags, additional-mechanics section, and expandable context/provenance disclosure. Later entity renderers can reuse those primitives without being forced into the monster layout.
+Incremental loading, complete-dataset sorting, active-filter summaries, clear/remove behavior, keyboard navigation, and responsive list/detail behavior remain owned by the Phase 2 browser framework.
 
-## Explicit render lifecycle
+## Species and Subspecies
 
-Application-owned DOM continues to use the explicit Rules Core render lifecycle. The Rules Library and Sources workspace call the existing fragment-presentation hook after their own in-place result/detail updates so shell presentation is reapplied deliberately.
+Normal navigation exposes **Species** and **Subspecies**. It does not expose a parallel **Races** family.
 
-`MutationObserver` is not used to enhance application-owned monster, catalog, or source-detail DOM. Observer-based behavior remains reserved for genuine external boundaries.
+For reference browsing:
 
-## Adjudication scope control
+- `race` and `species` both canonicalize to the mechanical category `species`;
+- `subrace` and `subspecies` both canonicalize to the mechanical category `subspecies`;
+- immutable source records retain their original source terminology;
+- legacy `/races/...` links resolve to Species;
+- legacy `/subraces/...` links resolve to Subspecies.
 
-The workspace exposes a persistent adjudication scope control when the account has mutation authority. Scope choices are derived from authorization rather than from arbitrary campaign membership:
+This is terminology normalization at the rules/reference boundary, not a rewrite of immutable source records.
 
-- `Dorks & Dice` is the user-facing label for the global adjudication target and appears only for a Rules Lawyer;
-- a campaign scope appears as an adjudication target only when the current account has the campaign-scoped `DM` role;
-- in this architecture, that `DM` role is the campaign owner authority;
-- campaign Players remain in browse mode for that campaign.
+## Generic families
 
-A user can hold these roles simultaneously across different scopes. For example, one account may be a global Rules Lawyer, DM of multiple campaigns, and Player in another campaign. Campaign authority is therefore always evaluated against the specific campaign ID and never inferred from a user-wide `DM` state.
+Known entity families use their configured columns, type-specific filters, and renderer hints. Imported or future entity types that do not yet have specialized browser configuration remain browseable through the generic fallback with Name, Type, and Source columns. Adding an unknown family must not require changing the reference API contract.
 
-If the host supplies no campaign memberships, Rules Core exposes no campaign browse or adjudication scopes and does not synthesize campaign authority. Global access continues independently.
+## Read versus mutation authority
 
-Server endpoints independently authorize the requested scope. UI selection is never an authorization boundary.
+Ordinary users may inspect every accessible variation in a reference history and use read-only semantic comparison. This does not grant Rules Lawyer or campaign-DM authority.
 
-`GET /api/workspace/scopes` exposes browse/adjudication capability for the current global and campaign scopes. Semantic comparison requests carry an explicit scope object and are rejected when that scope is not authorized.
+When a reference has a real Rules Layer `RuleConcept` target, an authorized global Rules Lawyer receives **Edit Dorks & Dice rule** and an authorized campaign DM receives **Edit campaign rule**. Those controls open the existing adjudication workflows and preserve the selected campaign scope; the Wiki browser does not implement a second mutation path.
 
-## Semantic comparison
+Ordinary global readers and campaign Players do not receive mutation controls. A source-only reference never fabricates a RuleConcept target from `referenceIdentity`. An authorized global Rules Lawyer instead receives **Create/bind Dorks & Dice rule**, which sends the real source entity ID through the existing Rules Core normalization endpoint. If normalization creates or reuses a RuleConcept, Rules Wiki immediately opens that real concept in the existing global adjudication editor. Campaign-DM authority alone does not grant this global normalization action.
 
-Manual adjudication uses a common semantic comparison model rather than asking the user to discover differences in two raw JSON documents.
+The comparison capability remains read-only for ordinary users with source access. When the viewer also has adjudication authority and the reference has a RuleConcept, the comparison result may offer the same transition into the existing editor.
 
-`POST /api/rules/comparison` is the Rules Lawyer comparison endpoint used by the Rules Library when adjudicating source differences. It compares two accessible source revisions already bound to the same Rules Layer concept and requires global Rules Lawyer authority. Normal tool consumers do not receive source alternatives to compare.
-
-`POST /api/workspace/comparison` remains the adjudication endpoint. It carries an explicit global or campaign scope and requires authority to mutate that scope before returning the same semantic comparison model.
-
-The comparison model reports:
-
-- unchanged values as a count rather than visual noise;
-- source/provenance-only metadata differences;
-- additions;
-- omissions that can be non-destructively retained;
-- compatible additive array/object differences;
-- contradictions that require a human decision.
-
-The final `canResolveAutomatically` result is delegated to the same conservative compatibility policy used by automatic cross-edition resolution. The explanatory diff does not broaden what Rules Core is allowed to auto-resolve. A scalar replacement, changed same-named entry, incompatible ordering, ambiguous array change, or other contradiction remains manual.
-
-The Rules Library exposes comparison as another detail tab whenever at least two accessible source versions exist. Viewing differences is read-only. When the current identity is a Rules Lawyer in global scope or the DM of the selected campaign, the comparison pane also offers a direct transition into the corresponding ruling editor. Scope changes authority and decision destination, not the meaning of the source difference.
-
-## Publication and authority invariants
-
-The browser/workspace preserves the existing separation of facts:
-
-- source identity and immutable source revisions are not Rules Layer decisions;
-- concept binding is not adjudication;
-- automatic compatibility does not publish;
-- global decisions are append-only and require Rules Lawyer authority;
-- campaign decisions are append-only within that campaign and require that campaign's DM/owner authority;
-- campaign decisions never mutate the global Rules Layer;
-- publication remains explicit at each scope;
-- newer publication date never silently grants higher mechanical authority;
-- source grants remain independent from global or campaign mutation authority;
-- existing manual/patched decisions remain authoritative within their scope until deliberately changed.
-
-The route, renderer, scope, and comparison contracts are intentionally extensible so later entity families and additional adjudication scopes do not require another hosting or persistence redesign.
+Rules Layer mutation, source administration, normalization, publication, and campaign authoring continue to use their existing authorization gates. Source grants remain independent from mutation authority.

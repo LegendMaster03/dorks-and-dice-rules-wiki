@@ -65,7 +65,9 @@ export function sortRulesForBrowser(rules, entityType, sort) {
 
         const byName = COLLATOR.compare(left.displayName ?? "", right.displayName ?? "");
         if (byName !== 0) return byName;
-        return COLLATOR.compare(left.conceptKey ?? "", right.conceptKey ?? "");
+        return COLLATOR.compare(
+            left.referenceIdentity ?? left.conceptKey ?? "",
+            right.referenceIdentity ?? right.conceptKey ?? "");
     });
 }
 
@@ -141,7 +143,7 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
         if (!append) {
             container.append(element("div", {
                 className: "rules-core-library-empty-list",
-                text: "No rules match the current search or filters."
+                text: "No references match the current search or filters."
             }));
         }
         return;
@@ -154,7 +156,7 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
         const row = element("button", {
             type: "button",
             className: "rules-core-library-row",
-            dataset: { conceptKey: rule.conceptKey },
+            dataset: { conceptKey: rule.referenceIdentity ?? rule.conceptKey },
             attributes: {
                 role: "option",
                 "aria-selected": "false"
@@ -162,14 +164,14 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
         });
         row.style.gridTemplateColumns = template;
         for (const value of columns) {
-            row.append(renderRuleCell(rule, value, configuration));
+            row.append(renderRuleCell(rule, value, configuration, entityType));
         }
         row.addEventListener("click", () => onSelect(rule));
         container.append(row);
     }
 }
 
-function renderRuleCell(rule, columnDefinition, configuration) {
+function renderRuleCell(rule, columnDefinition, configuration, browsingEntityType) {
     const value = browserColumnValue(rule, columnDefinition.key);
     const classNames = [
         "rules-core-library-cell",
@@ -184,6 +186,7 @@ function renderRuleCell(rule, columnDefinition, configuration) {
             .filter(Boolean)
             .filter((entry, index, values) => values.indexOf(entry) === index)
             .join(" · ");
+        const historySummary = referenceHistorySummary(rule, browsingEntityType);
         return element("span", { className: classNames },
             element("span", {
                 className: "rules-core-library-row-name",
@@ -195,12 +198,23 @@ function renderRuleCell(rule, columnDefinition, configuration) {
                     text: summary
                 })
                 : null,
-            rule.hasCampaignOverride
+            historySummary
+                ? element("span", {
+                    className: "rules-core-library-row-summary rules-wiki-category-history",
+                    text: historySummary
+                })
+                : null,
+            rule.resolutionState === "unresolved-fallback"
                 ? element("span", {
                     className: "rules-core-library-row-override",
-                    text: "Campaign override"
+                    text: "Default: newest accessible variation"
                 })
-                : null);
+                : rule.hasCampaignOverride
+                    ? element("span", {
+                        className: "rules-core-library-row-override",
+                        text: "Campaign override"
+                    })
+                    : null);
     }
 
     return element("span", {
@@ -212,14 +226,14 @@ function renderRuleCell(rule, columnDefinition, configuration) {
 
 export function browserColumnValue(rule, key) {
     if (key === "name") return rule.displayName ?? "";
-    if (key === "entityType") return humanizeEntityType(rule.entityType);
+    if (key === "entityType") return humanizeEntityType(rule.effectiveCategory ?? rule.entityType);
     if (key === "source") {
         return rule.sourceCode
             || rule.packageDisplayName
             || rule.editionDisplayName
             || "";
     }
-    if (key === "edition") return rule.editionDisplayName ?? "";
+    if (key === "edition") return rule.editionDisplayName ?? rule.effectiveEditionDisplayName ?? "";
     if (key === "parentClass") {
         return (rule.relationships ?? [])
             .filter(relationship =>
@@ -266,6 +280,25 @@ export function renderContinuousIndexFooter(
     });
     button.addEventListener("click", onLoadMore);
     container.append(button);
+}
+
+function referenceHistorySummary(rule, browsingEntityType) {
+    const history = Array.isArray(rule.categoryHistory) ? rule.categoryHistory : [];
+    const effectiveCategory = String(rule.effectiveCategory ?? rule.entityType ?? "");
+    const normalizedBrowsingType = String(browsingEntityType ?? "");
+    const mixed = history.length > 1;
+    const historicalBrowse = normalizedBrowsingType
+        && effectiveCategory
+        && normalizedBrowsingType !== effectiveCategory;
+    if (!mixed && !historicalBrowse) return "";
+
+    const parts = history.map(entry => {
+        const editions = (entry.editions ?? []).filter(Boolean).join("/");
+        return `${editions ? `${editions} ` : ""}${humanizeEntityType(entry.category)}`;
+    });
+    const effectiveEdition = rule.effectiveEditionDisplayName ?? rule.editionDisplayName ?? "";
+    parts.push(`Effective: ${humanizeEntityType(effectiveCategory)}${effectiveEdition ? ` (${effectiveEdition})` : ""}`);
+    return parts.join(" · ");
 }
 
 function compareBrowserValues(key, left, right) {
