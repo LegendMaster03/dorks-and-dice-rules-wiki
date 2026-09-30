@@ -4,7 +4,8 @@ import {
     explicitPrestigePrerequisites,
     featureGroups,
     isClassFamilyReference,
-    progressionSurfaces
+    progressionSurfaces,
+    registerClassFamilyAdvancementMetadata
 } from "../src/RulesWiki.Web/wwwroot/class-family-model.js";
 import { installWikiReferenceApi } from "../src/RulesWiki.Web/wwwroot/rules-reference-api.js";
 import { parseToolRoute } from "../src/RulesWiki.Web/wwwroot/rules-browser-routing.js";
@@ -39,25 +40,18 @@ const fiveEClass = {
         "Fighting Style|Fighter|PHB|1",
         "Action Surge|Fighter|PHB|2",
         "Source reference without authoritative acquisition metadata"
-    ],
-    _rulesCore: {
-        character: {
-            advancementFeatures: [
-                { name: "Fighting Style", level: 1, featureReference: "Fighting Style|Fighter|PHB|1" },
-                { name: "Action Surge", level: 2, featureReference: "Action Surge|Fighter|PHB|2" }
-            ]
-        }
-    }
+    ]
 };
+const fiveEAdvancement = [
+    { name: "Fighting Style", level: 1, featureReference: "Fighting Style|Fighter|PHB|1" },
+    { name: "Action Surge", level: 2, featureReference: "Action Surge|Fighter|PHB|2" },
+    { name: "Source reference without authoritative acquisition metadata", level: null, featureReference: "Source reference without authoritative acquisition metadata" }
+];
 const surfaces = progressionSurfaces(fiveEClass);
 assert(surfaces.length === 1, "5e class table groups should become a progression surface.");
 assert(surfaces[0].columns[0].label === "Level", "Class table-group row order should be presented with its class-level index.");
 assert(surfaces[0].rows[1][0] === 2, "Class table-group row order should preserve level progression.");
 assert(!surfaces[0].columns.some(value => value.label === "Base Attack Bonus"), "The Wiki must not manufacture progression columns that Core did not supply.");
-const fiveEFeatures = featureGroups(fiveEClass, "class");
-assert(fiveEFeatures.length === 2, "Rules Core advancementFeatures should drive class feature grouping.");
-assert(fiveEFeatures[0].level === "1" && fiveEFeatures[0].features[0] === "Fighting Style", "Authoritative acquisition level 1 should be preserved.");
-assert(fiveEFeatures[1].level === "2" && fiveEFeatures[1].features[0] === "Action Surge", "Authoritative acquisition level 2 should be preserved.");
 
 const rawOnlyFeatures = featureGroups({
     classFeatures: [
@@ -65,21 +59,27 @@ const rawOnlyFeatures = featureGroups({
         "Action Surge|Fighter|PHB|2"
     ]
 }, "class");
-assert(rawOnlyFeatures.length === 1, "Raw source feature references should remain present when no normalized acquisition metadata exists.");
+assert(rawOnlyFeatures.length === 1, "Raw source feature references should remain present when no authoritative acquisition metadata exists.");
 assert(rawOnlyFeatures[0].level === null, "Rules Wiki must not infer acquisition levels from encoded source feature references.");
 
 const requests = [];
+const effectiveDocument = structuredClone(fiveEClass);
+const variationDocument = structuredClone(fiveEClass);
+const effectiveDocumentBefore = JSON.stringify(effectiveDocument);
+const variationDocumentBefore = JSON.stringify(variationDocument);
 const realContractDetail = {
     reference: {
         referenceIdentity: "canonical:class-fixture",
         effectiveCategory: "class",
         effectiveVariation: { sourceEntityRevisionId: "effective" }
     },
-    effectiveDocument: structuredClone(fiveEClass),
+    effectiveDocument,
+    effectiveAdvancementFeatures: structuredClone(fiveEAdvancement),
     variations: [{
         category: "class",
         sourceEntityRevisionId: "effective",
-        document: structuredClone(fiveEClass)
+        document: variationDocument,
+        advancementFeatures: structuredClone(fiveEAdvancement)
     }]
 };
 const relationContract = {
@@ -108,12 +108,34 @@ const referenceApi = {
 };
 installWikiReferenceApi(referenceApi);
 const projectedDetail = await referenceApi.getWikiReferenceDetail("canonical:class-fixture");
-assert(projectedDetail === realContractDetail, "Wiki reference detail should consume the production Core contract without inventing presentation-only API properties.");
-assert(!("effectiveAdvancementFeatures" in projectedDetail), "The Phase 3 validator must not invent effectiveAdvancementFeatures.");
-assert(!("advancementFeatures" in projectedDetail.variations[0]), "The Phase 3 validator must not invent variation.advancementFeatures.");
-assert(JSON.stringify(projectedDetail.effectiveDocument) === JSON.stringify(fiveEClass), "Rules Wiki must not mutate normalized rules semantics while presenting acquisition levels.");
+assert(projectedDetail === realContractDetail, "Wiki reference detail should preserve the production Core response object.");
+assert(Array.isArray(projectedDetail.effectiveAdvancementFeatures), "The production contract should expose effectiveAdvancementFeatures.");
+assert(Array.isArray(projectedDetail.variations[0].advancementFeatures), "Each source variation should expose advancementFeatures.");
 const projectedGroups = featureGroups(projectedDetail.effectiveDocument, "class");
-assert(projectedGroups[0].level === "1" && projectedGroups[1].level === "2", "Production document advancement metadata should remain authoritative after API projection.");
+assert(projectedGroups.length === 3, "Effective Core advancement metadata should drive leveled and unresolved feature grouping.");
+assert(projectedGroups[0].level === "1" && projectedGroups[0].features[0] === "Fighting Style", "Effective acquisition level 1 should be preserved.");
+assert(projectedGroups[1].level === "2" && projectedGroups[1].features[0] === "Action Surge", "Effective acquisition level 2 should be preserved.");
+assert(projectedGroups[2].level === null && projectedGroups[2].features[0] === "Source reference without authoritative acquisition metadata", "Unresolved Core acquisition metadata should remain unresolved.");
+const variationGroups = featureGroups(projectedDetail.variations[0].document, "class");
+assert(variationGroups[0].level === "1" && variationGroups[1].level === "2", "Variation advancementFeatures should drive inspected source grouping.");
+assert(JSON.stringify(projectedDetail.effectiveDocument) === effectiveDocumentBefore, "Registering effective advancement metadata must not mutate the normalized rule document.");
+assert(JSON.stringify(projectedDetail.variations[0].document) === variationDocumentBefore, "Registering variation advancement metadata must not mutate the normalized source document.");
+
+const precedenceDocument = {
+    classFeatures: ["Raw Feature|Fixture|SRC|1"],
+    _rulesCore: {
+        character: {
+            advancementFeatures: [{ name: "Normalized Fallback", level: 9 }]
+        }
+    }
+};
+registerClassFamilyAdvancementMetadata({
+    effectiveDocument: precedenceDocument,
+    effectiveAdvancementFeatures: [{ name: "Explicit Wiki Contract", level: 2 }],
+    variations: []
+});
+const precedenceGroups = featureGroups(precedenceDocument, "class");
+assert(precedenceGroups.length === 1 && precedenceGroups[0].level === "2" && precedenceGroups[0].features[0] === "Explicit Wiki Contract", "Explicit Wiki advancement metadata must take precedence over normalized document fallback metadata.");
 
 const relations = await referenceApi.getClassFamilyRelations("canonical:class-fixture");
 assert(relations.subclasses.length === 1 && relations.subclasses[0].referenceIdentity === "canonical:subclass-fixture", "Class-family navigation should consume the Core-owned related-reference collection.");
@@ -155,7 +177,7 @@ assert(byLabel.get("Fortitude Progression") === "poor" && byLabel.get("Reflex Pr
 assert(Array.isArray(byLabel.get("Class Skills")), "Older-edition class skills should remain structurally available.");
 assert(byLabel.get("Prerequisites") === threeXPrerequisites, "Prestige-class summary should prefer normalized Rules Core prerequisites.");
 assert(explicitPrestigePrerequisites(threeXClass) === threeXPrerequisites, "Structured normalized prestige prerequisites should be preserved without reinterpretation.");
-assert(featureGroups(threeXClass, "prestigeClass")[0].level === "1", "Older-edition authoritative feature acquisition levels should remain available.");
+assert(featureGroups(threeXClass, "prestigeClass")[0].level === "1", "Older-edition normalized advancementFeatures should remain available as the document fallback path.");
 assert(classFamilyKind("prestigeClass") === "prestigeClass", "Prestige classes must retain a distinct class-family kind.");
 
 const crossCategory = {
