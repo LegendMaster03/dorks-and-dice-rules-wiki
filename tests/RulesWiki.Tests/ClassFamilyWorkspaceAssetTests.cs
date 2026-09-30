@@ -60,7 +60,7 @@ public sealed class ClassFamilyWorkspaceAssetTests
     }
 
     [Fact]
-    public void ProgressionFeaturesAndPrestigeRequirementsUseRealNormalizedCoreDocument()
+    public void ProgressionFeaturesAndPrestigeRequirementsUseAuthoritativeCoreContracts()
     {
         var workspace = ReadWebAsset("class-family-workspace.js");
         var model = ReadWebAsset("class-family-model.js");
@@ -71,11 +71,15 @@ public sealed class ClassFamilyWorkspaceAssetTests
         Assert.Contains("baseAttackProgression", model, StringComparison.Ordinal);
         Assert.Contains("saveProgressions", model, StringComparison.Ordinal);
         Assert.Contains("classSkills", model, StringComparison.Ordinal);
+        Assert.Contains("registerClassFamilyAdvancementMetadata", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("registerClassFamilyAdvancementMetadata", model, StringComparison.Ordinal);
+        Assert.Contains("detail.effectiveAdvancementFeatures", model, StringComparison.Ordinal);
+        Assert.Contains("variation?.advancementFeatures", model, StringComparison.Ordinal);
         Assert.Contains("rulesCoreCharacter(document).advancementFeatures", model, StringComparison.Ordinal);
         Assert.Contains("rulesCoreCharacter(document).prerequisites", model, StringComparison.Ordinal);
-        Assert.DoesNotContain("effectiveAdvancementFeatures", referenceApi, StringComparison.Ordinal);
-        Assert.DoesNotContain("variation.advancementFeatures", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("new WeakMap()", model, StringComparison.Ordinal);
         Assert.DoesNotContain("Object.defineProperty", referenceApi, StringComparison.Ordinal);
+        Assert.DoesNotContain("Object.defineProperty", model, StringComparison.Ordinal);
         Assert.Contains("No normalized progression table is present", workspace, StringComparison.Ordinal);
         Assert.Contains("Rules Wiki does not manufacture missing level mechanics", workspace, StringComparison.Ordinal);
         Assert.DoesNotContain("BaseAttackBonus(", workspace, StringComparison.Ordinal);
