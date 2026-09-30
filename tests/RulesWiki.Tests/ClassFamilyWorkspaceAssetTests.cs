@@ -23,11 +23,14 @@ public sealed class ClassFamilyWorkspaceAssetTests
     public void ClassWorkspaceUsesCoreRelatedReferenceCollectionAndStableReferenceRoutes()
     {
         var workspace = ReadWebAsset("class-family-workspace.js");
+        var detail = ReadWebAsset("rules-browser-detail.js");
         var referenceApi = ReadWebAsset("rules-reference-api.js");
 
         Assert.Contains("getClassFamilyRelations", referenceApi, StringComparison.Ordinal);
         Assert.Contains("/class-family", referenceApi, StringComparison.Ordinal);
         Assert.Contains("app.api.getClassFamilyRelations(identity, campaignId)", workspace, StringComparison.Ordinal);
+        Assert.Contains("loadClassFamilyContextIfCurrent", workspace, StringComparison.Ordinal);
+        Assert.Contains("isCurrent: () => requestSerial === getCurrentSerial()", detail, StringComparison.Ordinal);
         Assert.Contains("relations?.parentClasses", workspace, StringComparison.Ordinal);
         Assert.Contains("relations?.subclasses", workspace, StringComparison.Ordinal);
         Assert.DoesNotContain("loadSubclassesForClass", workspace, StringComparison.Ordinal);
