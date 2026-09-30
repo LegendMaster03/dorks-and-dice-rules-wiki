@@ -159,8 +159,12 @@ public sealed class ClassFamilyWorkspaceAssetTests
             workspace,
             StringComparison.Ordinal);
 
+        var navigationStart = workspace.IndexOf(
+            "function renderFamilyNavigation",
+            StringComparison.Ordinal);
         var siblingStart = workspace.IndexOf(
             "if (kind === \"subclass\")",
+            navigationStart,
             StringComparison.Ordinal);
         var siblingEnd = workspace.IndexOf(
             "        return nav;",
