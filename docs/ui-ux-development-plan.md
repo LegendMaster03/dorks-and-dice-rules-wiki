@@ -20,6 +20,12 @@ The central product principle is:
 
 > **Rules Core owns rules. Rules Wiki owns how people find, read, compare, and resolve them. 5e.tools is a UI/UX reference, not a runtime dependency or content source.**
 
+A second, equally important integration principle is:
+
+> **Rules Wiki never consumes Rules Core's public/external API. Every Rules Wiki -> Rules Core request uses the private first-party Tool-to-Tool API.**
+
+This is a standing architectural rule. Rules Core's public API exists for other Tools and independent consumers. A Rules Wiki requirement is never, by itself, justification for expanding that public API.
+
 ## Current repository baseline
 
 This plan is an evolution of the current Rules Wiki architecture rather than a rewrite.
@@ -27,8 +33,9 @@ This plan is an evolution of the current Rules Wiki architecture rather than a r
 The repository already provides important foundations:
 
 - Rules Wiki is a separate application from Rules Core;
-- the normal hosted request path is `browser -> Site Tool Host -> Rules Wiki -> Site delegation -> Rules Core`;
-- the browser-facing `/api/*` contract is delegated to Rules Core rather than reimplemented locally;
+- the normal hosted request path is `browser -> Site Tool Host -> Rules Wiki -> Site delegation -> Rules Core internal API`;
+- the browser-facing Rules Wiki `/api/*` contract terminates in Rules Wiki and is backed by the private delegated Rules Core Tool-to-Tool API;
+- Rules Wiki does not consume Rules Core's public/external API;
 - the Site owns the global Dorks & Dice navigation ribbon, authentication shell, and footer;
 - Rules Wiki can use the full-bleed Embedded Module body between the Site ribbon and footer;
 - Rules Wiki already owns browser routing, client-side state, frontend assets, presentation, and rendering;
@@ -53,7 +60,7 @@ The primary mismatch is that much of the current UI still reflects its origin as
 1. Rules Core remains authoritative for normalized rule data, source ingestion, provenance, source grants, edition relationships, global rules, campaign rules, semantic comparison, adjudication, publication, authorization, and persistence.
 2. Rules Wiki must not develop a parallel rules engine, comparison engine, source-access model, campaign-rules model, or authorization model.
 3. Rules Wiki may perform presentation-only transformation, ordering, formatting, local view state, responsive composition, route state, caching, and interaction logic.
-4. If the UI needs semantic information that Rules Core does not expose, add or extend a Rules Core contract rather than inferring authoritative rules behavior in the frontend.
+4. If the UI needs semantic information that Rules Core does not expose, add or extend the **private Rules Wiki Tool-to-Tool Rules Core contract** rather than inferring authoritative rules behavior in the frontend.
 5. 5e.tools is a design and interaction reference only.
 6. Rules Wiki must not require a browser connection to 5e.tools, import 5e.tools runtime code as an application dependency, fetch 5e.tools content at runtime, or treat 5e.tools as an authoritative data service.
 7. Existing Rules Core import/source capabilities remain independent of this UI plan even when a source happens to use a 5e.tools-compatible schema.
@@ -72,6 +79,9 @@ The primary mismatch is that much of the current UI still reflects its origin as
 20. Edition-specific presentation must not silently reinterpret another edition's mechanics. Rules Core supplies semantics; Rules Wiki chooses how to display them.
 21. 3e/3.5e content must not be forced into 5e/5.5e assumptions merely to reuse a renderer.
 22. Do not merge implementation branches to `main` without explicit authorization.
+23. Rules Wiki must not call any Rules Core public/external API endpoint. Every Rules Wiki -> Rules Core operation must cross the existing private delegated Tool-to-Tool boundary.
+24. A Rules Wiki-only need must never expand Rules Core's stable public API. Wiki-specific browsing, history, comparison, relationship, presentation-projection, authoring, and administration contracts are internal first-party contracts.
+25. Promotion of an internal Rules Core capability to the public API requires a separately reviewed independent non-Wiki consumer need. UI convenience is not sufficient justification.
 
 ## 5e.tools reference-design boundary
 
@@ -245,14 +255,16 @@ Source administration remains distinct from ordinary reference browsing.
 
 It may use denser administrative patterns, but should still share the same visual system and interaction primitives. Source records are evidence/provenance; they are not presented as if they are automatically the effective table rule.
 
-## Rules Core contract boundary
+## Rules Core internal Tool-to-Tool contract boundary
 
-Rules Wiki should ask Rules Core for enough information to render the interface efficiently, but not for presentation-specific HTML.
+Rules Wiki should ask Rules Core for enough semantic information to render the interface efficiently, but every such request uses the **private first-party Rules Wiki -> Rules Core Tool-to-Tool API**.
+
+Rules Wiki does not use Rules Core's public/external consumer API, even when a public endpoint happens to expose similar data.
 
 Preferred contract direction:
 
 ```text
-Rules Core
+Rules Core internal Rules Wiki contract
   returns semantic data + stable identity + facets + relationships + provenance
         |
         v
@@ -260,7 +272,7 @@ Rules Wiki
   chooses layout + controls + density + renderer + route state
 ```
 
-Examples of valid Rules Core additions when UI work exposes a gap:
+Examples of valid **internal** Rules Core additions when UI work exposes a gap:
 
 - filter facets that are expensive or semantically unsafe to derive client-side;
 - stable sort fields;
@@ -270,7 +282,10 @@ Examples of valid Rules Core additions when UI work exposes a gap:
 - effective scope/ruling state;
 - readable relationship metadata;
 - pagination/incremental-load totals;
-- capability/authority state.
+- capability/authority state;
+- presentation projections such as authoritative feature acquisition levels when source-native encodings are unsafe for Rules Wiki to interpret.
+
+These additions remain private first-party contracts unless a separately reviewed non-Wiki consumer independently requires them.
 
 Examples that should remain Rules Wiki concerns:
 
@@ -287,7 +302,9 @@ Examples that should remain Rules Wiki concerns:
 - list density;
 - local sorting only when Rules Core has already supplied the complete bounded set and semantic ordering is not implied.
 
-If an API change is required, use a separate Rules Core branch/PR and keep the Rules Wiki change reviewable. Do not duplicate missing backend behavior locally merely to unblock a UI phase.
+If a Rules Core change is required, use a separate Rules Core branch/PR and change the internal Tool-to-Tool contract. Do not add or extend a public Rules Core API solely for Rules Wiki. Do not duplicate missing backend behavior locally merely to unblock a UI phase.
+
+Rules Core may reuse application/domain services behind its public and internal HTTP surfaces. That implementation reuse does not make the public API a valid Rules Wiki dependency.
 
 ## Navigation architecture
 
@@ -364,7 +381,7 @@ Entity-specific filters may include:
 - species size/speed/traits;
 - competency family/ability/mechanic profile.
 
-Rules Core should expose facets or query parameters when filtering the full authoritative set requires server knowledge.
+Rules Core should expose facets or query parameters through the internal Rules Wiki contract when filtering the full authoritative set requires server knowledge.
 
 Filters should use progressive disclosure. The list should not permanently sacrifice a large sidebar unless testing proves that is more efficient for a specific workspace.
 
@@ -432,7 +449,7 @@ Examples:
 - 3e -> 3.5e changes in skills, feats, combat statistics, spell fields, or prerequisite structures;
 - item property changes grouped by mechanical category.
 
-The comparison UI must render Rules Core comparison semantics; it must not independently decide whether a difference is compatible, contradictory, or automatically resolvable.
+The comparison UI must render Rules Core comparison semantics returned through the internal Tool-to-Tool contract; it must not independently decide whether a difference is compatible, contradictory, or automatically resolvable.
 
 ## Adjudication and campaign resolution
 
@@ -589,7 +606,7 @@ Do not eagerly load all source-native documents merely to render a browser list.
 
 The UI migration should be incremental.
 
-Existing browser routes, API calls, authorization rules, and publication behavior are the compatibility boundary. Visual structure may change substantially while those contracts remain stable.
+Existing browser routes, the Rules Wiki browser-facing API, the private Rules Wiki -> Rules Core Tool-to-Tool contract, authorization rules, and publication behavior are the compatibility boundaries relevant to Rules Wiki. Rules Core's public consumer API is not a Rules Wiki compatibility boundary because Rules Wiki does not use it.
 
 During migration:
 
@@ -599,7 +616,8 @@ During migration:
 - legacy `rules-core-*` CSS/DOM class names may remain temporarily where mass renaming would create regression risk;
 - new UI should prefer Rules Wiki terminology, but do not perform a repository-wide class-name rename solely for cosmetic purity;
 - authoring/admin views can temporarily retain older layouts while normal browsing is modernized;
-- a phase must not partially move authoritative behavior into the frontend to avoid a coordinated Rules Core change;
+- a phase must not partially move authoritative behavior into the frontend to avoid a coordinated Rules Core internal-contract change;
+- a phase must not call or expand a Rules Core public API to avoid a coordinated internal-contract change;
 - 5e/5.5e presentation improvements must not make 3e/3.5e records unreadable before the dedicated 3.xe phase;
 - 3.xe additions must preserve the generic fallback for still-unsupported editions and entity families.
 
@@ -616,7 +634,7 @@ Required work:
 3. Establish reusable Rules Wiki layout primitives for nav, reference browser, list, detail, tabs, disclosures, loading, empty, and error states.
 4. Normalize scroll ownership so the page does not accumulate competing nested scroll containers unnecessarily.
 5. Establish container-aware responsive breakpoints for wide, medium, and narrow hosted widths.
-6. Preserve existing routes, API contracts, deep links, source visibility, and authority behavior.
+6. Preserve existing routes, internal Tool-to-Tool contracts, deep links, source visibility, and authority behavior.
 7. Add or strengthen frontend integration tests for shell ownership, list/detail drill-in, route restoration, and narrow/wide behavior.
 8. Treat current 5e.tools interaction patterns as reference evidence, not runtime dependencies.
 
@@ -666,9 +684,9 @@ Introduce a Rules Wiki presentation configuration capable of defining per family
 - relationship hints;
 - optional specialized workspace key.
 
-Add shared source/edition/scope filters and family-specific filters where Rules Core already exposes the needed data.
+Add shared source/edition/scope filters and family-specific filters where the private Rules Core Wiki contract already exposes the needed data.
 
-If missing facets/sort contracts are discovered, coordinate additive Rules Core APIs rather than inferring semantics in Rules Wiki.
+If missing facets/sort contracts are discovered, coordinate additive **internal Tool-to-Tool Rules Core APIs** rather than inferring semantics in Rules Wiki or expanding the public consumer API.
 
 Unknown entity families must continue through generic fallback configuration.
 
@@ -678,8 +696,9 @@ Goal: make the normal browser operate on the complete source-accessible logical-
 
 Required work:
 
-- move primary Rules Wiki browse/search/detail/history from the resolved `/api/rules` consumer boundary to first-party Rules Core `/api/wiki/references` contracts;
-- preserve `/api/rules` and campaign equivalents as the effective consumer APIs used by game Tools;
+- move primary Rules Wiki browse/search/detail/history away from the resolved public `/api/rules` consumer boundary and onto first-party **internal Tool-to-Tool Rules Core reference contracts**;
+- Rules Wiki must not call `/api/rules`, campaign public equivalents, or any other public Rules Core consumer endpoint;
+- preserve `/api/rules` and campaign equivalents strictly as effective consumer APIs used by non-Wiki game Tools;
 - show one logical reference row across accessible `revision`/`rename` history while keeping variants and reprints distinct;
 - support stable source-only reference identities and deep links before a Rules Layer concept or publication exists;
 - allow ordinary users to inspect accessible history and read-only semantic comparison without granting Rules Lawyer or campaign-DM mutation authority;
@@ -718,6 +737,8 @@ Required work:
 - responsive behavior;
 - keyboard and accessibility coverage.
 
+All class-family semantic data required by Phase 3 must come through the private Rules Wiki -> Rules Core Tool-to-Tool API. Phase 3 must not consume or expand Rules Core's public consumer API for class relationships, progression metadata, feature acquisition levels, comparison, source history, or any other Wiki requirement.
+
 The workspace should be structurally capable of showing 3e/3.5e class-family data even though 5e/5.5e is the first human-testing target.
 
 ### Phase 4 — 5e/5.5e player-reference completion
@@ -741,7 +762,7 @@ Each family receives:
 - useful filters;
 - specialized presentation where generic structure is insufficient;
 - source/edition tabs;
-- cross-links/relationships where Rules Core exposes them;
+- cross-links/relationships where Rules Core exposes them through the internal Wiki contract;
 - stable routes and responsive behavior.
 
 Do not mark this phase complete merely because records render. Human testers must be able to find, distinguish, and inspect records efficiently.
@@ -794,7 +815,7 @@ Required work:
 - edition-appropriate action/attack structures without inventing absent mechanics;
 - source/edition tabs;
 - edition comparison in stat-block context where practical;
-- links to related creatures/mechanics when Rules Core exposes them;
+- links to related creatures/mechanics when Rules Core exposes them through the internal Wiki contract;
 - print/focused reading behavior if useful at the table.
 
 ### Phase 7 — global search and reference conveniences
@@ -803,7 +824,7 @@ Goal: reduce the time from "I need a rule" to "I am looking at it."
 
 Candidate capabilities:
 
-- omniselect/omnisearch across accessible Rules Core-backed content;
+- omniselect/omnisearch across accessible Rules Core-backed content through the internal Wiki contract;
 - keyboard-first result navigation;
 - direct jump to exact record;
 - recently viewed records;
@@ -846,7 +867,7 @@ Required work:
 - read-only comparison for normal users;
 - authorized resolve-this-difference transition.
 
-Rules Core remains authoritative for comparison semantics and automatic compatibility.
+Rules Core remains authoritative for comparison semantics and automatic compatibility, supplied to Rules Wiki through the internal Tool-to-Tool API.
 
 ### Phase 10 — adjudication and campaign-resolution redesign
 
@@ -959,19 +980,22 @@ feature/ui-phase-6-bestiary
 
 Do not modify `main` directly and do not merge until explicitly authorized.
 
-When a phase discovers a required Rules Core API addition, use a separate Rules Core branch. Keep cross-repository dependency explicit in PR descriptions and validation rather than mixing backend semantics into Rules Wiki.
+When a phase discovers a required Rules Core semantic/API addition, use a separate Rules Core branch and change the **private Rules Wiki Tool-to-Tool contract**. Keep cross-repository dependency explicit in PR descriptions and validation rather than mixing backend semantics into Rules Wiki. Do not expand or consume the Rules Core public API for a Rules Wiki phase.
 
 ## Before each implementation phase
 
 1. Fetch current Rules Wiki `main`.
 2. Read this development plan in full, especially the hard invariants and current phase.
-3. Inspect the current implementation instead of assuming the plan reflects every detail of the latest repository.
-4. Inspect any active overlapping Rules Wiki UI branch/PR.
-5. Inspect current Rules Core contracts used by the phase.
-6. Create or update the focused phase branch from current `main`.
-7. Preserve unrelated changes already merged to `main`.
-8. Identify whether the phase needs any coordinated Rules Core change before writing frontend workarounds.
-9. Keep other Dorks & Dice Tools and Site layout behavior unchanged unless the phase explicitly calls for a separately reviewed opt-in host capability.
+3. Read `docs/architecture.md`, especially the non-negotiable Rules Core API boundary.
+4. Inspect the current implementation instead of assuming the plan reflects every detail of the latest repository.
+5. Inspect any active overlapping Rules Wiki UI branch/PR.
+6. Inspect the current **internal Rules Wiki -> Rules Core Tool-to-Tool contracts** used by the phase.
+7. Confirm that the current Wiki implementation does not depend on a Rules Core public/external endpoint for the phase's workflow.
+8. Create or update the focused phase branch from current `main`.
+9. Preserve unrelated changes already merged to `main`.
+10. Identify whether the phase needs any coordinated Rules Core internal-contract change before writing frontend workarounds.
+11. If a needed capability exists only on the public Rules Core API, do not call that endpoint from Rules Wiki; expose/reuse the underlying Rules Core semantics through the internal first-party contract instead.
+12. Keep other Dorks & Dice Tools and Site layout behavior unchanged unless the phase explicitly calls for a separately reviewed opt-in host capability.
 
 ## Validation strategy
 
@@ -987,6 +1011,7 @@ Every phase should include the narrowest useful combination of:
 - capability/authorization presentation tests;
 - regression tests ensuring generic unknown families remain browsable;
 - regression tests ensuring source restrictions are not bypassed by presentation changes;
+- regression tests ensuring Rules Wiki uses only the private Rules Core Tool-to-Tool API and does not regress onto public consumer endpoints;
 - edition-shape regression tests where a specialized renderer supports more than one edition family.
 
 Where human visual judgment matters, automated tests should protect structure and behavior while human acceptance evaluates density, clarity, and usability.
@@ -1004,7 +1029,8 @@ Phase 0 should prove at least:
 - back/forward navigation restores the correct family and selection;
 - narrow width uses list/detail drill-in rather than an unusable stacked desktop workspace;
 - generic unknown entity families still render;
-- no new Rules Core semantic logic has been introduced in Rules Wiki.
+- no new Rules Core semantic logic has been introduced in Rules Wiki;
+- Rules Wiki does not call Rules Core's public consumer API.
 
 ## UI architecture definition of done
 
@@ -1031,4 +1057,5 @@ The target architecture is reached when a user can:
 19. continue browsing unknown/imported entity families through generic fallback even before specialized UI exists;
 20. use Rules Wiki with no runtime dependency on 5e.tools;
 21. use Rules Wiki without any duplicate rules semantics or authorization state being owned outside Rules Core;
-22. evolve Rules Wiki UI independently without forcing layout changes onto other Dorks & Dice Tools.
+22. evolve Rules Wiki UI independently without forcing layout changes onto other Dorks & Dice Tools;
+23. use Rules Wiki without any dependency on Rules Core's public/external consumer API; all Rules Wiki -> Rules Core traffic remains on the private delegated Tool-to-Tool contract.
