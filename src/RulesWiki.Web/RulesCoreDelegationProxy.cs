@@ -11,8 +11,13 @@ public sealed class RulesCoreDelegationProxy(HttpClient httpClient)
         "Trailer", "Transfer-Encoding", "Upgrade"
     };
 
-    public async Task ForwardAsync(HttpContext context)
+    public async Task ForwardAsync(HttpContext context, string corePath)
     {
+        if (!RulesCoreInternalRouteMapper.IsPrivateCoreTarget(corePath))
+        {
+            throw new ArgumentException("Rules Wiki delegation target must use the private Rules Core contract.", nameof(corePath));
+        }
+
         var authentication = HostedToolAuthenticationMiddleware.GetAuthenticationContext(context);
         if (authentication is null)
         {
@@ -33,7 +38,7 @@ public sealed class RulesCoreDelegationProxy(HttpClient httpClient)
         }
 
         var delegationBase = authentication.DelegationPath.Replace("{targetSlug}", TargetToolSlug, StringComparison.Ordinal);
-        var requestUri = $"{delegationBase}{context.Request.Path}{context.Request.QueryString}";
+        var requestUri = $"{delegationBase}{corePath}{context.Request.QueryString}";
         using var outbound = new HttpRequestMessage(new HttpMethod(context.Request.Method), requestUri);
         outbound.Headers.Authorization = new AuthenticationHeaderValue("Bearer", authentication.DelegationCapability);
 
