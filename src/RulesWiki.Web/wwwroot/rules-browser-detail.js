@@ -9,6 +9,10 @@ import {
 } from "./ui.js";
 import { renderResolvedRule } from "./rule-renderers.js";
 import { renderSemanticComparison } from "./semantic-comparison.js";
+import {
+    isClassFamilyReference,
+    renderClassFamilyReferenceDetail
+} from "./class-family-workspace.js";
 
 export async function renderRuleDetailPane(
     app,
@@ -31,91 +35,136 @@ export async function renderRuleDetailPane(
         const detail = await app.api.getWikiReferenceDetail(referenceIdentity, campaignId);
         if (requestSerial !== getCurrentSerial()) return;
 
-        const reference = detail.reference;
-        const variations = detail.variations ?? [];
-        const tabBar = element("div", {
-            className: "rules-core-version-tabs",
-            attributes: { role: "tablist", "aria-label": "Reference views" }
-        });
-        tabBar.append(element("button", {
-            type: "button",
-            className: "btn btn-sm btn-outline-secondary rules-core-library-mobile-back",
-            text: "← Back to list",
-            onClick: onBackToList
-        }));
-        const body = element("div", { className: "rules-core-library-detail-body" });
-
-        const effectiveLabel = campaignId ? campaignName(app, campaignId) : "Dorks & Dice";
-        const tabs = [{
-            key: "effective",
-            label: effectiveLabel,
-            title: "Effective/default variation in the selected rules scope",
-            render: () => renderEffectiveReference(app, body, detail, campaignId)
-        }];
-        for (const variation of variations) {
-            tabs.push({
-                key: `variation:${variation.sourceEntityRevisionId}`,
-                label: variationTabLabel(variation, variations),
-                title: variationLabel(variation),
-                render: () => renderVariation(body, reference, variation)
-            });
-        }
-        if (variations.length > 1) {
-            tabs.push({
-                key: "compare",
-                label: "Compare",
-                title: "Compare accessible source variations",
-                render: () => renderComparison(body, app, reference, variations, campaignId)
-            });
+        if (isClassFamilyReference(detail)) {
+            await renderClassFamilyReferenceDetail(
+                app,
+                container,
+                detail,
+                campaignId,
+                onBackToList,
+                {
+                    renderResolutionStatus: (reference, activeCampaignId) =>
+                        renderResolutionStatus(app, reference, activeCampaignId)
+                });
+            if (requestSerial !== getCurrentSerial()) return;
+            app.presentRenderedFragment?.(container);
+            return;
         }
 
-        const buttons = new Map();
-        const activate = key => {
-            for (const [buttonKey, button] of buttons) {
-                const selected = buttonKey === key;
-                button.classList.toggle("is-active", selected);
-                button.setAttribute("aria-selected", selected ? "true" : "false");
-            }
-            const tab = tabs.find(value => value.key === key) ?? tabs[0];
-            tab.render();
-            app.presentRenderedFragment?.(body);
-        };
-
-        tabBar.append(element("span", {
-            className: "rules-core-version-tabs-label",
-            text: "View"
-        }));
-        for (const tab of tabs) {
-            const button = element("button", {
-                type: "button",
-                className: "rules-core-version-tab",
-                text: tab.label,
-                title: tab.title,
-                attributes: { role: "tab", "aria-selected": tab.key === "effective" ? "true" : "false" }
-            });
-            button.addEventListener("click", () => activate(tab.key));
-            buttons.set(tab.key, button);
-            tabBar.append(button);
-        }
-
-        const context = element("div", { className: "rules-core-version-tabs-context" },
-            badge(humanizeEntityType(reference.effectiveCategory), "secondary"));
-        if (variations.length > 1) {
-            context.append(element("span", {
-                className: "rules-core-version-count",
-                text: `${variations.length} accessible variations`
-            }));
-        }
-        tabBar.append(context);
-
-        container.replaceChildren(tabBar, body);
-        activate("effective");
+        renderGenericReferenceDetail(app, container, detail, campaignId, onBackToList);
         app.presentRenderedFragment?.(container);
     } catch (error) {
         if (requestSerial !== getCurrentSerial()) return;
         container.replaceChildren(alertNode("danger", describeError(error)));
         app.presentRenderedFragment?.(container);
     }
+}
+
+function renderGenericReferenceDetail(app, container, detail, campaignId, onBackToList) {
+    const reference = detail.reference;
+    const variations = detail.variations ?? [];
+    const tabBar = element("div", {
+        className: "rules-core-version-tabs",
+        attributes: { role: "tablist", "aria-label": "Reference views" }
+    });
+    tabBar.append(element("button", {
+        type: "button",
+        className: "btn btn-sm btn-outline-secondary rules-core-library-mobile-back",
+        text: "← Back to list",
+        onClick: onBackToList
+    }));
+    const body = element("div", { className: "rules-core-library-detail-body" });
+
+    const effectiveLabel = campaignId ? campaignName(app, campaignId) : "Dorks & Dice";
+    const tabs = [{
+        key: "effective",
+        label: effectiveLabel,
+        title: "Effective/default variation in the selected rules scope",
+        render: () => renderEffectiveReference(app, body, detail, campaignId)
+    }];
+    for (const variation of variations) {
+        tabs.push({
+            key: `variation:${variation.sourceEntityRevisionId}`,
+            label: variationTabLabel(variation, variations),
+            title: variationLabel(variation),
+            render: () => renderVariation(body, reference, variation)
+        });
+    }
+    if (variations.length > 1) {
+        tabs.push({
+            key: "compare",
+            label: "Compare",
+            title: "Compare accessible source variations",
+            render: () => renderComparison(body, app, reference, variations, campaignId)
+        });
+    }
+
+    const buttons = new Map();
+    const activate = key => {
+        for (const [buttonKey, button] of buttons) {
+            const selected = buttonKey === key;
+            button.classList.toggle("is-active", selected);
+            button.setAttribute("aria-selected", selected ? "true" : "false");
+            button.tabIndex = selected ? 0 : -1;
+        }
+        const tab = tabs.find(value => value.key === key) ?? tabs[0];
+        tab.render();
+        app.presentRenderedFragment?.(body);
+    };
+
+    tabBar.append(element("span", {
+        className: "rules-core-version-tabs-label",
+        text: "View"
+    }));
+    for (const tab of tabs) {
+        const button = element("button", {
+            type: "button",
+            className: "rules-core-version-tab",
+            text: tab.label,
+            title: tab.title,
+            attributes: {
+                role: "tab",
+                "aria-selected": tab.key === "effective" ? "true" : "false",
+                tabindex: tab.key === "effective" ? "0" : "-1"
+            }
+        });
+        button.addEventListener("click", () => activate(tab.key));
+        buttons.set(tab.key, button);
+        tabBar.append(button);
+    }
+    installTabKeyboardNavigation(tabBar, buttons, activate);
+
+    const context = element("div", { className: "rules-core-version-tabs-context" },
+        badge(humanizeEntityType(reference.effectiveCategory), "secondary"));
+    if (variations.length > 1) {
+        context.append(element("span", {
+            className: "rules-core-version-count",
+            text: `${variations.length} accessible variations`
+        }));
+    }
+    tabBar.append(context);
+
+    container.replaceChildren(tabBar, body);
+    activate("effective");
+}
+
+function installTabKeyboardNavigation(tabBar, buttons, activate) {
+    tabBar.addEventListener("keydown", event => {
+        if (!event.target?.matches?.("[role='tab']")) return;
+        const entries = [...buttons.entries()];
+        const index = entries.findIndex(([, button]) => button === event.target);
+        if (index < 0) return;
+        let nextIndex = index;
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (index + 1) % entries.length;
+        else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (index - 1 + entries.length) % entries.length;
+        else if (event.key === "Home") nextIndex = 0;
+        else if (event.key === "End") nextIndex = entries.length - 1;
+        else return;
+        event.preventDefault();
+        const [key, button] = entries[nextIndex];
+        button.focus();
+        activate(key);
+    });
 }
 
 function renderEffectiveReference(app, container, detail, campaignId) {
@@ -201,7 +250,13 @@ function renderVariation(container, reference, variation) {
                     variation.publicationDisplayName
                 ].filter(Boolean).join(" · ")
             })),
-        variation.isEffective ? badge("Effective in scope", "primary") : null));
+        variation.isEffective ? badge("Effective in scope", "primary") : badge("Inspecting source", "secondary")));
+
+    if (!variation.isEffective) {
+        container.append(alertNode(
+            "secondary",
+            `This is an accessible source variation. The effective rule remains ${reference.effectiveEditionDisplayName || "the current Dorks & Dice/campaign variation"}.`));
+    }
 
     container.append(element("section", { className: "rules-core-effective-rule" },
         renderResolvedRule(category, variation.document, {
