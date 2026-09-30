@@ -26,7 +26,7 @@ public static class RulesCoreInternalRouteMapper
 
         if (IsWikiReferencePath(browserPath))
         {
-            // /api/wiki is a private Core route family despite retaining its historical name.
+            // The historical /api/wiki/references spelling is a private Core route family.
             // Core independently enforces the immediate delegated caller as rules-wiki.
             corePath = value;
             return true;
@@ -53,7 +53,7 @@ public static class RulesCoreInternalRouteMapper
 
     private static bool IsWikiReferencePath(PathString path)
     {
-        if (path.StartsWithSegments("/api/wiki", StringComparison.Ordinal)) return true;
+        if (path.StartsWithSegments("/api/wiki/references", StringComparison.Ordinal)) return true;
 
         var value = path.Value;
         if (string.IsNullOrWhiteSpace(value)) return false;
