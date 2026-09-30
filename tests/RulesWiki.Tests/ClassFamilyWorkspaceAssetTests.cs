@@ -41,7 +41,7 @@ public sealed class ClassFamilyWorkspaceAssetTests
 
         Assert.Contains("Inspecting source variation", workspace, StringComparison.Ordinal);
         Assert.Contains("The effective", workspace, StringComparison.Ordinal);
-        Assert.Contains("variation.isEffective", workspace, StringComparison.Ordinal);
+        Assert.Contains("variation?.isEffective", workspace, StringComparison.Ordinal);
         Assert.Contains("app.api.compareRuleVersions", workspace, StringComparison.Ordinal);
         Assert.Contains("renderSemanticComparison", workspace, StringComparison.Ordinal);
         Assert.Contains("Rules Core semantic comparison remains authoritative", workspace, StringComparison.Ordinal);
