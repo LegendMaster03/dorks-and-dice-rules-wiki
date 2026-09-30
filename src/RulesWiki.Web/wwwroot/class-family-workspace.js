@@ -22,12 +22,14 @@ export async function renderClassFamilyReferenceDetail(
     detail,
     campaignId,
     onBackToList,
-    { renderResolutionStatus = null } = {})
+    { renderResolutionStatus = null, isCurrent = () => true } = {})
 {
-    installClassFamilyStylesheet();
+    if (!isCurrent()) return;
     const reference = detail.reference;
     const variations = detail.variations ?? [];
-    const context = await loadClassFamilyContext(app, reference, campaignId);
+    const context = await loadClassFamilyContextIfCurrent(app, reference, campaignId, isCurrent);
+    if (!context) return;
+    installClassFamilyStylesheet();
 
     const tabBar = element("div", {
         className: "rules-core-version-tabs class-family-view-tabs",
@@ -139,6 +141,16 @@ export async function renderClassFamilyReferenceDetail(
     container.replaceChildren(tabBar, body);
     activate("effective");
     app.presentRenderedFragment?.(container);
+}
+
+export async function loadClassFamilyContextIfCurrent(
+    app,
+    reference,
+    campaignId,
+    isCurrent = () => true)
+{
+    const context = await loadClassFamilyContext(app, reference, campaignId);
+    return isCurrent() ? context : null;
 }
 
 async function loadClassFamilyContext(app, reference, campaignId) {
