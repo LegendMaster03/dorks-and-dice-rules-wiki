@@ -20,24 +20,29 @@ public sealed class ClassFamilyWorkspaceAssetTests
     }
 
     [Fact]
-    public void ClassWorkspaceUsesAuthoritativeParentRelationshipsAndStableReferenceRoutes()
+    public void ClassWorkspaceUsesCoreRelatedReferenceCollectionAndStableReferenceRoutes()
     {
         var workspace = ReadWebAsset("class-family-workspace.js");
-        var model = ReadWebAsset("class-family-model.js");
+        var referenceApi = ReadWebAsset("rules-reference-api.js");
 
-        Assert.Contains("parent-class", model, StringComparison.Ordinal);
-        Assert.Contains("relatedConceptKey", model, StringComparison.Ordinal);
-        Assert.Contains("relatedRuleConceptId", model, StringComparison.Ordinal);
-        Assert.Contains("subclassesForClass", workspace, StringComparison.Ordinal);
+        Assert.Contains("getClassFamilyRelations", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("/class-family", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("app.api.getClassFamilyRelations(identity, campaignId)", workspace, StringComparison.Ordinal);
+        Assert.Contains("relations?.parentClasses", workspace, StringComparison.Ordinal);
+        Assert.Contains("relations?.subclasses", workspace, StringComparison.Ordinal);
+        Assert.DoesNotContain("loadSubclassesForClass", workspace, StringComparison.Ordinal);
+        Assert.DoesNotContain("PAGE_SIZE", workspace, StringComparison.Ordinal);
+        Assert.DoesNotContain("categoryMode", workspace, StringComparison.Ordinal);
         Assert.Contains("target.browserLink?.toolRelativePath", workspace, StringComparison.Ordinal);
         Assert.Contains("pushToolRoute(app, route, app.browserScope)", workspace, StringComparison.Ordinal);
         Assert.Contains("normalizeBrowserFieldFiltersForEntityTransition", workspace, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ClassWorkspacePreservesEffectiveVersusInspectedVariationAndSemanticComparison()
+    public void ClassWorkspacePreservesEffectiveVariationSemanticComparisonAndAdjudicationContinuation()
     {
         var workspace = ReadWebAsset("class-family-workspace.js");
+        var detail = ReadWebAsset("rules-browser-detail.js");
 
         Assert.Contains("Inspecting source variation", workspace, StringComparison.Ordinal);
         Assert.Contains("The effective", workspace, StringComparison.Ordinal);
@@ -45,10 +50,17 @@ public sealed class ClassFamilyWorkspaceAssetTests
         Assert.Contains("app.api.compareRuleVersions", workspace, StringComparison.Ordinal);
         Assert.Contains("renderSemanticComparison", workspace, StringComparison.Ordinal);
         Assert.Contains("Rules Core semantic comparison remains authoritative", workspace, StringComparison.Ordinal);
+        Assert.Contains("Need a ruling?", workspace, StringComparison.Ordinal);
+        Assert.Contains("renderResolutionStatus(reference, campaignId)", workspace, StringComparison.Ordinal);
+        Assert.Contains("referenceAdjudicationTarget", detail, StringComparison.Ordinal);
+        Assert.Contains("referenceNormalizationTarget", detail, StringComparison.Ordinal);
+        Assert.Contains("Edit campaign rule", detail, StringComparison.Ordinal);
+        Assert.Contains("Edit Dorks & Dice rule", detail, StringComparison.Ordinal);
+        Assert.Contains("Create/bind Dorks & Dice rule", detail, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ProgressionAndFeaturesAreSourceDrivenAndOlderEditionSafe()
+    public void ProgressionFeaturesAndPrestigeRequirementsUseRealNormalizedCoreDocument()
     {
         var workspace = ReadWebAsset("class-family-workspace.js");
         var model = ReadWebAsset("class-family-model.js");
@@ -59,11 +71,11 @@ public sealed class ClassFamilyWorkspaceAssetTests
         Assert.Contains("baseAttackProgression", model, StringComparison.Ordinal);
         Assert.Contains("saveProgressions", model, StringComparison.Ordinal);
         Assert.Contains("classSkills", model, StringComparison.Ordinal);
-        Assert.Contains("classFamilyAdvancementFeatures", model, StringComparison.Ordinal);
-        Assert.Contains("effectiveAdvancementFeatures", referenceApi, StringComparison.Ordinal);
-        Assert.Contains("variation.advancementFeatures", referenceApi, StringComparison.Ordinal);
-        Assert.Contains("Object.defineProperty", referenceApi, StringComparison.Ordinal);
-        Assert.Contains("enumerable: false", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("rulesCoreCharacter(document).advancementFeatures", model, StringComparison.Ordinal);
+        Assert.Contains("rulesCoreCharacter(document).prerequisites", model, StringComparison.Ordinal);
+        Assert.DoesNotContain("effectiveAdvancementFeatures", referenceApi, StringComparison.Ordinal);
+        Assert.DoesNotContain("variation.advancementFeatures", referenceApi, StringComparison.Ordinal);
+        Assert.DoesNotContain("Object.defineProperty", referenceApi, StringComparison.Ordinal);
         Assert.Contains("No normalized progression table is present", workspace, StringComparison.Ordinal);
         Assert.Contains("Rules Wiki does not manufacture missing level mechanics", workspace, StringComparison.Ordinal);
         Assert.DoesNotContain("BaseAttackBonus(", workspace, StringComparison.Ordinal);
