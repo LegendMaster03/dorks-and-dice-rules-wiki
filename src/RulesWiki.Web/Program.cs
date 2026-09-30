@@ -38,9 +38,20 @@ app.MapGet("/ready", () => Results.Ok(new
 }));
 
 app.MapMethods("/api/{**path}", ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
-    async (HttpContext context, RulesCoreDelegationProxy proxy) => await proxy.ForwardAsync(context));
+    async (HttpContext context, RulesCoreDelegationProxy proxy) =>
+    {
+        if (!RulesCoreInternalRouteMapper.TryMap(context.Request.Path, out var corePath))
+        {
+            context.Response.StatusCode = StatusCodes.Status404NotFound;
+            return;
+        }
 
-app.MapGet("/api", async (HttpContext context, RulesCoreDelegationProxy proxy) => await proxy.ForwardAsync(context));
+        await proxy.ForwardAsync(context, corePath);
+    });
+
+// Rules Wiki intentionally does not expose a transparent /api root pass-through. Every browser
+// route must match the explicit private-Core mapping above.
+app.MapGet("/api", () => Results.NotFound());
 
 const string standaloneShell = """
 <!doctype html>
