@@ -1,3 +1,5 @@
+import { registerClassFamilyAdvancementMetadata } from "./class-family-model.js";
+
 const REFERENCE_CATALOG_SENTINEL = "reference-catalog";
 
 export function installWikiReferenceApi(api) {
@@ -8,7 +10,13 @@ export function installWikiReferenceApi(api) {
     api.getWikiReferenceDetail = (referenceIdentity, campaignId = null) =>
         api.backend(campaignId
             ? `/api/campaigns/${encodeURIComponent(campaignId)}/wiki/references/${encodeURIComponent(referenceIdentity)}`
-            : `/api/wiki/references/${encodeURIComponent(referenceIdentity)}`);
+            : `/api/wiki/references/${encodeURIComponent(referenceIdentity)}`)
+            .then(registerClassFamilyAdvancementMetadata);
+
+    api.getClassFamilyRelations = (referenceIdentity, campaignId = null) =>
+        api.backend(campaignId
+            ? `/api/campaigns/${encodeURIComponent(campaignId)}/wiki/references/${encodeURIComponent(referenceIdentity)}/class-family`
+            : `/api/wiki/references/${encodeURIComponent(referenceIdentity)}/class-family`);
 
     api.getGlobalResolvedRule = async referenceIdentity =>
         projectEffectiveReference(await api.getWikiReferenceDetail(referenceIdentity));
