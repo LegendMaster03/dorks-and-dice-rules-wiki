@@ -11,6 +11,14 @@
     outline-offset: 2px;
 }
 
+.class-family-view-tablist {
+    display: flex;
+    align-items: center;
+    gap: .25rem;
+    min-width: 0;
+    flex: 0 0 auto;
+}
+
 .class-family-header {
     display: flex;
     align-items: flex-start;
