@@ -1,3 +1,5 @@
+import { classFamilyAdvancementFeatures } from "./rules-reference-api.js";
+
 const CLASS_FAMILY_TYPES = new Set(["class", "subclass", "prestigeclass"]);
 
 export function normalizeClassFamilyType(value) {
@@ -125,6 +127,16 @@ export function progressionSurfaces(document = {}) {
 
 export function featureGroups(document = {}, category = "class") {
     const kind = classFamilyKind(category) ?? "class";
+    const authoritative = classFamilyAdvancementFeatures(document);
+    if (authoritative.length) {
+        const label = kind === "subclass"
+            ? "Subclass Features"
+            : kind === "prestigeClass"
+                ? "Prestige Class Features"
+                : "Class Features";
+        return groupAuthoritativeAdvancementFeatures(authoritative, label);
+    }
+
     const candidates = kind === "subclass"
         ? [
             ["Subclass Features", document.subclassFeatures],
@@ -203,6 +215,30 @@ function appendArrayRowsSurface(surfaces, title, labels, rows, { inferLevelFromI
     }
 
     surfaces.push({ title, columns, rows: normalizedRows });
+}
+
+function groupAuthoritativeAdvancementFeatures(features, label) {
+    const groups = new Map();
+    const unresolved = [];
+    for (const feature of features) {
+        if (!feature || typeof feature !== "object") continue;
+        const displayName = String(feature.name ?? "").trim();
+        if (!displayName) continue;
+        const level = Number(feature.level);
+        if (Number.isInteger(level) && level > 0) {
+            const key = String(level);
+            const values = groups.get(key) ?? [];
+            values.push(displayName);
+            groups.set(key, values);
+        } else {
+            unresolved.push(displayName);
+        }
+    }
+    const result = [...groups.entries()]
+        .sort((left, right) => Number(left[0]) - Number(right[0]))
+        .map(([level, featuresAtLevel]) => ({ level, label, features: featuresAtLevel }));
+    if (unresolved.length) result.push({ level: null, label, features: unresolved });
+    return result;
 }
 
 function groupFeatureValue(value, label) {
