@@ -41,11 +41,37 @@ public sealed class DelegationBoundaryTests
     }
 
     [Fact]
-    public async Task ProxyDelegatesApiRequestToRulesCoreWithoutLeakingDelegationHeaders()
+    public void RouteMapperKeepsWikiBrowserContractButPrivateMapsSharedCoreOperations()
+    {
+        Assert.True(RulesCoreInternalRouteMapper.TryMap(
+            "/api/wiki/references/reference-1",
+            out var referenceTarget));
+        Assert.Equal("/api/wiki/references/reference-1", referenceTarget);
+        Assert.True(RulesCoreInternalRouteMapper.IsPrivateCoreTarget(referenceTarget));
+
+        Assert.True(RulesCoreInternalRouteMapper.TryMap(
+            "/api/rules/monster.red-dragon",
+            out var sharedTarget));
+        Assert.Equal("/internal/wiki/shared/api/rules/monster.red-dragon", sharedTarget);
+        Assert.True(RulesCoreInternalRouteMapper.IsPrivateCoreTarget(sharedTarget));
+
+        var campaignId = Guid.NewGuid();
+        Assert.True(RulesCoreInternalRouteMapper.TryMap(
+            $"/api/campaigns/{campaignId:D}/rules/example",
+            out var campaignTarget));
+        Assert.Equal($"/internal/wiki/shared/api/campaigns/{campaignId:D}/rules/example", campaignTarget);
+
+        Assert.False(RulesCoreInternalRouteMapper.TryMap("/api/integration/session", out _));
+        Assert.False(RulesCoreInternalRouteMapper.TryMap("/api/character/projection", out _));
+        Assert.False(RulesCoreInternalRouteMapper.TryMap("/api/not-a-core-contract", out _));
+    }
+
+    [Fact]
+    public async Task ProxyDelegatesOnlyExplicitPrivateCoreTargetWithoutLeakingDelegationHeaders()
     {
         var handler = new RecordingHandler(request =>
         {
-            Assert.Equal("/tool-host/rules-wiki/api/delegate/rules-core/upstream/api/rules/monster.red-dragon?scope=global", request.RequestUri!.PathAndQuery);
+            Assert.Equal("/tool-host/rules-wiki/api/delegate/rules-core/upstream/internal/wiki/shared/api/rules/monster.red-dragon?scope=global", request.RequestUri!.PathAndQuery);
             Assert.Equal("capability-1", request.Headers.Authorization!.Parameter);
             Assert.False(request.Headers.Contains(ToolHostAuthenticationHeaders.Ticket));
             var response = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("{\"ok\":true}", Encoding.UTF8, "application/json") };
@@ -61,12 +87,26 @@ public sealed class DelegationBoundaryTests
         httpContext.Response.Body = new MemoryStream();
         HostedToolAuthenticationMiddleware.SetAuthenticationContext(httpContext, AuthContext());
 
-        await proxy.ForwardAsync(httpContext);
+        await proxy.ForwardAsync(httpContext, "/internal/wiki/shared/api/rules/monster.red-dragon");
 
         Assert.Equal(StatusCodes.Status200OK, httpContext.Response.StatusCode);
         Assert.False(httpContext.Response.Headers.ContainsKey(ToolHostAuthenticationHeaders.DelegationCapability));
         httpContext.Response.Body.Position = 0;
         Assert.Equal("{\"ok\":true}", await new StreamReader(httpContext.Response.Body).ReadToEndAsync());
+    }
+
+    [Fact]
+    public async Task ProxyRejectsPublicCoreTargetEvenWhenBrowserPathLooksValid()
+    {
+        var proxy = new RulesCoreDelegationProxy(new HttpClient(new RecordingHandler(_ =>
+            throw new Xunit.Sdk.XunitException("Upstream must not be called.")))
+        { BaseAddress = new Uri("https://site.test") });
+        var httpContext = new DefaultHttpContext();
+        httpContext.Request.Path = "/api/rules/monster.red-dragon";
+        HostedToolAuthenticationMiddleware.SetAuthenticationContext(httpContext, AuthContext());
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            proxy.ForwardAsync(httpContext, "/api/rules/monster.red-dragon"));
     }
 
     [Fact]
@@ -83,7 +123,7 @@ public sealed class DelegationBoundaryTests
         httpContext.Response.Body = new MemoryStream();
         HostedToolAuthenticationMiddleware.SetAuthenticationContext(httpContext, AuthContext());
 
-        await proxy.ForwardAsync(httpContext);
+        await proxy.ForwardAsync(httpContext, "/internal/wiki/shared/api/sources/entities/restricted");
 
         Assert.Equal(StatusCodes.Status403Forbidden, httpContext.Response.StatusCode);
         httpContext.Response.Body.Position = 0;
@@ -98,7 +138,7 @@ public sealed class DelegationBoundaryTests
         var httpContext = new DefaultHttpContext();
         httpContext.Request.Path = "/api/rules";
 
-        await proxy.ForwardAsync(httpContext);
+        await proxy.ForwardAsync(httpContext, "/internal/wiki/shared/api/rules");
 
         Assert.Equal(StatusCodes.Status401Unauthorized, httpContext.Response.StatusCode);
     }
@@ -117,7 +157,7 @@ public sealed class DelegationBoundaryTests
             DelegationPath = null
         });
 
-        await proxy.ForwardAsync(httpContext);
+        await proxy.ForwardAsync(httpContext, "/internal/wiki/shared/api/rules");
 
         Assert.Equal(StatusCodes.Status503ServiceUnavailable, httpContext.Response.StatusCode);
     }
