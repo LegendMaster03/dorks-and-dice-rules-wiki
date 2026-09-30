@@ -112,6 +112,88 @@ public sealed class ClassFamilyWorkspaceAssetTests
         Assert.DoesNotContain("MutationObserver", workspace, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ClassFamilyViewAndSiblingNavigationUseCorrectAriaSemantics()
+    {
+        var workspace = ReadWebAsset("class-family-workspace.js");
+
+        var tabListIndex = workspace.IndexOf(
+            "className: \"class-family-view-tablist\"",
+            StringComparison.Ordinal);
+        var backButtonIndex = workspace.IndexOf(
+            "className: \"btn btn-sm btn-outline-secondary rules-core-library-mobile-back\"",
+            StringComparison.Ordinal);
+        var viewLabelIndex = workspace.IndexOf(
+            "className: \"rules-core-version-tabs-label\"",
+            StringComparison.Ordinal);
+        var tabPanelIndex = workspace.IndexOf(
+            "role: \"tabpanel\"",
+            StringComparison.Ordinal);
+
+        Assert.True(tabListIndex > 0, "The top-level view switcher should contain a dedicated tablist.");
+        Assert.True(backButtonIndex >= 0 && backButtonIndex < tabListIndex, "The Back button must be outside the top-level tablist.");
+        Assert.True(viewLabelIndex >= 0 && viewLabelIndex < tabListIndex, "The View label must be outside the top-level tablist.");
+
+        Assert.Contains(
+            "id: viewPanelId,",
+            workspace,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "role: \"tabpanel\",",
+            workspace,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"aria-controls\": viewPanelId,",
+            workspace,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "body.setAttribute(\"aria-labelledby\", button.id)",
+            workspace,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "tabList.append(button)",
+            workspace,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "tabBar.append(tabList, viewContext)",
+            workspace,
+            StringComparison.Ordinal);
+
+        var siblingStart = workspace.IndexOf(
+            "if (kind === \"subclass\")",
+            StringComparison.Ordinal);
+        var siblingEnd = workspace.IndexOf(
+            "        return nav;",
+            siblingStart,
+            StringComparison.Ordinal);
+        Assert.True(siblingStart >= 0 && siblingEnd > siblingStart, "The subclass navigation block should be present.");
+        var siblingSection = workspace[siblingStart..siblingEnd];
+        Assert.Contains(
+            "attributes: { role: \"list\", \"aria-label\": \"Sibling subclasses\" }",
+            siblingSection,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "attributes: { role: \"listitem\" }",
+            siblingSection,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "\"aria-current\": selected ? \"page\" : null",
+            siblingSection,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "role: \"tablist\"",
+            siblingSection,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "role: \"tab\"",
+            siblingSection,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            "wireHorizontalTablist(siblings",
+            siblingSection,
+            StringComparison.Ordinal);
+    }
+
     private static string ReadWebAsset(string filename)
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
