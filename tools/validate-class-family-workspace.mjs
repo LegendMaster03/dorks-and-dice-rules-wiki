@@ -7,6 +7,7 @@ import {
     progressionSurfaces,
     subclassesForClass
 } from "../src/RulesWiki.Web/wwwroot/class-family-model.js";
+import { installWikiReferenceApi } from "../src/RulesWiki.Web/wwwroot/rules-reference-api.js";
 import { parseToolRoute } from "../src/RulesWiki.Web/wwwroot/rules-browser-routing.js";
 
 function assert(condition, message) {
@@ -81,6 +82,38 @@ assert(!surfaces[0].columns.some(value => value.label === "Base Attack Bonus"), 
 const fiveEFeatures = featureGroups(fiveEClass, "class");
 assert(fiveEFeatures.some(value => value.level === "1"), "Explicit class feature levels should group by level.");
 assert(fiveEFeatures.some(value => value.level === null), "Feature references without level semantics should remain explicitly unleveled.");
+
+const referenceApi = {
+    backend: async () => ({
+        reference: {
+            referenceIdentity: "class.fighter",
+            effectiveCategory: "class",
+            effectiveVariation: { sourceEntityRevisionId: "effective" }
+        },
+        effectiveDocument: {
+            classFeatures: ["Fighting Style|PHB|Fighter|1", "Action Surge|PHB|Fighter|2"]
+        },
+        effectiveAdvancementFeatures: [
+            { name: "Fighting Style", level: 1, featureReference: "Fighting Style|PHB|Fighter|1" },
+            { name: "Action Surge", level: 2, featureReference: "Action Surge|PHB|Fighter|2" }
+        ],
+        variations: [{
+            category: "class",
+            sourceEntityRevisionId: "effective",
+            document: { classFeatures: ["Fighting Style|PHB|Fighter|1"] },
+            advancementFeatures: [
+                { name: "Fighting Style", level: 1, featureReference: "Fighting Style|PHB|Fighter|1" }
+            ]
+        }]
+    })
+};
+installWikiReferenceApi(referenceApi);
+const projectedDetail = await referenceApi.getWikiReferenceDetail("class.fighter");
+const authoritativeGroups = featureGroups(projectedDetail.effectiveDocument, "class");
+assert(authoritativeGroups.length === 2, "Rules Wiki should consume the authoritative Rules Core advancement-feature projection.");
+assert(authoritativeGroups[0].level === "1" && authoritativeGroups[0].features[0] === "Fighting Style", "Rules Core acquisition levels should drive feature grouping.");
+assert(authoritativeGroups[1].level === "2" && authoritativeGroups[1].features[0] === "Action Surge", "Rules Core acquisition levels should remain ordered by level.");
+assert(!Object.keys(projectedDetail.effectiveDocument).some(key => key.includes("rulesWikiAdvancement")), "Presentation metadata must remain non-enumerable and must not alter the normalized rules document surface.");
 
 const threeXClass = {
     _rulesCore: {
