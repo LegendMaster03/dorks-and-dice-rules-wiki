@@ -1,3 +1,4 @@
+import { loadClassFamilyContextIfCurrent } from "../src/RulesWiki.Web/wwwroot/class-family-workspace.js";
 import {
     classFamilyIdentityFields,
     classFamilyKind,
@@ -189,5 +190,36 @@ const crossCategory = {
     variations: [{ category: "subclass" }, { category: "prestigeClass" }]
 };
 assert(isClassFamilyReference(crossCategory), "Cross-category class-family history should stay in the specialized workspace.");
+
+let currentSelection = 1;
+let releaseFirstSelection;
+const firstSelectionGate = new Promise(resolve => {
+    releaseFirstSelection = resolve;
+});
+const raceApp = {
+    api: {
+        async getClassFamilyRelations(identity) {
+            if (identity === "class-a") {
+                return firstSelectionGate.then(() => ({ subclasses: [] }));
+            }
+            return { subclasses: [{ referenceIdentity: "subclass-b" }] };
+        }
+    },
+    browserScope: null
+};
+const firstSelection = loadClassFamilyContextIfCurrent(
+    raceApp,
+    { referenceIdentity: "class-a", effectiveCategory: "class" },
+    null,
+    () => currentSelection === 1);
+currentSelection = 2;
+const secondSelection = await loadClassFamilyContextIfCurrent(
+    raceApp,
+    { referenceIdentity: "class-b", effectiveCategory: "class" },
+    null,
+    () => currentSelection === 2);
+assert(secondSelection?.subclasses?.[0]?.referenceIdentity === "subclass-b", "The newer class selection should render its own class-family context.");
+releaseFirstSelection();
+assert(await firstSelection === null, "A delayed class-family response from an older selection must be discarded before rendering.");
 
 console.log("Class-family Phase 3 model validation passed.");
