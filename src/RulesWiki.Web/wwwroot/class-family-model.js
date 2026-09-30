@@ -1,5 +1,3 @@
-import { classFamilyAdvancementFeatures } from "./rules-reference-api.js";
-
 const CLASS_FAMILY_TYPES = new Set(["class", "subclass", "prestigeclass"]);
 
 export function normalizeClassFamilyType(value) {
@@ -34,21 +32,6 @@ export function findParentClassRelationship(reference) {
         && normalizeClassFamilyType(value?.relatedEntityType) === "class") ?? null;
 }
 
-export function subclassesForClass(references, classReference) {
-    const conceptKey = String(classReference?.conceptKey ?? "").toLowerCase();
-    const conceptId = String(classReference?.ruleConceptId ?? "").toLowerCase();
-    if (!conceptKey && !conceptId) return [];
-
-    return (references ?? []).filter(reference =>
-        (reference?.relationships ?? []).some(relationship => {
-            if (String(relationship?.kind ?? "").toLowerCase() !== "parent-class") return false;
-            if (normalizeClassFamilyType(relationship?.relatedEntityType) !== "class") return false;
-            const relatedKey = String(relationship?.relatedConceptKey ?? "").toLowerCase();
-            const relatedId = String(relationship?.relatedRuleConceptId ?? "").toLowerCase();
-            return Boolean((conceptKey && relatedKey === conceptKey) || (conceptId && relatedId === conceptId));
-        }));
-}
-
 export function classFamilyIdentityFields(document = {}, category = "class") {
     const kind = classFamilyKind(category) ?? "class";
     const fields = [];
@@ -78,7 +61,7 @@ export function classFamilyIdentityFields(document = {}, category = "class") {
         add("Class Source", document.classSource);
     }
     if (kind === "prestigeClass") {
-        add("Prerequisites", firstDefined(document.prerequisite, document.prerequisites));
+        add("Prerequisites", explicitPrestigePrerequisites(document));
     }
 
     const character = rulesCoreCharacter(document);
@@ -127,8 +110,8 @@ export function progressionSurfaces(document = {}) {
 
 export function featureGroups(document = {}, category = "class") {
     const kind = classFamilyKind(category) ?? "class";
-    const authoritative = classFamilyAdvancementFeatures(document);
-    if (authoritative.length) {
+    const authoritative = rulesCoreCharacter(document).advancementFeatures;
+    if (Array.isArray(authoritative) && authoritative.length) {
         const label = kind === "subclass"
             ? "Subclass Features"
             : kind === "prestigeClass"
@@ -163,7 +146,11 @@ export function featureGroups(document = {}, category = "class") {
 }
 
 export function explicitPrestigePrerequisites(document = {}) {
-    return firstDefined(document.prerequisite, document.prerequisites, document.requirements);
+    return firstDefined(
+        rulesCoreCharacter(document).prerequisites,
+        document.prerequisite,
+        document.prerequisites,
+        document.requirements);
 }
 
 export function humanizeClassFamilyType(value) {
@@ -204,10 +191,7 @@ function appendArrayRowsSurface(surfaces, title, labels, rows, { inferLevelFromI
     const normalizedLabels = [...labels];
     while (normalizedLabels.length < width) normalizedLabels.push(`Column ${normalizedLabels.length + 1}`);
     const columns = normalizedLabels.slice(0, width).map((label, index) => ({ key: `column-${index}`, label }));
-    const normalizedRows = rows.map(row => {
-        const values = Array.from({ length: width }, (_, index) => row[index]);
-        return values;
-    });
+    const normalizedRows = rows.map(row => Array.from({ length: width }, (_, index) => row[index]));
 
     if (inferLevelFromIndex && !normalizedLabels.some(label => /^level$/i.test(String(label).trim()))) {
         columns.unshift({ key: "level", label: "Level" });
@@ -261,12 +245,7 @@ function groupFeatureValue(value, label) {
 
     const groups = new Map();
     const ungrouped = [];
-    value.forEach((feature, index) => {
-        if (Array.isArray(feature)) {
-            const normalized = asFeatureArray(feature);
-            if (normalized.length) groups.set(String(index + 1), normalized);
-            return;
-        }
+    value.forEach(feature => {
         if (isPlainObject(feature)) {
             const explicitLevel = firstDefined(feature.level, feature.classLevel, feature.characterLevel);
             if (hasValue(explicitLevel)) {
