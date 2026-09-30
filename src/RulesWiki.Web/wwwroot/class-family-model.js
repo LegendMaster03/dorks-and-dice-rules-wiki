@@ -1,4 +1,5 @@
 const CLASS_FAMILY_TYPES = new Set(["class", "subclass", "prestigeclass"]);
+const ADVANCEMENT_FEATURES_BY_DOCUMENT = new WeakMap();
 
 export function normalizeClassFamilyType(value) {
     return String(value ?? "").replace(/[-_\s]/g, "").toLowerCase();
@@ -17,6 +18,15 @@ export function isClassFamilyReference(detail) {
         ...(detail.variations ?? []).map(value => value?.category)
     ];
     return categories.some(isClassFamilyType);
+}
+
+export function registerClassFamilyAdvancementMetadata(detail) {
+    if (!detail || typeof detail !== "object") return detail;
+    registerAdvancementMetadata(detail.effectiveDocument, detail.effectiveAdvancementFeatures);
+    for (const variation of detail.variations ?? []) {
+        registerAdvancementMetadata(variation?.document, variation?.advancementFeatures);
+    }
+    return detail;
 }
 
 export function classFamilyKind(value) {
@@ -110,7 +120,11 @@ export function progressionSurfaces(document = {}) {
 
 export function featureGroups(document = {}, category = "class") {
     const kind = classFamilyKind(category) ?? "class";
-    const authoritative = rulesCoreCharacter(document).advancementFeatures;
+    const explicit = advancementMetadata(document);
+    const normalized = rulesCoreCharacter(document).advancementFeatures;
+    const authoritative = Array.isArray(explicit) && explicit.length
+        ? explicit
+        : normalized;
     if (Array.isArray(authoritative) && authoritative.length) {
         const label = kind === "subclass"
             ? "Subclass Features"
@@ -209,7 +223,7 @@ function groupAuthoritativeAdvancementFeatures(features, label) {
         const displayName = String(feature.name ?? "").trim();
         if (!displayName) continue;
         const level = Number(feature.level);
-        if (Number.isInteger(level) && level > 0) {
+        if (feature.level !== null && feature.level !== undefined && Number.isInteger(level) && level > 0) {
             const key = String(level);
             const values = groups.get(key) ?? [];
             values.push(displayName);
@@ -262,6 +276,17 @@ function groupFeatureValue(value, label) {
     const result = [...groups.entries()].map(([level, features]) => ({ level, label, features }));
     if (ungrouped.length) result.push({ level: null, label, features: ungrouped });
     return result;
+}
+
+function registerAdvancementMetadata(document, features) {
+    if (!isPlainObject(document) || !Array.isArray(features)) return;
+    ADVANCEMENT_FEATURES_BY_DOCUMENT.set(document, features);
+}
+
+function advancementMetadata(document) {
+    return isPlainObject(document)
+        ? ADVANCEMENT_FEATURES_BY_DOCUMENT.get(document)
+        : undefined;
 }
 
 function rulesCoreCharacter(document) {
