@@ -56,17 +56,20 @@ function getCatalog(api, campaignId, filters = {}) {
 }
 
 function projectReferenceCatalog(catalog) {
-    const rules = (catalog.references ?? catalog.rules ?? []).map(reference => ({
-        ...reference,
-        conceptKey: reference.referenceIdentity,
-        ruleConceptId: reference.ruleConceptId ?? null,
-        entityType: reference.effectiveCategory ?? reference.entityType,
-        editionKey: reference.effectiveEditionKey ?? reference.editionKey ?? "",
-        editionDisplayName: reference.effectiveEditionDisplayName ?? reference.editionDisplayName ?? "",
-        sourceCode: reference.sourceCode ?? reference.effectiveVariation?.sourceCode ?? "",
-        packageKey: reference.packageKey ?? reference.effectiveVariation?.packageKey ?? "",
-        packageDisplayName: reference.packageDisplayName ?? reference.effectiveVariation?.packageDisplayName ?? ""
-    }));
+    const rules = (catalog.references ?? catalog.rules ?? []).map(reference => {
+        const browse = reference.browseVariation ?? reference.effectiveVariation ?? {};
+        return {
+            ...reference,
+            conceptKey: reference.referenceIdentity,
+            ruleConceptId: reference.ruleConceptId ?? null,
+            entityType: reference.effectiveCategory ?? reference.entityType,
+            editionKey: browse.editionKey ?? reference.editionKey ?? reference.effectiveEditionKey ?? "",
+            editionDisplayName: browse.editionDisplayName ?? reference.editionDisplayName ?? reference.effectiveEditionDisplayName ?? "",
+            sourceCode: browse.sourceCode ?? reference.sourceCode ?? reference.effectiveVariation?.sourceCode ?? "",
+            packageKey: browse.packageKey ?? reference.packageKey ?? reference.effectiveVariation?.packageKey ?? "",
+            packageDisplayName: browse.packageDisplayName ?? reference.packageDisplayName ?? reference.effectiveVariation?.packageDisplayName ?? ""
+        };
+    });
     return {
         ...catalog,
         rules,

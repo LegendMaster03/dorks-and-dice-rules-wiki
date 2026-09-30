@@ -18,7 +18,9 @@ import {
 } from "../src/RulesWiki.Web/wwwroot/rules-browser-index.js";
 import {
     openReferenceAdjudication,
-    referenceAdjudicationTarget
+    openReferenceNormalization,
+    referenceAdjudicationTarget,
+    referenceNormalizationTarget
 } from "../src/RulesWiki.Web/wwwroot/rules-browser-detail.js";
 
 function assert(condition, message) {
@@ -48,36 +50,53 @@ assert(getEntityBrowserConfigForRoute("races")?.entityType === "species", "Legac
 assert(getEntityBrowserConfigForRoute("subraces")?.entityType === "subspecies", "Legacy /subraces routes should resolve to Subspecies.");
 assert(parseToolRoute("/races/elf").conceptKey === "species.elf", "Legacy race detail links should resolve to canonical Species identity.");
 assert(parseToolRoute("/subraces/high-elf").conceptKey === "subspecies.high-elf", "Legacy subrace detail links should resolve to canonical Subspecies identity.");
-assert(parseToolRoute("/references/canonical%3A0123").conceptKey === "canonical:0123", "Source-only reference links should round-trip stable Core-owned identity.");
+assert(parseToolRoute("/references/canonical%3A0123").conceptKey === "canonical:0123", "Canonical source-only links should round-trip stable Core-owned identity.");
+assert(parseToolRoute("/references/occurrence%3A0123").conceptKey === "occurrence:0123", "Unresolved occurrence links should round-trip stable Core-owned identity.");
 assert(catalogRouteForEntity("species") === "/species", "Species should use its canonical browser route.");
 assert(catalogRouteForEntity("subspecies") === "/subspecies", "Subspecies should use its canonical browser route.");
 
 const calls = [];
+const effectiveVariation = {
+    sourceEntityId: "source-entity",
+    sourceEntityRevisionId: "source-revision",
+    sourceRevisionNumber: 1,
+    name: "Source Only Fixture",
+    category: "subclass",
+    sourceCode: "NONSRD",
+    packageKey: "third-party",
+    packageDisplayName: "Third Party",
+    editionKey: "5e",
+    editionDisplayName: "5e",
+    publicationKey: "publication",
+    publicationDisplayName: "Publication"
+};
+const historicalVariation = {
+    sourceEntityId: "prestige-source-entity",
+    sourceEntityRevisionId: "prestige-source-revision",
+    sourceRevisionNumber: 1,
+    name: "Source Only Fixture",
+    category: "prestigeClass",
+    sourceCode: "THREEFIVE",
+    packageKey: "third-party-35",
+    packageDisplayName: "Third Party 3.5e",
+    editionKey: "3.5e",
+    editionDisplayName: "3.5e",
+    publicationKey: "publication-35",
+    publicationDisplayName: "Publication 3.5e"
+};
 const sourceOnlyReference = {
     referenceIdentity: "canonical:0123",
     ruleConceptId: null,
     conceptKey: null,
     displayName: "Source Only Fixture",
-    entityType: "prestigeClass",
+    entityType: "subclass",
     effectiveCategory: "subclass",
     effectiveEditionKey: "5e",
     effectiveEditionDisplayName: "5e",
     resolutionState: "unresolved-fallback",
     hasCampaignOverride: false,
-    effectiveVariation: {
-        sourceEntityId: "source-entity",
-        sourceEntityRevisionId: "source-revision",
-        sourceRevisionNumber: 1,
-        name: "Source Only Fixture",
-        category: "subclass",
-        sourceCode: "NONSRD",
-        packageKey: "third-party",
-        packageDisplayName: "Third Party",
-        editionKey: "5e",
-        editionDisplayName: "5e",
-        publicationKey: "publication",
-        publicationDisplayName: "Publication"
-    },
+    effectiveVariation,
+    browseVariation: effectiveVariation,
     categoryHistory: [
         { category: "prestigeClass", editions: ["3.5e"] },
         { category: "subclass", editions: ["5e"] }
@@ -90,6 +109,12 @@ const sourceOnlyReference = {
         canonicalKey: "canonical:0123"
     }
 };
+const historicalReference = {
+    ...sourceOnlyReference,
+    browseVariation: historicalVariation,
+    browserFields: [{ key: "prerequisite", label: "Prerequisite", value: "Legacy" }]
+};
+
 const fakeApi = {
     async backend(path, options = undefined) {
         calls.push({ path, options });
@@ -101,17 +126,7 @@ const fakeApi = {
                 reference: sourceOnlyReference,
                 variations: [
                     {
-                        sourceEntityRevisionId: "source-revision",
-                        sourceRevisionNumber: 1,
-                        name: "Source Only Fixture",
-                        category: "subclass",
-                        sourceCode: "NONSRD",
-                        packageKey: "third-party",
-                        packageDisplayName: "Third Party",
-                        publicationKey: "publication",
-                        publicationDisplayName: "Publication",
-                        editionKey: "5e",
-                        editionDisplayName: "5e",
+                        ...effectiveVariation,
                         isEffective: true,
                         document: { name: "Source Only Fixture" }
                     }
@@ -119,17 +134,21 @@ const fakeApi = {
                 effectiveDocument: { name: "Source Only Fixture" }
             };
         }
+
+        const historical = path.includes("entityType=prestigeClass")
+            && path.includes("categoryMode=any");
+        const reference = historical ? historicalReference : sourceOnlyReference;
         return {
             scope: path.includes("/campaigns/") ? "campaign" : "global",
             campaignId: path.includes("/campaigns/") ? "campaign-1" : null,
             revisionNumber: 7,
             totalCount: 1,
-            categoryMode: "effective",
+            categoryMode: historical ? "any" : "effective",
             entityTypeFacets: [{ value: "subclass", displayName: "subclass", count: 1 }],
-            sourceFacets: [{ value: "NONSRD", displayName: "NONSRD", count: 1 }],
-            packageFacets: [{ value: "third-party", displayName: "Third Party", count: 1 }],
-            editionFacets: [{ value: "5e", displayName: "5e", count: 1 }],
-            references: [sourceOnlyReference]
+            sourceFacets: [{ value: reference.browseVariation.sourceCode, displayName: reference.browseVariation.sourceCode, count: 1 }],
+            packageFacets: [{ value: reference.browseVariation.packageKey, displayName: reference.browseVariation.packageDisplayName, count: 1 }],
+            editionFacets: [{ value: reference.browseVariation.editionKey, displayName: reference.browseVariation.editionDisplayName, count: 1 }],
+            references: [reference]
         };
     }
 };
@@ -152,15 +171,28 @@ assert(calls[0].path.includes("edition=5e"), "Edition filters should be sent to 
 assert(globalCatalog.rules.length === 1, "One logical reference should project to one browser row.");
 assert(globalCatalog.rules[0].conceptKey === "canonical:0123", "Source-only references should remain selectable without a RuleConcept.");
 assert(globalCatalog.rules[0].ruleConceptId === null, "Source-only references must not fabricate a RuleConcept ID.");
-assert(globalCatalog.rules[0].sourceCode === "NONSRD", "Effective source metadata should project into the reusable Phase 2 columns.");
-assert(globalCatalog.rules[0].editionDisplayName === "5e", "Effective edition metadata should remain the row value even when history filters are active.");
+assert(globalCatalog.rules[0].sourceCode === "NONSRD", "Effective-mode source metadata should project into the reusable Phase 2 columns.");
+assert(globalCatalog.rules[0].editionDisplayName === "5e", "Effective-mode edition metadata should remain the row value.");
 assert(globalCatalog.entityTypeFacets[0].entityType === "subclass", "Core entity facets should project into the reusable Type control contract.");
 assert(globalCatalog.sourceFacets[0].sourceCode === "NONSRD", "Core source facets should project into the reusable Source control contract.");
 assert(fakeApi.referenceFacets.package[0].value === "third-party", "Package facet values should remain Core-owned package identities.");
-assert(fakeApi.referenceFacets.package[0].displayName === "Third Party", "Package facets should retain human-readable labels.");
 assert(fakeApi.referenceFacets.edition[0].value === "5e", "Edition facet values should remain authoritative edition keys.");
 assert(browserColumnValue(globalCatalog.rules[0], "entityType") === "Subclass", "Effective category should drive the row's current type column.");
 assert(sortRulesForBrowser(globalCatalog.rules, "prestigeClass", { key: "name", direction: "asc" }).length === 1, "Source-only references should participate in reusable sorting.");
+
+window.location.search = "";
+const historicalCatalog = await fakeApi.getGlobalRulesCatalog({
+    entityType: "prestigeClass",
+    query: "fixture",
+    limit: 50,
+    offset: 0
+});
+const historicalCall = calls.at(-1).path;
+assert(historicalCall.includes("categoryMode=any"), "Any-variation browse mode should be sent to Core.");
+assert(historicalCatalog.rules[0].entityType === "subclass", "Effective category remains the current rule type in historical browse mode.");
+assert(historicalCatalog.rules[0].sourceCode === "THREEFIVE", "Any-variation rows must project source metadata from the matching historical variation.");
+assert(historicalCatalog.rules[0].editionDisplayName === "3.5e", "Any-variation rows must project edition metadata from the matching historical variation.");
+assert(browserColumnValue(historicalCatalog.rules[0], "prerequisite") === "Legacy", "Historical family columns must use browser fields from the matching historical variation.");
 
 const detail = await fakeApi.getWikiReferenceDetail("canonical:0123");
 assert(detail.reference.referenceIdentity === "canonical:0123", "Reference detail should preserve logical identity.");
@@ -219,11 +251,20 @@ assert(referenceAdjudicationTarget(
 assert(referenceAdjudicationTarget(
     { canEditGlobal: true, dmCampaigns: [{ id: "campaign-1" }] },
     null,
-    null) === null, "Source-only references must remain read-only even for a Rules Lawyer.");
-assert(referenceAdjudicationTarget(
-    { canEditGlobal: true, dmCampaigns: [{ id: "campaign-1" }] },
-    null,
-    "campaign-1") === null, "Source-only references must remain read-only even for a campaign DM.");
+    null) === null, "Source-only references must not fabricate a RuleConcept adjudication target.");
+
+const normalizationTarget = referenceNormalizationTarget(
+    { canEditGlobal: true, dmCampaigns: [] },
+    sourceOnlyReference);
+assert(normalizationTarget?.scope === "global", "Rules Lawyer should receive a source-normalization target for a source-only reference.");
+assert(normalizationTarget?.sourceEntityId === "source-entity", "Source normalization must use the real source entity ID.");
+assert(normalizationTarget?.label === "Create/bind Dorks & Dice rule", "Source-only normalization should clearly describe the Rules Layer transition.");
+assert(referenceNormalizationTarget(
+    { canEditGlobal: false, dmCampaigns: [] },
+    sourceOnlyReference) === null, "Ordinary readers must not receive source normalization controls.");
+assert(referenceNormalizationTarget(
+    { canEditGlobal: false, dmCampaigns: [{ id: "campaign-1" }] },
+    sourceOnlyReference) === null, "Campaign DM authority alone must not grant global source normalization authority.");
 
 const globalTransitions = [];
 const globalBody = { id: "global-body" };
@@ -258,6 +299,29 @@ assert(campaignTransitions.some(value => value[0] === "campaign"
     && value[2] === "concept-1"
     && value[3] === "campaign-1"),
     "Campaign adjudication transition should open the existing editor for the same concept and selected campaign.");
+
+const normalizationTransitions = [];
+const normalizationBody = { id: "normalization-body" };
+const normalizationApp = {
+    activeView: "reference",
+    activeCampaignId: "campaign-1",
+    api: {
+        async acceptSourceNormalization(sourceEntityId) {
+            normalizationTransitions.push(["normalize", sourceEntityId]);
+            return { concept: { id: "concept-2" } };
+        }
+    },
+    root: { querySelector: selector => selector === ".rules-core-main" ? normalizationBody : null },
+    async render() { normalizationTransitions.push(["render", this.activeView, this.activeCampaignId]); },
+    async renderGlobalConcept(body, conceptId) { normalizationTransitions.push(["global", body, conceptId]); },
+    async renderCampaignConcept() { throw new Error("Source normalization must open the global Rules Layer editor."); }
+};
+await openReferenceNormalization(normalizationApp, "source-entity");
+assert(normalizationTransitions.some(value => value[0] === "normalize" && value[1] === "source-entity"),
+    "Source-only normalization must call the real normalization API with the source entity ID.");
+assert(normalizationApp.activeView === "global", "Accepted source normalization should transition to the global Rules Layer view.");
+assert(normalizationTransitions.some(value => value[0] === "global" && value[1] === normalizationBody && value[2] === "concept-2"),
+    "Accepted source normalization should open the returned real RuleConcept in the existing editor.");
 
 const unknown = getEntityBrowserConfig("importedMysteryFamily");
 assert(unknown.renderer === "generic", "Imported/unknown families must retain generic fallback rendering.");

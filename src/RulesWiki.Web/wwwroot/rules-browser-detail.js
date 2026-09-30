@@ -181,7 +181,8 @@ function renderResolutionStatus(app, reference, campaignId) {
             element("div", { className: "small text-body-secondary", text: detail })),
         element("div", { className: "d-flex align-items-center gap-2" },
             badge(campaignId ? "Campaign scope" : "Global scope", state === "unresolved-fallback" ? "secondary" : "primary"),
-            adjudicationButton(app, reference.ruleConceptId, campaignId)));
+            adjudicationButton(app, reference.ruleConceptId, campaignId),
+            normalizationButton(app, reference)));
 }
 
 function renderVariation(container, reference, variation) {
@@ -314,6 +315,17 @@ export function referenceAdjudicationTarget(app, ruleConceptId, campaignId) {
     };
 }
 
+export function referenceNormalizationTarget(app, reference) {
+    if (!app.canEditGlobal || reference?.ruleConceptId) return null;
+    const sourceEntityId = reference?.effectiveVariation?.sourceEntityId;
+    if (!sourceEntityId) return null;
+    return {
+        sourceEntityId,
+        scope: "global",
+        label: "Create/bind Dorks & Dice rule"
+    };
+}
+
 function adjudicationButton(app, ruleConceptId, campaignId) {
     const target = referenceAdjudicationTarget(app, ruleConceptId, campaignId);
     if (!target) return null;
@@ -323,6 +335,27 @@ function adjudicationButton(app, ruleConceptId, campaignId) {
         className: "btn btn-sm btn-outline-primary",
         text: target.label,
         onClick: async () => openReferenceAdjudication(app, target.ruleConceptId, target.campaignId)
+    });
+}
+
+function normalizationButton(app, reference) {
+    const target = referenceNormalizationTarget(app, reference);
+    if (!target) return null;
+
+    return element("button", {
+        type: "button",
+        className: "btn btn-sm btn-outline-primary",
+        text: target.label,
+        onClick: async event => {
+            const button = event.currentTarget;
+            setButtonBusy(button, true, "Creating…");
+            try {
+                await openReferenceNormalization(app, target.sourceEntityId);
+            } catch (error) {
+                window.alert(describeError(error));
+                setButtonBusy(button, false);
+            }
+        }
     });
 }
 
@@ -343,6 +376,16 @@ export async function openReferenceAdjudication(app, ruleConceptId, campaignId) 
     } else {
         await app.renderGlobalConcept(body, ruleConceptId);
     }
+}
+
+export async function openReferenceNormalization(app, sourceEntityId) {
+    const accepted = await app.api.acceptSourceNormalization(sourceEntityId);
+    const ruleConceptId = accepted?.concept?.id;
+    if (!ruleConceptId) {
+        throw new Error("Source normalization did not return a Rules Layer concept.");
+    }
+    await openReferenceAdjudication(app, ruleConceptId, null);
+    return accepted;
 }
 
 function comparisonField(label, control) {
