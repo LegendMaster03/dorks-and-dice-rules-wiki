@@ -1,4 +1,5 @@
 const REFERENCE_CATALOG_SENTINEL = "reference-catalog";
+const CLASS_FAMILY_ADVANCEMENT_METADATA = "__rulesWikiAdvancementFeatures";
 
 export function installWikiReferenceApi(api) {
     api.referenceFacets = { package: [], edition: [] };
@@ -8,7 +9,8 @@ export function installWikiReferenceApi(api) {
     api.getWikiReferenceDetail = (referenceIdentity, campaignId = null) =>
         api.backend(campaignId
             ? `/api/campaigns/${encodeURIComponent(campaignId)}/wiki/references/${encodeURIComponent(referenceIdentity)}`
-            : `/api/wiki/references/${encodeURIComponent(referenceIdentity)}`);
+            : `/api/wiki/references/${encodeURIComponent(referenceIdentity)}`)
+            .then(projectWikiReferenceDetail);
 
     api.getGlobalResolvedRule = async referenceIdentity =>
         projectEffectiveReference(await api.getWikiReferenceDetail(referenceIdentity));
@@ -88,6 +90,40 @@ function projectReferenceCatalog(catalog) {
         revisionNumber: catalog.revisionNumber ?? REFERENCE_CATALOG_SENTINEL,
         wikiReferencePublicationRevision: catalog.revisionNumber ?? null
     };
+}
+
+function projectWikiReferenceDetail(detail) {
+    if (!detail || typeof detail !== "object") return detail;
+    return {
+        ...detail,
+        effectiveDocument: decorateClassFamilyDocument(
+            detail.effectiveDocument,
+            detail.effectiveAdvancementFeatures),
+        variations: (detail.variations ?? []).map(variation => ({
+            ...variation,
+            document: decorateClassFamilyDocument(
+                variation.document,
+                variation.advancementFeatures)
+        }))
+    };
+}
+
+function decorateClassFamilyDocument(documentValue, advancementFeatures) {
+    if (!documentValue || typeof documentValue !== "object" || Array.isArray(documentValue)) {
+        return documentValue;
+    }
+    const projected = { ...documentValue };
+    Object.defineProperty(projected, CLASS_FAMILY_ADVANCEMENT_METADATA, {
+        value: Array.isArray(advancementFeatures) ? advancementFeatures : [],
+        enumerable: false,
+        configurable: false,
+        writable: false
+    });
+    return projected;
+}
+
+export function classFamilyAdvancementFeatures(documentValue) {
+    return documentValue?.[CLASS_FAMILY_ADVANCEMENT_METADATA] ?? [];
 }
 
 function projectFacetOptions(facets = []) {
