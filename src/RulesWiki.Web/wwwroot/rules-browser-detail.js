@@ -44,7 +44,8 @@ export async function renderRuleDetailPane(
                 onBackToList,
                 {
                     renderResolutionStatus: (reference, activeCampaignId) =>
-                        renderResolutionStatus(app, reference, activeCampaignId)
+                        renderResolutionStatus(app, reference, activeCampaignId),
+                    isCurrent: () => requestSerial === getCurrentSerial()
                 });
             if (requestSerial !== getCurrentSerial()) return;
             app.presentRenderedFragment?.(container);
