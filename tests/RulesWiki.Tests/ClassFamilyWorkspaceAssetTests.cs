@@ -52,16 +52,23 @@ public sealed class ClassFamilyWorkspaceAssetTests
     {
         var workspace = ReadWebAsset("class-family-workspace.js");
         var model = ReadWebAsset("class-family-model.js");
+        var referenceApi = ReadWebAsset("rules-reference-api.js");
 
         Assert.Contains("classTableGroups", model, StringComparison.Ordinal);
         Assert.Contains("rowsSpellProgression", model, StringComparison.Ordinal);
         Assert.Contains("baseAttackProgression", model, StringComparison.Ordinal);
         Assert.Contains("saveProgressions", model, StringComparison.Ordinal);
         Assert.Contains("classSkills", model, StringComparison.Ordinal);
+        Assert.Contains("classFamilyAdvancementFeatures", model, StringComparison.Ordinal);
+        Assert.Contains("effectiveAdvancementFeatures", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("variation.advancementFeatures", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("Object.defineProperty", referenceApi, StringComparison.Ordinal);
+        Assert.Contains("enumerable: false", referenceApi, StringComparison.Ordinal);
         Assert.Contains("No normalized progression table is present", workspace, StringComparison.Ordinal);
         Assert.Contains("Rules Wiki does not manufacture missing level mechanics", workspace, StringComparison.Ordinal);
         Assert.DoesNotContain("BaseAttackBonus(", workspace, StringComparison.Ordinal);
         Assert.DoesNotContain("BaseAttackBonus(", model, StringComparison.Ordinal);
+        Assert.DoesNotContain("split('|')", model, StringComparison.Ordinal);
     }
 
     [Fact]
