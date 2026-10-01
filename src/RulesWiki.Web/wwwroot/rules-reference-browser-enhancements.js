@@ -13,7 +13,9 @@ export function installWikiReferenceBrowserEnhancements(app) {
         if (app.activeView !== "library") return;
         installServerReferenceFacetControls(app, container);
         installCategoryModeControl(app, container);
+        relocateBrowserContextControls(container);
         clarifyReferenceCatalogStatus(container);
+        enhanceWikiReferenceFragment(app, container);
     };
 }
 
@@ -48,6 +50,15 @@ export function installWikiReferenceNavigation(app) {
         }
         return navigation;
     };
+
+    const presentRenderedFragment = app.presentRenderedFragment?.bind(app);
+    if (presentRenderedFragment) {
+        app.presentRenderedFragment = container => {
+            const result = presentRenderedFragment(container);
+            if (app.activeView === "library") enhanceWikiReferenceFragment(app, container);
+            return result;
+        };
+    }
 }
 
 function installServerReferenceFacetControls(app, container) {
@@ -150,8 +161,16 @@ function installCategoryModeControl(app, container) {
         className: "form-select form-select-sm rules-wiki-category-mode",
         ariaLabel: "Category membership mode"
     },
-    element("option", { value: "any", text: "Category: any variation" }),
-    element("option", { value: "effective", text: "Category: effective in this scope" }));
+    element("option", {
+        value: "any",
+        text: "Any variation",
+        attributes: { "aria-label": "Category: any variation" }
+    }),
+    element("option", {
+        value: "effective",
+        text: "Effective in this scope",
+        attributes: { "aria-label": "Category: effective in this scope" }
+    }));
     select.value = referenceCategoryMode();
     select.addEventListener("change", async () => {
         const parameters = new URLSearchParams(window.location.search);
@@ -165,9 +184,79 @@ function installCategoryModeControl(app, container) {
         await app.render();
     });
 
-    controls.append(element("label", { className: "rules-wiki-category-mode-field" },
-        element("span", { className: "visually-hidden", text: "Category membership" }),
-        select));
+    controls.append(element("label", {
+        className: "rules-wiki-browser-context-field rules-wiki-category-mode-field"
+    },
+    element("span", { className: "rules-wiki-browser-context-label", text: "Category" }),
+    select));
+}
+
+function relocateBrowserContextControls(container) {
+    const controls = container.querySelector(".rules-core-library-controls");
+    const index = container.querySelector(".rules-core-library-index");
+    if (!controls || !index) return;
+
+    controls.classList.add("rules-wiki-browser-context-controls");
+    wrapBrowserContextControl(
+        controls.querySelector(".rules-core-library-scope"),
+        "Scope");
+    wrapBrowserContextControl(
+        controls.querySelector(".rules-core-library-more-types"),
+        "Type");
+
+    const searchGroup = index.querySelector(":scope > .rules-core-library-search-group");
+    if (searchGroup) index.insertBefore(controls, searchGroup);
+    else index.prepend(controls);
+}
+
+function wrapBrowserContextControl(control, label) {
+    if (!control || control.parentElement?.classList.contains("rules-wiki-browser-context-field")) return;
+    const wrapper = element("label", { className: "rules-wiki-browser-context-field" },
+        element("span", { className: "rules-wiki-browser-context-label", text: label }));
+    control.parentNode.insertBefore(wrapper, control);
+    wrapper.append(control);
+}
+
+function enhanceWikiReferenceFragment(app, container) {
+    addReferenceHeading(app, container);
+    collapseSourceSpecificMechanics(container);
+    classifyResolutionStatus(container);
+}
+
+function addReferenceHeading(app, container) {
+    const selectedName = app.root
+        ?.querySelector(".rules-core-library-row.is-selected .rules-core-library-row-name")
+        ?.textContent
+        ?.trim();
+    if (!selectedName) return;
+
+    for (const renderer of container.querySelectorAll(".rules-core-structured-rule")) {
+        if (renderer.querySelector(":scope > .rules-wiki-reference-heading")) continue;
+        renderer.prepend(element("header", { className: "rules-wiki-reference-heading" },
+            element("h3", { className: "rules-wiki-reference-title", text: selectedName })));
+    }
+}
+
+function collapseSourceSpecificMechanics(container) {
+    for (const section of container.querySelectorAll(".rules-core-source-mechanics")) {
+        if (section.closest(".rules-wiki-source-mechanics-disclosure")) continue;
+        section.querySelector(":scope > .rules-core-monster-section-title")?.remove();
+        const body = element("div", { className: "rules-core-secondary-details-body" });
+        body.append(...section.childNodes);
+        const disclosure = element("details", {
+            className: "rules-core-secondary-details rules-wiki-source-mechanics-disclosure"
+        },
+        element("summary", { text: "Source-specific mechanics" }),
+        body);
+        section.replaceWith(disclosure);
+    }
+}
+
+function classifyResolutionStatus(container) {
+    for (const status of container.querySelectorAll(".rules-core-ruling-status")) {
+        const title = status.querySelector(".rules-core-ruling-status-title")?.textContent?.trim();
+        status.classList.toggle("is-unresolved", title === "Unresolved default");
+    }
 }
 
 function clarifyReferenceCatalogStatus(container) {

@@ -5,9 +5,25 @@
 }
 
 .rules-core-main[data-rules-view="library"] {
+    min-height: 0;
     padding-top: 0;
+    overflow: hidden;
 }
 
 .rules-core-main[data-rules-view="library"] .rules-core-library-heading {
     display: none;
+}
+
+/* The reference browser owns the available Tool viewport. The index and detail panes
+   scroll independently instead of forcing the embedded page itself to grow. */
+.rules-core-app:has(.rules-core-main[data-rules-view="library"]) {
+    grid-template-rows: auto auto minmax(0, 1fr);
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+}
+
+.rules-core-app:has(.rules-core-main[data-rules-view="library"]) .rules-core-nav-shell {
+    position: relative;
+    top: auto;
 }
