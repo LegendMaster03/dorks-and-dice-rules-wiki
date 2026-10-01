@@ -6,6 +6,12 @@ import { installConceptSourceAuthoring } from "./concept-source-authoring.js";
 import { installHostedSourceAuthoring } from "./hosted-source-authoring.js";
 import { installMechanicalRelationships } from "./mechanical-relationships.js";
 import { installResolvedRulesBrowser } from "./rules-browser.js";
+import { hasClientBrowserFilters } from "./rules-browser-filters.js";
+import {
+    parseBrowserViewState,
+    parseToolRoute
+} from "./rules-browser-routing.js";
+import { installImmediateReferenceBrowserLayout } from "./rules-reference-browser-layout.js";
 import { installWikiReferenceApi } from "./rules-reference-api.js";
 import {
     installWikiReferenceBrowserEnhancements,
@@ -24,7 +30,13 @@ import { installSourceRevisionReview } from "./source-revision-review.js";
 import { installSourceVersioning } from "./source-versioning.js";
 import { installRulesCoreUx } from "./ux-shell.js";
 import { installWorkspaceRouting } from "./workspace-routing.js";
-import { alertNode, clear, describeError, element } from "./ui.js";
+import {
+    alertNode,
+    clear,
+    describeError,
+    element,
+    DEFAULT_PAGE_SIZE
+} from "./ui.js";
 
 const root = document.getElementById("tool-root");
 if (!root) throw new Error("Rules Wiki could not find the Dorks & Dice tool root.");
@@ -38,6 +50,8 @@ try {
     const hostContext = await loadToolHostContext(root);
     const api = new RulesCoreApi(hostContext);
     installWikiReferenceApi(api);
+    prefetchInitialReferenceContent(api, hostContext);
+
     const [session, campaigns, workspaceScopes] = await Promise.all([
         api.getOptionalSession(),
         api.getOptionalCampaigns(),
@@ -60,6 +74,7 @@ try {
 
     const app = new RulesAuthoringApp(root, api, hostContext, effectiveSession, campaigns);
     installResolvedRulesBrowser(app);
+    installImmediateReferenceBrowserLayout(app);
     installWikiReferenceBrowserEnhancements(app);
     installAdjudicationScopeControl(app);
     installSemanticComparison(app);
@@ -89,6 +104,46 @@ try {
     root.append(element("div", { className: "card card-body" },
         element("h2", { className: "h5", text: "Rules Wiki unavailable" }),
         alertNode("danger", describeError(error))));
+}
+
+function prefetchInitialReferenceContent(api, hostContext) {
+    if (hostContext.siteMode !== "dorks-and-dice") return;
+
+    const toolRoute = String(hostContext.toolRoute ?? "/") || "/";
+    const route = parseToolRoute(toolRoute);
+    if (toolRoute !== "/" && !route.entityType && !route.conceptKey) return;
+
+    const entityType = route.entityType ?? "";
+    const viewState = parseBrowserViewState(window.location.search, entityType);
+    const searchParameters = new URLSearchParams(window.location.search);
+    const requestedScope = searchParameters.get("scope");
+    const campaignId = requestedScope?.startsWith("campaign:")
+        ? requestedScope.slice("campaign:".length).trim() || null
+        : null;
+    const filters = {
+        entityType: entityType || null,
+        query: viewState.query || null,
+        sourceCode: viewState.sourceCode || null,
+        overridesOnly: Boolean(campaignId && viewState.overridesOnly),
+        limit: DEFAULT_PAGE_SIZE,
+        offset: 0
+    };
+
+    const catalog = campaignId
+        ? api.prefetchCampaignRulesCatalog(campaignId, filters)
+        : api.prefetchGlobalRulesCatalog(filters);
+
+    void catalog.then(result => {
+        const predictedIdentity = route.conceptKey
+            ?? (!viewState.sortKey
+                && !hasClientBrowserFilters(entityType, viewState.fieldFilters)
+                ? result.rules?.[0]?.conceptKey
+                : null);
+        if (!predictedIdentity) return null;
+        return api.prefetchWikiReferenceDetail(predictedIdentity, campaignId);
+    }).catch(() => {
+        // Prefetch is opportunistic. Normal browser loading retries through the regular path.
+    });
 }
 
 function installStylesheets() {

@@ -15,6 +15,40 @@ public sealed class Phase32UiAssetTests
     }
 
     [Fact]
+    public void ReferenceBrowserPlacesContextControlsBeforeAsyncLoadCompletes()
+    {
+        var app = ReadWebAsset("app.js");
+        var layout = ReadWebAsset("rules-reference-browser-layout.js");
+
+        Assert.Contains("installImmediateReferenceBrowserLayout(app)", app, StringComparison.Ordinal);
+        Assert.Contains("const rendering = renderActiveView(container);", layout, StringComparison.Ordinal);
+        Assert.Contains("placeReferenceBrowserControls(container);", layout, StringComparison.Ordinal);
+        Assert.Contains("await rendering;", layout, StringComparison.Ordinal);
+        Assert.True(
+            layout.IndexOf("placeReferenceBrowserControls(container);", StringComparison.Ordinal)
+            < layout.IndexOf("await rendering;", StringComparison.Ordinal));
+        Assert.Contains("index.insertBefore(controls, searchGroup)", layout, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ReferenceBrowserPrefetchesInitialReferenceContentDuringBootstrap()
+    {
+        var app = ReadWebAsset("app.js");
+        var api = ReadWebAsset("rules-reference-api.js");
+
+        Assert.Contains("prefetchInitialReferenceContent(api, hostContext);", app, StringComparison.Ordinal);
+        Assert.True(
+            app.IndexOf("prefetchInitialReferenceContent(api, hostContext);", StringComparison.Ordinal)
+            < app.IndexOf("const [session, campaigns, workspaceScopes] = await Promise.all", StringComparison.Ordinal));
+        Assert.Contains("prefetchGlobalRulesCatalog", api, StringComparison.Ordinal);
+        Assert.Contains("prefetchCampaignRulesCatalog", api, StringComparison.Ordinal);
+        Assert.Contains("prefetchWikiReferenceDetail", api, StringComparison.Ordinal);
+        Assert.Contains("REFERENCE_PREFETCH_TTL_MS", api, StringComparison.Ordinal);
+        Assert.Contains("consumePrefetch", api, StringComparison.Ordinal);
+        Assert.Contains("!hasClientBrowserFilters(entityType, viewState.fieldFilters)", app, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReferenceBrowserOwnsTheViewportAndScrollsBothPanesIndependently()
     {
         var content = ReadWebAssets(
