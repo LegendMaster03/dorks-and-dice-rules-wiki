@@ -15,6 +15,22 @@ public sealed class Phase32UiAssetTests
     }
 
     [Fact]
+    public void ReferenceBrowserPlacesContextControlsBeforeAsyncLoadCompletes()
+    {
+        var app = ReadWebAsset("app.js");
+        var layout = ReadWebAsset("rules-reference-browser-layout.js");
+
+        Assert.Contains("installImmediateReferenceBrowserLayout(app)", app, StringComparison.Ordinal);
+        Assert.Contains("const rendering = renderActiveView(container);", layout, StringComparison.Ordinal);
+        Assert.Contains("placeReferenceBrowserControls(container);", layout, StringComparison.Ordinal);
+        Assert.Contains("await rendering;", layout, StringComparison.Ordinal);
+        Assert.True(
+            layout.IndexOf("placeReferenceBrowserControls(container);", StringComparison.Ordinal)
+            < layout.IndexOf("await rendering;", StringComparison.Ordinal));
+        Assert.Contains("index.insertBefore(controls, searchGroup)", layout, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReferenceBrowserOwnsTheViewportAndScrollsBothPanesIndependently()
     {
         var content = ReadWebAssets(
