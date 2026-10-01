@@ -49,6 +49,22 @@ public sealed class Phase32UiAssetTests
     }
 
     [Fact]
+    public void DeepLinkedReferenceDetailPrefetchDoesNotWaitForCatalog()
+    {
+        var app = ReadWebAsset("app.js");
+        const string immediateDetail = "api.prefetchWikiReferenceDetail(route.conceptKey, campaignId)";
+        const string catalogContinuation = "void catalog.then(result =>";
+
+        Assert.Contains("if (route.conceptKey)", app, StringComparison.Ordinal);
+        Assert.Contains(immediateDetail, app, StringComparison.Ordinal);
+        Assert.Contains(catalogContinuation, app, StringComparison.Ordinal);
+        Assert.True(
+            app.IndexOf(immediateDetail, StringComparison.Ordinal)
+            < app.IndexOf(catalogContinuation, StringComparison.Ordinal));
+        Assert.Contains("if (route.conceptKey) return null;", app, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReferenceBrowserOwnsTheViewportAndScrollsBothPanesIndependently()
     {
         var content = ReadWebAssets(
