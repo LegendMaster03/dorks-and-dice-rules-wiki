@@ -6,6 +6,7 @@ import { installConceptSourceAuthoring } from "./concept-source-authoring.js";
 import { installHostedSourceAuthoring } from "./hosted-source-authoring.js";
 import { installMechanicalRelationships } from "./mechanical-relationships.js";
 import { installResolvedRulesBrowser } from "./rules-browser.js";
+import { installImmediateReferenceBrowserLayout } from "./rules-reference-browser-layout.js";
 import { installWikiReferenceApi } from "./rules-reference-api.js";
 import {
     installWikiReferenceBrowserEnhancements,
@@ -60,6 +61,7 @@ try {
 
     const app = new RulesAuthoringApp(root, api, hostContext, effectiveSession, campaigns);
     installResolvedRulesBrowser(app);
+    installImmediateReferenceBrowserLayout(app);
     installWikiReferenceBrowserEnhancements(app);
     installAdjudicationScopeControl(app);
     installSemanticComparison(app);
