@@ -77,8 +77,6 @@ async function presentCompanionContent(
         ?? host.querySelector(".rules-core-effective-rule");
     if (rule?.parentElement === host) rule.insertAdjacentElement("afterend", section);
     else host.append(section);
-
-    presentNormalizedFragment(app, section);
 }
 
 function getCompanionCollection(app, cache, referenceIdentity, campaignId) {
@@ -98,8 +96,8 @@ function getCompanionCollection(app, cache, referenceIdentity, campaignId) {
 }
 
 function companionContentsForVariation(contents, variation) {
-    const candidates = (contents ?? []).filter(content =>
-        SUPPORTED_COMPANION_KINDS.has(String(content?.companionKind ?? "").toLowerCase()));
+    const candidates = uniqueCompanionContents((contents ?? []).filter(content =>
+        SUPPORTED_COMPANION_KINDS.has(String(content?.companionKind ?? "").toLowerCase())));
     if (!variation || candidates.length === 0) return [];
 
     const revisionMatches = candidates.filter(content =>
@@ -108,6 +106,19 @@ function companionContentsForVariation(contents, variation) {
 
     return candidates.filter(content =>
         sameIdentity(content.sourceEntityId, variation.sourceEntityId));
+}
+
+function uniqueCompanionContents(contents) {
+    const seen = new Set();
+    return contents.filter(content => {
+        const key = [
+            content?.sourceEntityRevisionId ?? "",
+            content?.contentSha256 ?? content?.companionContentId ?? ""
+        ].join("|").toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 }
 
 function renderCompanionSection(contents) {
@@ -166,15 +177,6 @@ function companionHost(container) {
     return container.querySelector?.(".rules-core-library-detail-body")
         ?? container.closest?.(".rules-core-library-detail-body")
         ?? null;
-}
-
-function presentNormalizedFragment(app, section) {
-    // The existing Phase 3.2 presentation hook repairs any remaining source renderer tokens.
-    // Call the wrapped hook only for the newly inserted section; the serial guard prevents the
-    // resulting callback from appending a second companion section.
-    const current = app.presentRenderedFragment;
-    if (typeof current !== "function") return;
-    section.querySelectorAll("[data-rules-wiki-normalized]").forEach(node => node.removeAttribute("data-rules-wiki-normalized"));
 }
 
 function sameSelection(left, right) {
