@@ -3,6 +3,7 @@ import { RulesAuthoringApp } from "./authoring.js";
 import { installAdjudicationQueue } from "./adjudication-queue.js";
 import { installCampaignBaselineAuthoring } from "./campaign-baseline-authoring.js";
 import { installConceptSourceAuthoring } from "./concept-source-authoring.js";
+import { installCorpusReconciliationMaintenance } from "./corpus-reconciliation-maintenance.js";
 import { installHostedSourceAuthoring } from "./hosted-source-authoring.js";
 import { installMechanicalRelationships } from "./mechanical-relationships.js";
 import { installResolvedRulesBrowser } from "./rules-browser.js";
@@ -88,6 +89,7 @@ try {
     installAdjudicationQueue(app);
     installHostedSourceAuthoring(app);
     installSourceAdministration(app);
+    installCorpusReconciliationMaintenance(app);
     installSourceAccessAdministration(app);
     installSourceAcquisitionAdministration(app);
     installCampaignBaselineAuthoring(app);
@@ -109,64 +111,24 @@ try {
 }
 
 function prefetchInitialReferenceContent(api, hostContext) {
-    if (hostContext.siteMode !== "dorks-and-dice") return;
-
-    const toolRoute = String(hostContext.toolRoute ?? "/") || "/";
-    const route = parseToolRoute(toolRoute);
-    if (toolRoute !== "/" && !route.entityType && !route.conceptKey) return;
-
-    const entityType = route.entityType ?? "";
-    const viewState = parseBrowserViewState(window.location.search, entityType);
-    const searchParameters = new URLSearchParams(window.location.search);
-    const requestedScope = searchParameters.get("scope");
-    const campaignId = requestedScope?.startsWith("campaign:")
-        ? requestedScope.slice("campaign:".length).trim() || null
-        : null;
-    const filters = {
-        entityType: entityType || null,
-        query: viewState.query || null,
-        sourceCode: viewState.sourceCode || null,
-        overridesOnly: Boolean(campaignId && viewState.overridesOnly),
-        limit: DEFAULT_PAGE_SIZE,
-        offset: 0
-    };
-
-    const catalog = campaignId
-        ? api.prefetchCampaignRulesCatalog(campaignId, filters)
-        : api.prefetchGlobalRulesCatalog(filters);
-
-    // A deep link already gives us the exact reference identity. Do not serialize its detail
-    // request behind the catalog request; start both as soon as the Tool Host context is ready.
-    if (route.conceptKey) {
-        void api.prefetchWikiReferenceDetail(route.conceptKey, campaignId).catch(() => {
-            // Prefetch is opportunistic. Normal browser loading retries through the regular path.
-        });
+    const route = parseToolRoute(window.location.pathname, window.location.search, hostContext.basePath);
+    if (route.view === "rules") {
+        const state = parseBrowserViewState(route.pathSegments, route.searchParams);
+        if (state.referenceIdentity && state.referenceView === "detail") {
+            api.prefetchWikiReferenceDetail?.(state.referenceIdentity, null);
+        } else if (!state.referenceIdentity && !hasClientBrowserFilters(state.filters)) {
+            api.prefetchWikiReferenceCatalog?.(null, state.filters, DEFAULT_PAGE_SIZE, 0);
+        }
     }
-
-    void catalog.then(result => {
-        if (route.conceptKey) return null;
-        const predictedIdentity = !viewState.sortKey
-            && !hasClientBrowserFilters(entityType, viewState.fieldFilters)
-            ? result.rules?.[0]?.conceptKey
-            : null;
-        if (!predictedIdentity) return null;
-        return api.prefetchWikiReferenceDetail(predictedIdentity, campaignId);
-    }).catch(() => {
-        // Prefetch is opportunistic. Normal browser loading retries through the regular path.
-    });
 }
 
 function installStylesheets() {
-    for (const [id, filename] of [
-        ["rules-core-module-styles", "./rules-core.css"],
-        ["rules-core-detail-styles", "./rules-core-detail.css"],
-        ["rules-wiki-shell-styles", "./rules-wiki-shell.css"]
-    ]) {
-        if (document.getElementById(id)) continue;
+    for (const href of ["/css/bootstrap.min.css", "/css/tool-ui.css"]) {
+        if (document.querySelector(`link[data-rules-core-stylesheet="${href}"]`)) continue;
         const link = document.createElement("link");
-        link.id = id;
         link.rel = "stylesheet";
-        link.href = new URL(filename, import.meta.url).href;
+        link.href = href;
+        link.dataset.rulesCoreStylesheet = href;
         document.head.append(link);
     }
 }
