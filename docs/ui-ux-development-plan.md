@@ -490,7 +490,7 @@ The first human-testing target. These editions establish the initial reference-b
 
 ### 3.xe
 
-For this plan, **3.xe means D&D 3e and D&D 3.5e**. After the 5e/5.5e player-reference surface is stable, Rules Wiki should deliberately test the architecture against 3.xe before bestiary completion.
+For this plan, **3.xe means D&D 3e and D&D 3.5e**. Phase 4 should establish a usable 5e/5.5e reference baseline and then deliberately test the same reference architecture against 3.xe before the phase is considered complete and before bestiary completion begins.
 
 High-value 3.xe concepts include:
 
@@ -503,7 +503,7 @@ High-value 3.xe concepts include:
 - weapon/armor categories, enhancement/special properties, charges, costs, and other item mechanics;
 - combat/reference mechanics such as touch AC, flat-footed AC, grapple, damage reduction, spell resistance, and miss chance.
 
-The purpose of the 3.xe phase is not merely to add more labels. It must prove that the shared browser and renderer architecture can display a materially different rules family without flattening it into 5e semantics.
+The purpose of the 3.xe validation within Phase 4 is not merely to add more labels. It must prove that the shared browser and renderer architecture can display a materially different rules family without flattening it into 5e semantics.
 
 ## Stat-block presentation
 
@@ -618,7 +618,7 @@ During migration:
 - authoring/admin views can temporarily retain older layouts while normal browsing is modernized;
 - a phase must not partially move authoritative behavior into the frontend to avoid a coordinated Rules Core internal-contract change;
 - a phase must not call or expand a Rules Core public API to avoid a coordinated internal-contract change;
-- 5e/5.5e presentation improvements must not make 3e/3.5e records unreadable before the dedicated 3.xe phase;
+- Phase 4 must not treat the 5e/5.5e reference baseline as complete until the same families have been exercised against materially different 3e/3.5e shapes;
 - 3.xe additions must preserve the generic fallback for still-unsupported editions and entity families.
 
 ## Phased roadmap
@@ -741,9 +741,9 @@ All class-family semantic data required by Phase 3 must come through the private
 
 The workspace should be structurally capable of showing 3e/3.5e class-family data even though 5e/5.5e is the first human-testing target.
 
-### Phase 4 — 5e/5.5e player-reference completion
+### Phase 4 — cross-edition player/reference completion
 
-Goal: make the primary 5e/5.5e player-facing rules families consistently usable for human testing.
+Goal: make the primary player-facing and ordinary reference families consistently usable for human testing across 5e, 5.5e, 3e, and 3.5e, proving the shared browser is genuinely edition-flexible rather than a 5e UI with older-edition labels added afterward.
 
 Bring these families to the new reference-browser standard:
 
@@ -765,13 +765,12 @@ Each family receives:
 - cross-links/relationships where Rules Core exposes them through the internal Wiki contract;
 - stable routes and responsive behavior.
 
-Do not mark this phase complete merely because records render. Human testers must be able to find, distinguish, and inspect records efficiently.
+Phase 4 has two required acceptance gates within the same implementation phase:
 
-### Phase 5 — 3.xe (3e/3.5e) reference completion
+1. Establish a complete, usable 5e/5.5e reference baseline for the families above.
+2. Immediately exercise and extend that same architecture against 3e/3.5e before declaring the phase complete.
 
-Goal: deliberately stress the new UI architecture against D&D 3e and 3.5e before bestiary completion, proving that the system is edition-flexible rather than a 5e UI with extra labels.
-
-Required work:
+The 3.xe work must include:
 
 - use the Phase 3 class workspace for 3e/3.5e base classes and prestige classes;
 - render BAB, Fortitude/Reflex/Will progressions, skill points/class skills, caster progression, prerequisites, and other class-table fields without flattening them into 5e concepts;
@@ -789,6 +788,7 @@ Required work:
 
 Acceptance should include at least:
 
+- efficient lookup and inspection of the listed 5e/5.5e reference families;
 - a 3.5e base class;
 - a prestige class with meaningful prerequisites;
 - a ranked/family skill example;
@@ -797,9 +797,11 @@ Acceptance should include at least:
 - an item with 3.xe-specific mechanics;
 - one 3e versus 3.5e concept comparison.
 
-This phase does not complete the 3.xe bestiary. Monster-specific 3.xe presentation is handled in Phase 6 so bestiary behavior can be evaluated as one cross-edition stat-block system.
+Do not mark Phase 4 complete merely because records render or because the 5e/5.5e gate passes. Human testers must be able to find, distinguish, and inspect records efficiently, and the 3.xe gate must prove that the same reference architecture handles materially different mechanics without edition-specific architectural workarounds.
 
-### Phase 6 — bestiary and stat-block completion
+Phase 4 does not complete the 3.xe bestiary. Monster-specific 3.xe presentation remains part of the dedicated cross-edition stat-block phase so bestiary behavior can be evaluated as one stat-block system.
+
+### Phase 5 — bestiary and stat-block completion
 
 Goal: complete the bestiary around the existing D&D 5.5e-inspired stat-block foundation while preserving edition-specific mechanics.
 
@@ -818,7 +820,7 @@ Required work:
 - links to related creatures/mechanics when Rules Core exposes them through the internal Wiki contract;
 - print/focused reading behavior if useful at the table.
 
-### Phase 7 — global search and reference conveniences
+### Phase 6 — global search and reference conveniences
 
 Goal: reduce the time from "I need a rule" to "I am looking at it."
 
@@ -834,7 +836,7 @@ Candidate capabilities:
 
 Do not reproduce unrelated 5e.tools utilities merely for parity.
 
-### Phase 8 — source and edition context redesign
+### Phase 7 — source and edition context redesign
 
 Goal: make provenance and edition alternatives understandable without overwhelming ordinary browsing.
 
@@ -849,7 +851,7 @@ Required work:
 - clear separation of effective Dorks & Dice/campaign result from source evidence;
 - source-library transitions that retain useful context.
 
-### Phase 9 — cross-edition comparison UX
+### Phase 8 — cross-edition comparison UX
 
 Goal: make edition comparison a polished first-class Rules Wiki capability.
 
@@ -869,7 +871,7 @@ Required work:
 
 Rules Core remains authoritative for comparison semantics and automatic compatibility, supplied to Rules Wiki through the internal Tool-to-Tool API.
 
-### Phase 10 — adjudication and campaign-resolution redesign
+### Phase 9 — adjudication and campaign-resolution redesign
 
 Goal: transform Rules Lawyer/campaign authoring from inherited backend workspace UI into an in-context human ruling workflow.
 
@@ -887,7 +889,7 @@ Required work:
 - keep manual concept creation and normalization as secondary/escape-hatch tools;
 - preserve source-access and authority constraints.
 
-### Phase 11 — Sources and maintenance modernization
+### Phase 10 — Sources and maintenance modernization
 
 Goal: bring source-management surfaces into the same visual system without allowing maintenance UI to dominate the product.
 
@@ -903,7 +905,7 @@ Modernize:
 
 Large maintenance operations should expose progress, errors, and resumable/recoverable states clearly. Source credit/attribution must remain visible where required.
 
-### Phase 12 — reading/reference modes and long-form content
+### Phase 11 — reading/reference modes and long-form content
 
 Goal: support long-form rules and book-like reference content without forcing it into a dense two-column browser when that is not the best reading model.
 
@@ -917,7 +919,7 @@ Candidate work:
 - focused reading mode;
 - return-to-browser context preservation.
 
-### Phase 13 — accessibility, responsive, and performance hardening
+### Phase 12 — accessibility, responsive, and performance hardening
 
 Goal: treat the redesigned surface as production-ready across real devices and input methods.
 
@@ -940,7 +942,7 @@ Required validation includes:
 - source-access variation;
 - campaign membership/role variation.
 
-### Phase 14 — human acceptance and UI consistency pass
+### Phase 13 — human acceptance and UI consistency pass
 
 Goal: test complete user tasks rather than individual components.
 
@@ -973,10 +975,11 @@ feature/ui-phase-0-foundation
 feature/ui-phase-1-reference-browser
 feature/ui-phase-2-filter-framework
 feature/ui-phase-3-class-workspace
-feature/ui-phase-4-5e-reference
-feature/ui-phase-5-3xe-reference
-feature/ui-phase-6-bestiary
+feature/ui-phase-4-cross-edition-reference
+feature/ui-phase-5-bestiary
 ```
+
+Corrective or review-remediation phases may be inserted between roadmap phases using decimal numbering such as `3.1` or `3.2`. These intermediate phases address defects or corrections discovered during implementation or acceptance and do not renumber or redefine the subsequent planned roadmap phase.
 
 Do not modify `main` directly and do not merge until explicitly authorized.
 
