@@ -54,16 +54,8 @@ async function renderCorpusReconciliationMaintenance(app, container) {
         try {
             const status = await app.api.operation("getCorpusReconciliationStatus");
             if (token !== pollToken) return;
-            renderStatus(statusHost, status);
-            const running = status.state === "running";
-            const completed = status.state === "completed";
-            startButton.disabled = running || completed;
-            startButton.textContent = running
-                ? "Reconciliation running…"
-                : completed
-                    ? "Corpus reconciled"
-                    : "Reconcile existing corpus";
-            if (running && scheduleNext && card.isConnected && app.activeView === "source-admin") {
+            applyStatus(status);
+            if (status.state === "running" && scheduleNext && card.isConnected && app.activeView === "source-admin") {
                 window.setTimeout(() => refreshStatus(true), POLL_INTERVAL_MS);
             }
         } catch (error) {
@@ -73,13 +65,24 @@ async function renderCorpusReconciliationMaintenance(app, container) {
         }
     }
 
+    function applyStatus(status) {
+        renderStatus(statusHost, status);
+        const running = status.state === "running";
+        const completed = status.state === "completed";
+        startButton.disabled = running || completed;
+        startButton.textContent = running
+            ? "Reconciliation running…"
+            : completed
+                ? "Corpus reconciled"
+                : "Reconcile existing corpus";
+    }
+
     startButton.addEventListener("click", async () => {
         setButtonBusy(startButton, true, "Starting…");
         statusHost.replaceChildren();
         try {
             const status = await app.api.operation("startCorpusReconciliation");
-            renderStatus(statusHost, status);
-            startButton.disabled = status.state === "running" || status.state === "completed";
+            applyStatus(status);
             if (status.state === "running") {
                 window.setTimeout(() => refreshStatus(true), POLL_INTERVAL_MS);
             }
@@ -87,6 +90,7 @@ async function renderCorpusReconciliationMaintenance(app, container) {
             statusHost.replaceChildren(alertNode("danger", describeError(error)));
         } finally {
             setButtonBusy(startButton, false);
+            await refreshStatus(true);
         }
     });
 
