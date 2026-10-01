@@ -115,12 +115,30 @@ If anonymous Rules Library behavior is required, Site and Rules Core need an exp
 The coordinated deployment uses two Rules Core surfaces:
 
 - the normal shared Rules Core ingress runs `RulesCore:ApiSurface=PublicOnly` for ordinary Tool consumers;
-- a separate private Rules Core ingress runs `RulesCore:ApiSurface=PrivateOnly` and is attached to the pair-specific Rules Wiki/Rules Core network plus the restricted Site control-plane network required for ticket introspection.
+- a separate private Rules Core ingress runs `RulesCore:ApiSurface=PrivateOnly` and is attached to the pair-specific Rules Wiki/Rules Core network plus the restricted Site control-plane network and its restricted database dependency network.
 
 Rules Wiki receives `RulesCorePrivate:BaseUrl` from deployment configuration and joins the pair-specific private network through `docker-compose.private-tunnel.yml`. Ordinary Tools on the shared backend network do not join that pair network.
 
+Production configuration currently requires:
+
+```text
+RulesCorePrivate__Network=dorks-and-dice-private-rules-wiki-rules-core
+RULES_CORE_PRIVATE_BASE_URL=http://dorks-and-dice-rules-core-private:8080
+```
+
 Site deployment policy must explicitly configure `rules-wiki -> rules-core` under `ToolHosting:PrivateTunnels`. `DelegationTargets` does not grant this access and is not a substitute for the private tunnel.
 
-The Rules Wiki repository validates both the base Compose configuration and the private-tunnel overlay. Production activation must coordinate the Site, Rules Core, and Rules Wiki changes so the private ingress and pair network exist when Wiki begins using the private client.
+The production deployment workflow must always include both Compose files:
 
-See Rules Core `docs/api-boundaries.md` and `docs/private-tool-tunnel-deployment.md`, and Site `docs/tool-authentication-contract.md`, for the corresponding server and control-plane contracts.
+```text
+docker-compose.yml
+docker-compose.private-tunnel.yml
+```
+
+Deploying only the base Compose file would recreate Rules Wiki without the pair-network attachment. The deployment workflow therefore validates the private settings, applies both Compose files, verifies that Rules Wiki reports the private Core backend/authentication mode, verifies pair-network membership, and verifies that the Wiki container can resolve `dorks-and-dice-rules-core-private`.
+
+Readiness does not prove ticket exchange. Production acceptance must also exercise at least one real Rules Wiki operation through Site capability exchange and the private Core ingress.
+
+The generic private-tunnel creation, verification, persistence, and revocation procedure is canonical in the Site repository at `docs/private-tool-tunnels.md`. Rules Core `docs/private-tool-tunnel-deployment.md` documents the target-specific split ingress and database dependency network.
+
+See also Rules Core `docs/api-boundaries.md` and Site `docs/tool-authentication-contract.md` for the corresponding API and authentication contracts.
