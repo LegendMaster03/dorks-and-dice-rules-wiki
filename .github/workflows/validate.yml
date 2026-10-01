@@ -38,6 +38,7 @@ jobs:
           node tools/validate-browser-framework.mjs
           node tools/validate-reference-browser.mjs
           node tools/validate-class-family-workspace.mjs
+          node tools/validate-private-core-boundary.mjs
           if grep -R '/tools/rules-core' -n src/RulesWiki.Web/wwwroot tools; then
             echo "Rules Wiki presentation still contains the old Tool mount."
             exit 1
@@ -49,7 +50,11 @@ jobs:
             exit 1
           fi
       - name: Validate Compose configuration
-        run: docker compose -f docker-compose.yml config >/dev/null
+        env:
+          RulesCorePrivate__Network: rules-wiki-rules-core-test
+        run: |
+          docker compose -f docker-compose.yml config >/dev/null
+          docker compose -f docker-compose.yml -f docker-compose.private-tunnel.yml config >/dev/null
       - name: Build container
         run: docker build -t dorks-and-dice-rules-wiki:test -f src/RulesWiki.Web/Dockerfile .
       - name: Smoke test container
@@ -58,6 +63,7 @@ jobs:
           docker run -d --name dorks-and-dice-rules-wiki-smoketest \
             -p 127.0.0.1:58080:8080 \
             -e ToolHost__BaseUrl=http://site.example.invalid \
+            -e RulesCorePrivate__BaseUrl=http://rules-core-private.example.invalid \
             dorks-and-dice-rules-wiki:test
           ready=false
           for i in {1..20}; do

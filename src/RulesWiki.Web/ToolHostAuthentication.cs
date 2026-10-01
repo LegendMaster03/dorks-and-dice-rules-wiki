@@ -9,8 +9,7 @@ public static class ToolHostAuthenticationHeaders
 {
     public const string Ticket = "X-Dorks-Tool-Auth-Ticket";
     public const string IntrospectionPath = "X-Dorks-Tool-Auth-Introspection-Path";
-    public const string DelegationCapability = "X-Dorks-Tool-Delegation-Capability";
-    public const string DelegationPath = "X-Dorks-Tool-Delegation-Path";
+    public const string PrivateTunnelCapability = "X-Dorks-Tool-Private-Tunnel-Capability";
 }
 
 public sealed record ToolHostUserContext(string Id, string DisplayName);
@@ -24,8 +23,8 @@ public sealed record ToolHostAuthenticationContext(
     IReadOnlyList<string> GlobalRoles,
     IReadOnlyList<ToolHostCampaignContext> Campaigns)
 {
-    public string? DelegationCapability { get; init; }
-    public string? DelegationPath { get; init; }
+    public string? ToolKey { get; init; }
+    public string? PrivateTunnelCapability { get; init; }
 }
 
 public interface IToolHostAuthenticationClient
@@ -39,9 +38,9 @@ public interface IToolHostAuthenticationClient
 public sealed class DorksAndDiceToolHostAuthenticationClient(HttpClient httpClient)
     : IToolHostAuthenticationClient
 {
+    public const string ExpectedToolKey = "rules-wiki";
     public const string ExpectedToolSlug = "rules-wiki";
     public const string ExpectedIntrospectionPath = "/tool-host/rules-wiki/api/introspect";
-    public const string ExpectedDelegationPath = "/tool-host/rules-wiki/api/delegate/{targetSlug}/upstream";
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -69,19 +68,16 @@ public sealed class DorksAndDiceToolHostAuthenticationClient(HttpClient httpClie
             throw new InvalidDataException($"Unsupported Tool Host authentication contract version '{context.ContractVersion}'.");
         if (!string.Equals(context.ToolSlug, ExpectedToolSlug, StringComparison.Ordinal))
             throw new InvalidDataException("Tool Host authentication context was issued for another Tool.");
+        if (!string.IsNullOrWhiteSpace(context.ToolKey)
+            && !string.Equals(context.ToolKey, ExpectedToolKey, StringComparison.Ordinal))
+            throw new InvalidDataException("Tool Host authentication context has an unexpected stable Tool key.");
         if (string.IsNullOrWhiteSpace(context.SiteMode))
             throw new InvalidDataException("Tool Host authentication context does not include a site mode.");
         if (context.User is null || string.IsNullOrWhiteSpace(context.User.Id))
             throw new InvalidDataException("Tool Host authentication context does not include a stable user ID.");
 
-        var capability = ReadOptionalSingleHeader(response, ToolHostAuthenticationHeaders.DelegationCapability);
-        var delegationPath = ReadOptionalSingleHeader(response, ToolHostAuthenticationHeaders.DelegationPath);
-        if ((capability is null) != (delegationPath is null))
-            throw new InvalidDataException("Tool Host delegation capability and path must be supplied together.");
-        if (delegationPath is not null && !string.Equals(delegationPath, ExpectedDelegationPath, StringComparison.Ordinal))
-            throw new InvalidDataException("Tool Host returned an unexpected delegation path.");
-
-        return context with { DelegationCapability = capability, DelegationPath = delegationPath };
+        var privateCapability = ReadOptionalSingleHeader(response, ToolHostAuthenticationHeaders.PrivateTunnelCapability);
+        return context with { PrivateTunnelCapability = privateCapability };
     }
 
     private static string? ReadOptionalSingleHeader(HttpResponseMessage response, string name)
