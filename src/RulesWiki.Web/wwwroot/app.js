@@ -133,12 +133,20 @@ function prefetchInitialReferenceContent(api, hostContext) {
         ? api.prefetchCampaignRulesCatalog(campaignId, filters)
         : api.prefetchGlobalRulesCatalog(filters);
 
+    // A deep link already gives us the exact reference identity. Do not serialize its detail
+    // request behind the catalog request; start both as soon as the Tool Host context is ready.
+    if (route.conceptKey) {
+        void api.prefetchWikiReferenceDetail(route.conceptKey, campaignId).catch(() => {
+            // Prefetch is opportunistic. Normal browser loading retries through the regular path.
+        });
+    }
+
     void catalog.then(result => {
-        const predictedIdentity = route.conceptKey
-            ?? (!viewState.sortKey
-                && !hasClientBrowserFilters(entityType, viewState.fieldFilters)
-                ? result.rules?.[0]?.conceptKey
-                : null);
+        if (route.conceptKey) return null;
+        const predictedIdentity = !viewState.sortKey
+            && !hasClientBrowserFilters(entityType, viewState.fieldFilters)
+            ? result.rules?.[0]?.conceptKey
+            : null;
         if (!predictedIdentity) return null;
         return api.prefetchWikiReferenceDetail(predictedIdentity, campaignId);
     }).catch(() => {
