@@ -44,6 +44,46 @@ public sealed class Phase32UiAssetTests
         Assert.Contains("flex-wrap: wrap", styles, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ReferencePresentationSeparatesRulesFromTechnicalMetadata()
+    {
+        var script = ReadWebAsset("rules-reference-browser-enhancements.js");
+
+        Assert.Contains("compactReferenceContext", script, StringComparison.Ordinal);
+        Assert.Contains("Source and reference metadata", script, StringComparison.Ordinal);
+        Assert.Contains("Technical identifiers", script, StringComparison.Ordinal);
+        Assert.Contains("compactCategoryHistory", script, StringComparison.Ordinal);
+        Assert.Contains("uniqueCategories.size <= 1", script, StringComparison.Ordinal);
+        Assert.Contains("Global scope", script, StringComparison.Ordinal);
+        Assert.Contains("scopeBadge.remove()", script, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MonsterPresentationConsumesImportMetadataAndRepairsSourceMarkup()
+    {
+        var script = ReadWebAsset("rules-reference-browser-enhancements.js");
+
+        Assert.Contains("consumeAdditionalMonsterMechanics", script, StringComparison.Ordinal);
+        Assert.Contains("SUPPRESSED_MONSTER_MECHANICS", script, StringComparison.Ordinal);
+        Assert.Contains("actiontags", script, StringComparison.Ordinal);
+        Assert.Contains("basicrules2024", script, StringComparison.Ordinal);
+        Assert.Contains("referencesources", script, StringComparison.Ordinal);
+        Assert.Contains("soundclip", script, StringComparison.Ordinal);
+        Assert.Contains("presentPassivePerception", script, StringComparison.Ordinal);
+        Assert.Contains("Passive Perception", script, StringComparison.Ordinal);
+        Assert.Contains("Environment", script, StringComparison.Ordinal);
+        Assert.Contains("Treasure", script, StringComparison.Ordinal);
+        Assert.Contains("sanitizeMonsterGear", script, StringComparison.Ordinal);
+        Assert.Contains("split(\"|\")[0]", script, StringComparison.Ordinal);
+        Assert.Contains("normalizeRenderedRuleText", script, StringComparison.Ordinal);
+        Assert.Contains("Melee Attack:", script, StringComparison.Ordinal);
+        Assert.Contains("Ranged Attack:", script, StringComparison.Ordinal);
+        Assert.Contains("acttrigger", script, StringComparison.Ordinal);
+        Assert.Contains("actresponse", script, StringComparison.Ordinal);
+        Assert.Contains("Hit:", script, StringComparison.Ordinal);
+        Assert.Contains("Additional mechanics", script, StringComparison.Ordinal);
+    }
+
     private static string ReadWebAssets(params string[] filenames) =>
         string.Join(
             Environment.NewLine,
