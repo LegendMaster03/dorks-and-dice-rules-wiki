@@ -31,6 +31,24 @@ public sealed class Phase32UiAssetTests
     }
 
     [Fact]
+    public void ReferenceBrowserPrefetchesInitialReferenceContentDuringBootstrap()
+    {
+        var app = ReadWebAsset("app.js");
+        var api = ReadWebAsset("rules-reference-api.js");
+
+        Assert.Contains("prefetchInitialReferenceContent(api, hostContext);", app, StringComparison.Ordinal);
+        Assert.True(
+            app.IndexOf("prefetchInitialReferenceContent(api, hostContext);", StringComparison.Ordinal)
+            < app.IndexOf("const [session, campaigns, workspaceScopes] = await Promise.all", StringComparison.Ordinal));
+        Assert.Contains("prefetchGlobalRulesCatalog", api, StringComparison.Ordinal);
+        Assert.Contains("prefetchCampaignRulesCatalog", api, StringComparison.Ordinal);
+        Assert.Contains("prefetchWikiReferenceDetail", api, StringComparison.Ordinal);
+        Assert.Contains("REFERENCE_PREFETCH_TTL_MS", api, StringComparison.Ordinal);
+        Assert.Contains("consumePrefetch", api, StringComparison.Ordinal);
+        Assert.Contains("!hasClientBrowserFilters(entityType, viewState.fieldFilters)", app, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ReferenceBrowserOwnsTheViewportAndScrollsBothPanesIndependently()
     {
         var content = ReadWebAssets(
