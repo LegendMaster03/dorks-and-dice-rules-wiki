@@ -26,6 +26,7 @@ builder.Services.AddHttpClient(RulesCorePrivateClient.RulesCoreClientName, clien
 builder.Services.AddSingleton<IRulesCorePrivateClient, RulesCorePrivateClient>();
 builder.Services.AddSingleton<RulesCoreUiOperationDispatcher>();
 builder.Services.AddSingleton<RulesCoreCompanionContentOperation>();
+builder.Services.AddSingleton<RulesCoreCorpusReconciliationOperation>();
 builder.Services.AddHealthChecks();
 var app = builder.Build();
 
@@ -47,6 +48,22 @@ app.MapPost("/_rules-wiki/operations/getWikiReferenceCompanionContent", async (
     RulesCoreCompanionContentOperation operation) =>
 {
     await operation.InvokeAsync(context, request);
+});
+
+app.MapPost("/_rules-wiki/operations/getCorpusReconciliationStatus", async (
+    HttpContext context,
+    RulesWikiUiOperationRequest request,
+    RulesCoreCorpusReconciliationOperation operation) =>
+{
+    await operation.InvokeAsync(context, start: false);
+});
+
+app.MapPost("/_rules-wiki/operations/startCorpusReconciliation", async (
+    HttpContext context,
+    RulesWikiUiOperationRequest request,
+    RulesCoreCorpusReconciliationOperation operation) =>
+{
+    await operation.InvokeAsync(context, start: true);
 });
 
 app.MapPost("/_rules-wiki/operations/{operation}", async (
