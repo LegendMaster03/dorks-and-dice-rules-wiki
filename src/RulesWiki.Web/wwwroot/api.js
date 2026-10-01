@@ -41,12 +41,17 @@ const PUBLIC_CORE_METHODS = new Set([
     "getCampaignResolvedRule", "getRuleVersions", "compareRuleVersions"
 ]);
 
+// Reference browsing still supports these UI-level filters; rules-reference-api.js owns their
+// private Wiki semantics and this client never translates them into public Rules Core calls.
+const PRIVATE_REFERENCE_FILTER_FIELDS = Object.freeze(["sourceCode", "overridesOnly"]);
+
 export class RulesCoreApi {
     constructor(hostContext) {
         if (!hostContext?.apiBaseUrl) throw new Error("The Tool Host context did not include an API base URL.");
         this.hostContext = hostContext;
         this.hostApiBaseUrl = trimTrailingSlash(hostContext.apiBaseUrl);
         this.operationBaseUrl = `${this.hostApiBaseUrl}/upstream/_rules-wiki/operations`;
+        this.privateReferenceFilterFields = PRIVATE_REFERENCE_FILTER_FIELDS;
 
         return new Proxy(this, {
             get(target, property, receiver) {
