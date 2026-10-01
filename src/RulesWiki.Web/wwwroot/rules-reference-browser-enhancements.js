@@ -161,8 +161,16 @@ function installCategoryModeControl(app, container) {
         className: "form-select form-select-sm rules-wiki-category-mode",
         ariaLabel: "Category membership mode"
     },
-    element("option", { value: "any", text: "Any variation" }),
-    element("option", { value: "effective", text: "Effective in this scope" }));
+    element("option", {
+        value: "any",
+        text: "Any variation",
+        attributes: { "aria-label": "Category: any variation" }
+    }),
+    element("option", {
+        value: "effective",
+        text: "Effective in this scope",
+        attributes: { "aria-label": "Category: effective in this scope" }
+    }));
     select.value = referenceCategoryMode();
     select.addEventListener("change", async () => {
         const parameters = new URLSearchParams(window.location.search);
