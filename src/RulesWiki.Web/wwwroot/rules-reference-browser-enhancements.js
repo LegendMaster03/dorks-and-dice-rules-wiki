@@ -3,6 +3,29 @@ import { normalizeBrowserFieldFilters } from "./rules-browser-filters.js";
 import { currentToolRoute, replaceToolRoute } from "./rules-browser-routing.js";
 import { referenceCategoryMode } from "./rules-reference-api.js";
 
+const SUPPRESSED_MONSTER_MECHANICS = new Set([
+    "actiontags",
+    "basicrules2024",
+    "damagetags",
+    "group",
+    "languagetags",
+    "misctags",
+    "referencesources",
+    "sensetags",
+    "soundclip",
+    "srd52"
+]);
+
+const BARE_RENDERER_TAG_LABELS = new Map([
+    ["h", "Hit:"],
+    ["acttrigger", "Trigger:"],
+    ["actresponse", "Response:"],
+    ["actsave", "Saving Throw:"],
+    ["actsavefail", "Failure:"],
+    ["actsavesuccess", "Success:"],
+    ["actsavefailorsuccess", "Failure or Success:"]
+]);
+
 export function installWikiReferenceBrowserEnhancements(app) {
     app.api.onReferenceFacetsChanged = () => app.refreshWikiReferenceFacetControls?.();
 
@@ -219,7 +242,11 @@ function wrapBrowserContextControl(control, label) {
 
 function enhanceWikiReferenceFragment(app, container) {
     addReferenceHeading(app, container);
+    normalizeRenderedRuleText(container);
+    enhanceMonsterReferencePresentation(container);
     collapseSourceSpecificMechanics(container);
+    compactReferenceContext(container);
+    compactCategoryHistory(container);
     classifyResolutionStatus(container);
 }
 
@@ -234,6 +261,216 @@ function addReferenceHeading(app, container) {
         if (renderer.querySelector(":scope > .rules-wiki-reference-heading")) continue;
         renderer.prepend(element("header", { className: "rules-wiki-reference-heading" },
             element("h3", { className: "rules-wiki-reference-title", text: selectedName })));
+    }
+}
+
+function normalizeRenderedRuleText(container) {
+    for (const renderer of container.querySelectorAll(".rules-core-rule-renderer")) {
+        const walker = document.createTreeWalker(renderer, NodeFilter.SHOW_TEXT);
+        const nodes = [];
+        while (walker.nextNode()) nodes.push(walker.currentNode);
+        for (const node of nodes) {
+            const parent = node.parentElement;
+            if (!parent || parent.closest("pre, code, .rules-core-secondary-details")) continue;
+            const normalized = normalizeVisibleRuleText(node.nodeValue ?? "");
+            if (normalized !== node.nodeValue) node.nodeValue = normalized;
+        }
+    }
+}
+
+function normalizeVisibleRuleText(value) {
+    let result = String(value ?? "");
+    result = result.replace(/\{@([a-zA-Z][\w]*)\}/g, (match, tag) =>
+        BARE_RENDERER_TAG_LABELS.get(String(tag).toLowerCase()) ?? match);
+    result = result.replace(/^(\s*)m\s+([+-]\d+)(?=,)/i, "$1Melee Attack: $2 to hit");
+    result = result.replace(/^(\s*)r\s+([+-]\d+)(?=,)/i, "$1Ranged Attack: $2 to hit");
+    return result;
+}
+
+function enhanceMonsterReferencePresentation(container) {
+    sanitizeMonsterGear(container);
+    consumeAdditionalMonsterMechanics(container);
+}
+
+function sanitizeMonsterGear(container) {
+    for (const list of container.querySelectorAll(".rules-core-monster-stat-block .rules-core-labeled-details")) {
+        const pair = findDefinitionPair(list, "gear");
+        if (!pair) continue;
+        const [, value] = pair;
+        const readable = String(value.textContent ?? "")
+            .split(",")
+            .map(entry => entry.trim().split("|")[0]?.trim())
+            .filter(Boolean)
+            .join(", ");
+        if (readable) value.textContent = readable;
+    }
+}
+
+function consumeAdditionalMonsterMechanics(container) {
+    for (const section of container.querySelectorAll(".rules-core-monster-stat-block .rules-core-additional-mechanics")) {
+        const heading = section.querySelector(":scope > .rules-core-monster-section-title");
+        if (heading?.textContent?.trim() !== "Additional Mechanics") continue;
+        const list = section.querySelector(":scope > .rules-core-additional-mechanics-list");
+        if (!list) continue;
+        const statBlock = section.closest(".rules-core-monster-stat-block");
+        if (!statBlock) continue;
+
+        for (const row of [...list.querySelectorAll(":scope > .rules-core-additional-mechanic")]) {
+            const labelNode = row.querySelector(":scope > .rules-core-additional-mechanic-label");
+            const valueNode = row.querySelector(":scope > .rules-core-rule-content");
+            const label = labelNode?.textContent?.trim() ?? "";
+            const key = normalizePresentationKey(label);
+            const value = valueNode?.textContent?.trim() ?? "";
+
+            if (key === "passive") {
+                presentPassivePerception(statBlock, value);
+                row.remove();
+                continue;
+            }
+            if (key === "environment") {
+                appendMonsterDetail(statBlock, "Environment", value);
+                row.remove();
+                continue;
+            }
+            if (key === "treasure") {
+                appendMonsterDetail(statBlock, "Treasure", value);
+                row.remove();
+                continue;
+            }
+            if (SUPPRESSED_MONSTER_MECHANICS.has(key)) {
+                row.remove();
+            }
+        }
+
+        if (!list.children.length) {
+            section.remove();
+            continue;
+        }
+
+        heading.remove();
+        const body = element("div", { className: "rules-core-secondary-details-body" });
+        body.append(...section.childNodes);
+        const disclosure = element("details", {
+            className: "rules-core-secondary-details rules-wiki-additional-mechanics-disclosure"
+        },
+        element("summary", { text: "Additional mechanics" }),
+        body);
+        section.replaceWith(disclosure);
+    }
+}
+
+function presentPassivePerception(statBlock, value) {
+    if (!value) return;
+    const list = statBlock.querySelector(".rules-core-monster-details .rules-core-labeled-details");
+    const senses = list ? findDefinitionPair(list, "senses") : null;
+    if (senses) {
+        const [, detail] = senses;
+        const current = detail.textContent?.trim() ?? "";
+        if (!/passive\s+perception/i.test(current)) {
+            detail.textContent = current
+                ? `${current}, passive Perception ${value}`
+                : `Passive Perception ${value}`;
+        }
+        return;
+    }
+    appendMonsterDetail(statBlock, "Passive Perception", value);
+}
+
+function appendMonsterDetail(statBlock, label, value) {
+    if (!value) return;
+    let section = statBlock.querySelector(".rules-core-monster-details");
+    let list = section?.querySelector(".rules-core-labeled-details");
+    if (!list) {
+        section = element("section", { className: "rules-core-monster-details rules-core-monster-section" });
+        list = element("dl", { className: "rules-core-labeled-details" });
+        section.append(list);
+        const anchor = statBlock.querySelector(".rules-core-additional-mechanics, .rules-core-secondary-details");
+        if (anchor) statBlock.insertBefore(section, anchor);
+        else statBlock.append(section);
+    }
+    if (findDefinitionPair(list, normalizePresentationKey(label))) return;
+    list.append(
+        element("dt", { text: label }),
+        element("dd", { text: value }));
+}
+
+function findDefinitionPair(list, normalizedLabel) {
+    const children = [...list.children];
+    for (let index = 0; index < children.length - 1; index += 1) {
+        const label = children[index];
+        const value = children[index + 1];
+        if (label.tagName !== "DT" || value.tagName !== "DD") continue;
+        if (normalizePresentationKey(label.textContent) === normalizedLabel) return [label, value];
+    }
+    return null;
+}
+
+function compactReferenceContext(container) {
+    for (const card of [...container.querySelectorAll(".rules-core-detail-context-card")]) {
+        const heading = card.querySelector(":scope > h3");
+        if (heading?.textContent?.trim() !== "Reference context") continue;
+        const list = card.querySelector(":scope > dl");
+        if (!list) continue;
+
+        const technical = element("dl");
+        const children = [...list.children];
+        for (let index = 0; index < children.length - 1; index += 1) {
+            const label = children[index];
+            const value = children[index + 1];
+            if (label.tagName !== "DT" || value.tagName !== "DD") continue;
+            const key = normalizePresentationKey(label.textContent);
+            if (key === "scope" || key === "effectivecategory") {
+                label.remove();
+                value.remove();
+                continue;
+            }
+            if (key === "effectiveedition") {
+                label.textContent = "Edition";
+                continue;
+            }
+            if (key === "package" || key === "referenceidentity") {
+                technical.append(label, value);
+            }
+        }
+
+        const body = element("div", { className: "rules-core-context-disclosure-body" });
+        if (list.children.length) body.append(list);
+        if (technical.children.length) {
+            body.append(element("details", { className: "rules-core-secondary-details" },
+                element("summary", { text: "Technical identifiers" }),
+                element("div", { className: "rules-core-secondary-details-body" }, technical)));
+        }
+        const disclosure = element("details", {
+            className: "rules-core-context-disclosure rules-wiki-reference-metadata-disclosure"
+        },
+        element("summary", { text: "Source and reference metadata" }),
+        body);
+        card.replaceWith(disclosure);
+    }
+}
+
+function compactCategoryHistory(container) {
+    for (const card of [...container.querySelectorAll(".rules-core-detail-context-card")]) {
+        const heading = card.querySelector(":scope > h3");
+        if (heading?.textContent?.trim() !== "Category history") continue;
+        const entries = [...card.querySelectorAll(":scope > ul > li")];
+        const uniqueCategories = new Set(entries
+            .map(entry => normalizePresentationKey((entry.textContent ?? "").split("·")[0]))
+            .filter(Boolean));
+        if (uniqueCategories.size <= 1) {
+            card.remove();
+            continue;
+        }
+
+        heading.remove();
+        const body = element("div", { className: "rules-core-context-disclosure-body" });
+        body.append(...card.childNodes);
+        const disclosure = element("details", {
+            className: "rules-core-context-disclosure rules-wiki-category-history-disclosure"
+        },
+        element("summary", { text: "Category history" }),
+        body);
+        card.replaceWith(disclosure);
     }
 }
 
@@ -256,7 +493,18 @@ function classifyResolutionStatus(container) {
     for (const status of container.querySelectorAll(".rules-core-ruling-status")) {
         const title = status.querySelector(".rules-core-ruling-status-title")?.textContent?.trim();
         status.classList.toggle("is-unresolved", title === "Unresolved default");
+        for (const scopeBadge of status.querySelectorAll(".badge")) {
+            if (["Global scope", "Campaign scope"].includes(scopeBadge.textContent?.trim())) {
+                scopeBadge.remove();
+            }
+        }
     }
+}
+
+function normalizePresentationKey(value) {
+    return String(value ?? "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "");
 }
 
 function clarifyReferenceCatalogStatus(container) {
