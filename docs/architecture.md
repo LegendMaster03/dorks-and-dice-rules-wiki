@@ -1,38 +1,62 @@
 # Rules Wiki architecture
 
-Rules Wiki is the human-facing Dorks & Dice Tool for the rules platform. The presentation layer migrated from Rules Core remains structurally the same: Rules Library browsing, detail and comparison views, Sources workspace, Rules Lawyer authoring and adjudication, campaign rule authoring, source-update review, and related administration UI all live here.
+Rules Wiki is the human-facing Dorks & Dice Tool for the rules platform. Rules Library browsing, detail and comparison views, Sources, Rules Lawyer authoring and adjudication, campaign rule authoring, source-update review, and related administration UI all live here. Rules Core remains the authoritative rules backend.
 
-## Non-negotiable Rules Core API boundary
+## Non-negotiable Rules Core boundary
 
-Rules Wiki has a privileged first-party Tool-to-Tool relationship with Rules Core.
+The standing architectural rules are:
 
-The standing architectural rule is:
+> **Rules Wiki must not consume any part of Rules Core's public/external API.**
+>
+> **Rules Wiki must not expose a general API or act as a Rules Core API proxy.**
+>
+> **Every Rules Wiki -> Rules Core request uses the explicit `rules-wiki -> rules-core` private deployment tunnel.**
 
-> **Rules Wiki must not consume any part of Rules Core's public/external API. Every Rules Wiki -> Rules Core request uses the private delegated Tool-to-Tool API.**
+These rules apply to ordinary reference reads as strongly as they apply to Rules Lawyer, source administration, and other privileged workflows.
 
-This is the core premise of the Rules Wiki/Rules Core split. It applies to ordinary reference reads as strongly as it applies to Rules Lawyer, source-administration, and other privileged workflows.
-
-Rules Core's public API exists for other Dorks & Dice Tools and independent consumers. A Rules Wiki requirement is never, by itself, justification for expanding that public API. If Rules Wiki needs additional semantic information, Rules Core must expose it through the internal first-party contract. Promotion of an internal capability to the public API requires a separately reviewed independent non-Wiki consumer need.
-
-Rules Wiki may expose its own browser-facing `/api/*` routes. Those routes belong to Rules Wiki and terminate at Rules Wiki. The server-side Rules Wiki adapter then calls Rules Core through the internal Tool-to-Tool boundary. The browser-facing Rules Wiki route and the Rules Core internal route do not need to share a path or DTO.
-
-If a Rules Core public endpoint happens to provide similar data, Rules Wiki still does not call it. Rules Core should reuse the same application/domain services behind its internal and public boundaries rather than making Rules Wiki depend on the public HTTP contract.
+Rules Core's public API exists for other Dorks & Dice Tools and independent consumers. A Rules Wiki requirement is never, by itself, justification for expanding that public API. If Rules Wiki needs additional semantic information, Rules Core must expose it through its internal first-party contract. Promotion of an internal capability to the public API requires a separately reviewed independent non-Wiki consumer need.
 
 ## Request path
 
-Normal authenticated hosted traffic follows:
+The target data path is:
 
-`browser -> Site Tool Host -> rules-wiki -> Site delegation endpoint -> rules-core internal API`
+```text
+Browser
+  |
+  v
+Rules Wiki web application
+  |
+  | pair-specific private deployment network
+  v
+Rules Core private ingress
+```
 
-The browser authenticates to Rules Wiki through the normal Tool Host contract. Rules Wiki redeems that ticket through `/tool-host/rules-wiki/api/introspect`. When the Site registration allows `rules-wiki -> rules-core`, introspection also supplies a short-lived delegation capability and delegation-path template. Both remain server-side.
+Site remains the identity and control plane:
 
-Rules Wiki calls Rules Core only through that delegated server-side path. The Site authenticates Rules Core with a target-scoped ticket so Rules Core receives the user identity, global roles, campaign roles, and authorization context it already understands.
+1. the browser reaches Rules Wiki through the normal Site Tool Host;
+2. Rules Wiki redeems its normal Tool ticket through `/tool-host/rules-wiki/api/introspect`;
+3. Site returns a short-lived server-only private-tunnel source capability only when deployment policy explicitly allows `rules-wiki -> rules-core`;
+4. for each Core operation, Rules Wiki exchanges that capability through Site for a short-lived Rules Core-scoped target ticket;
+5. Rules Wiki sends the actual Rules Core request directly to the private Core ingress and supplies the target ticket plus the stable key-scoped Core introspection path;
+6. Rules Core redeems the ticket through Site and receives trusted `PrivateTunnelSourceToolKey = rules-wiki` provenance before applying its normal domain authorization.
 
-The browser never receives the Tool-to-Tool delegation capability and never calls Rules Core directly.
+Site does **not** relay the Rules Wiki -> Rules Core API request. Ordinary Tool delegation and private-tunnel authorization are different mechanisms and neither implies the other.
+
+The browser never receives the private-tunnel capability, target ticket, Core private base URL, or Core authentication headers.
+
+## Browser/server boundary
+
+Rules Wiki has no general browser-facing `/api/*` contract and no transparent Core relay.
+
+The browser uses a narrow application-internal UI transport under `/_rules-wiki/operations/{operation}`. That route accepts only named operations from a finite server-side operation catalog. Browser callers can not supply an arbitrary Rules Core path, host, target Tool, authentication header, or tunnel credential.
+
+The server-side operation catalog owns the mapping from a Wiki UI operation to a Rules Core internal route. This is an implementation boundary for the Rules Wiki web application, not a public compatibility API. Adding a new operation requires an explicit server-side mapping and must not silently expand Rules Core's public API.
+
+A small frontend compatibility translator may temporarily map known private Core-shaped strings used by existing Wiki modules into those named UI operations during migration. Those strings never cross the network as target paths, unmapped paths fail closed, and stable public Rules Core consumer routes are intentionally not translatable. New frontend work should use named Wiki operations rather than add new Core-shaped browser routing.
 
 ## Internal does not mean authorization-free
 
-The Tool-to-Tool boundary identifies and restricts the first-party caller. It does not replace Rules Core's domain authorization.
+The private tunnel identifies and restricts the first-party caller. It does not replace Rules Core's domain authorization.
 
 Rules Core remains responsible for enforcing, as applicable:
 
@@ -48,11 +72,13 @@ Rules Wiki may hide or expose controls according to returned capabilities, but U
 
 ## Ownership
 
-Rules Wiki owns presentation, Embedded Module v2 lifecycle integration, browser routing/state, browser-facing API shape, frontend assets, and the thin delegated backend adapter.
+Rules Wiki owns presentation, Embedded Module lifecycle integration, browser routing/state, frontend assets, the internal UI-operation transport, and the server-side private Core client.
 
 Rules Core owns normalized rule data, source ingestion and provenance, source grants, restricted-source filtering, global and campaign rules, Rules Lawyer authority, campaign DM authority, adjudication, immutable revisions, publication, resolution, comparison semantics, reference identity/history semantics, and PostgreSQL persistence.
 
-Rules Wiki does not have a Rules Core database, source-grant store, parallel authorization model, or parallel rules engine.
+Site owns normal Tool authentication plus private-tunnel source/target authorization and target-ticket issuance. Site is not the private API data plane.
+
+Rules Wiki does not have a Rules Core database, source-grant store, parallel authorization model, parallel rules engine, or public Rules Core client.
 
 ## Contract ownership
 
@@ -74,22 +100,27 @@ These contracts may evolve with Rules Wiki as long as Rules Core remains authori
 
 Rules Core remains the backend Tool identity `rules-core` for non-Wiki API consumers such as Character Sheet, Hex Crawl, Block Initiative, and future Tools.
 
-Rules Wiki is deliberately not one of those public API consumers.
+Rules Wiki is deliberately not one of those public API consumers. Its private server-side operation catalog must not map the stable public consumer contracts merely because they happen to contain similar data.
 
-Human-facing `browserLink` values emitted by Rules Core identify `rules-wiki` as the Tool slug while preserving stable human navigation. Historical persisted browser hrefs can still contain `/tools/rules-core/...`; production rollout therefore requires a Site compatibility redirect from the old browser mount to `/tools/rules-wiki/...`, preserving the trailing path and query string. The redirect is browser compatibility only and does not turn Rules Wiki into a public Rules Core API consumer.
+Human-facing `browserLink` values emitted by Rules Core identify `rules-wiki` as the Tool slug while preserving stable human navigation. Historical persisted browser hrefs can still contain `/tools/rules-core/...`; production rollout may retain a Site compatibility redirect from the old browser mount to `/tools/rules-wiki/...`, preserving the trailing path and query string. That redirect is browser compatibility only and has no bearing on Core API access.
 
 ## Anonymous access
 
-The current Site Tool Host proxies anonymous browser requests directly to Tools that allow anonymous use, but it issues Tool-to-Tool delegation capabilities only from an authenticated introspection context. The repository implementation intentionally does not bypass that boundary. Therefore anonymous Rules Wiki API traffic can not reach Rules Core until Site provides a first-party anonymous delegation mechanism that carries no user identity or grants while retaining the delegation allowlist and normal upstream protections.
+Private Core operations require a Tool Host authentication context because Site issues the private-tunnel source capability during authenticated Rules Wiki introspection. Rules Wiki must not bypass that boundary by falling back to Rules Core's public API.
 
-This is a production compatibility gate if the existing anonymous Rules Library behavior is retained. It is not a reason to call Rules Core's public API or to move source access or authorization state into Rules Wiki.
+If anonymous Rules Library behavior is required, Site and Rules Core need an explicitly designed anonymous private-tunnel identity/capability flow that carries no user grants while retaining the pair allowlist and source-access rules. Until such a flow exists, anonymous presentation must fail closed for Core-backed operations rather than weaken the private boundary.
 
-## Deployment gate
+## Deployment
 
-Development and validation can proceed independently, but production merge/deployment is gated on Site support for an enabled headless/non-navigable Rules Core service registration. That registration must support an upstream backend, health/readiness, authentication/introspection, and delegation targeting without exposing a normal public Tool page or navigation entry.
+The coordinated deployment uses two Rules Core surfaces:
 
-The public Rules Wiki registration is expected to use slug `rules-wiki`, Embedded Module v2, and a delegation target allowlist containing `rules-core`.
+- the normal shared Rules Core ingress runs `RulesCore:ApiSurface=PublicOnly` for ordinary Tool consumers;
+- a separate private Rules Core ingress runs `RulesCore:ApiSurface=PrivateOnly` and is attached to the pair-specific Rules Wiki/Rules Core network plus the restricted Site control-plane network required for ticket introspection.
 
-Before rollout, Site must also provide the historical browser-route redirect above and resolve anonymous delegation if Rules Wiki remains anonymously accessible.
+Rules Wiki receives `RulesCorePrivate:BaseUrl` from deployment configuration and joins the pair-specific private network through `docker-compose.private-tunnel.yml`. Ordinary Tools on the shared backend network do not join that pair network.
 
-See the Rules Core `docs/api-boundaries.md` document for the corresponding normative server-side classification.
+Site deployment policy must explicitly configure `rules-wiki -> rules-core` under `ToolHosting:PrivateTunnels`. `DelegationTargets` does not grant this access and is not a substitute for the private tunnel.
+
+The Rules Wiki repository validates both the base Compose configuration and the private-tunnel overlay. Production activation must coordinate the Site, Rules Core, and Rules Wiki changes so the private ingress and pair network exist when Wiki begins using the private client.
+
+See Rules Core `docs/api-boundaries.md` and `docs/private-tool-tunnel-deployment.md`, and Site `docs/tool-authentication-contract.md`, for the corresponding server and control-plane contracts.
