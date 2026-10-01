@@ -25,6 +25,7 @@ builder.Services.AddHttpClient(RulesCorePrivateClient.RulesCoreClientName, clien
 
 builder.Services.AddSingleton<IRulesCorePrivateClient, RulesCorePrivateClient>();
 builder.Services.AddSingleton<RulesCoreUiOperationDispatcher>();
+builder.Services.AddSingleton<RulesCoreCompanionContentOperation>();
 builder.Services.AddHealthChecks();
 var app = builder.Build();
 
@@ -39,6 +40,14 @@ app.MapGet("/ready", () => Results.Ok(new
     rulesBackend = "rules-core-private",
     authentication = "tool-host-private-tunnel"
 }));
+
+app.MapPost("/_rules-wiki/operations/getWikiReferenceCompanionContent", async (
+    HttpContext context,
+    RulesWikiUiOperationRequest request,
+    RulesCoreCompanionContentOperation operation) =>
+{
+    await operation.InvokeAsync(context, request);
+});
 
 app.MapPost("/_rules-wiki/operations/{operation}", async (
     HttpContext context,

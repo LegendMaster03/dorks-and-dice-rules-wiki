@@ -17,6 +17,7 @@ import {
     installWikiReferenceBrowserEnhancements,
     installWikiReferenceNavigation
 } from "./rules-reference-browser-enhancements.js";
+import { installWikiReferenceCompanionContent } from "./rules-reference-companion-content.js";
 import { installAdjudicationScopeControl } from "./scope-control.js";
 import { installSemanticComparison } from "./semantic-comparison.js";
 import { installSourceAccessAdministration } from "./source-access-admin.js";
@@ -76,6 +77,7 @@ try {
     installResolvedRulesBrowser(app);
     installImmediateReferenceBrowserLayout(app);
     installWikiReferenceBrowserEnhancements(app);
+    installWikiReferenceCompanionContent(app);
     installAdjudicationScopeControl(app);
     installSemanticComparison(app);
     installMechanicalRelationships(app);
