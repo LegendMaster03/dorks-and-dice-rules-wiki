@@ -1,0 +1,9 @@
+services:
+  rules-wiki:
+    networks:
+      - rules-core-private-tunnel
+
+networks:
+  rules-core-private-tunnel:
+    external: true
+    name: "${RulesCorePrivate__Network:?RulesCorePrivate__Network must be configured}"

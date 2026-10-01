@@ -2,13 +2,8 @@ using RulesWiki.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var toolHostBaseUrl = builder.Configuration["ToolHost:BaseUrl"];
-if (string.IsNullOrWhiteSpace(toolHostBaseUrl)
-    || !Uri.TryCreate(toolHostBaseUrl, UriKind.Absolute, out var toolHostBaseUri)
-    || (toolHostBaseUri.Scheme != Uri.UriSchemeHttp && toolHostBaseUri.Scheme != Uri.UriSchemeHttps))
-{
-    throw new InvalidOperationException("ToolHost:BaseUrl must be configured as an absolute HTTP or HTTPS URL.");
-}
+var toolHostBaseUri = RequireHttpUri(builder.Configuration, "ToolHost:BaseUrl");
+var rulesCorePrivateBaseUri = RequireHttpUri(builder.Configuration, "RulesCorePrivate:BaseUrl");
 
 builder.Services.AddHttpClient<IToolHostAuthenticationClient, DorksAndDiceToolHostAuthenticationClient>(client =>
 {
@@ -16,12 +11,20 @@ builder.Services.AddHttpClient<IToolHostAuthenticationClient, DorksAndDiceToolHo
     client.Timeout = TimeSpan.FromSeconds(3);
 }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 
-builder.Services.AddHttpClient<RulesCoreDelegationProxy>(client =>
+builder.Services.AddHttpClient(RulesCorePrivateClient.ToolHostClientName, client =>
 {
     client.BaseAddress = toolHostBaseUri;
+    client.Timeout = TimeSpan.FromSeconds(3);
+}).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
+
+builder.Services.AddHttpClient(RulesCorePrivateClient.RulesCoreClientName, client =>
+{
+    client.BaseAddress = rulesCorePrivateBaseUri;
     client.Timeout = TimeSpan.FromMinutes(10);
 }).ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 
+builder.Services.AddSingleton<IRulesCorePrivateClient, RulesCorePrivateClient>();
+builder.Services.AddSingleton<RulesCoreUiOperationDispatcher>();
 builder.Services.AddHealthChecks();
 var app = builder.Build();
 
@@ -33,14 +36,18 @@ app.MapGet("/ready", () => Results.Ok(new
 {
     status = "ready",
     persistence = "stateless",
-    rulesBackend = RulesCoreDelegationProxy.TargetToolSlug,
-    authentication = "tool-host-delegation"
+    rulesBackend = "rules-core-private",
+    authentication = "tool-host-private-tunnel"
 }));
 
-app.MapMethods("/api/{**path}", ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
-    async (HttpContext context, RulesCoreDelegationProxy proxy) => await proxy.ForwardAsync(context));
-
-app.MapGet("/api", async (HttpContext context, RulesCoreDelegationProxy proxy) => await proxy.ForwardAsync(context));
+app.MapPost("/_rules-wiki/operations/{operation}", async (
+    HttpContext context,
+    string operation,
+    RulesWikiUiOperationRequest request,
+    RulesCoreUiOperationDispatcher dispatcher) =>
+{
+    await dispatcher.InvokeAsync(context, operation, request);
+});
 
 const string standaloneShell = """
 <!doctype html>
@@ -65,5 +72,18 @@ app.MapFallback((HttpContext context) =>
 });
 
 app.Run();
+
+static Uri RequireHttpUri(IConfiguration configuration, string key)
+{
+    var value = configuration[key];
+    if (string.IsNullOrWhiteSpace(value)
+        || !Uri.TryCreate(value, UriKind.Absolute, out var uri)
+        || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+    {
+        throw new InvalidOperationException($"{key} must be configured as an absolute HTTP or HTTPS URL.");
+    }
+
+    return uri;
+}
 
 public partial class Program { }
