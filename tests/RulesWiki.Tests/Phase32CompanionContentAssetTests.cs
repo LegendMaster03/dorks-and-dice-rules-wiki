@@ -71,6 +71,7 @@ public sealed class Phase32CompanionContentAssetTests
             throw new InvalidOperationException("Could not locate the Rules Wiki repository root.");
         }
 
-        return File.ReadAllText(Path.Combine([directory.FullName, .. segments]));
+        var pathSegments = new[] { directory.FullName }.Concat(segments).ToArray();
+        return File.ReadAllText(Path.Combine(pathSegments));
     }
 }
