@@ -27,6 +27,7 @@ builder.Services.AddSingleton<IRulesCorePrivateClient, RulesCorePrivateClient>()
 builder.Services.AddSingleton<RulesCoreUiOperationDispatcher>();
 builder.Services.AddSingleton<RulesCoreCompanionContentOperation>();
 builder.Services.AddSingleton<RulesCoreCorpusReconciliationOperation>();
+builder.Services.AddSingleton<RulesCoreRuleConceptCoverageOperation>();
 builder.Services.AddHealthChecks();
 var app = builder.Build();
 
@@ -62,6 +63,22 @@ app.MapPost("/_rules-wiki/operations/startCorpusReconciliation", async (
     HttpContext context,
     RulesWikiUiOperationRequest request,
     RulesCoreCorpusReconciliationOperation operation) =>
+{
+    await operation.InvokeAsync(context, start: true);
+});
+
+app.MapPost("/_rules-wiki/operations/getRuleConceptCoverageStatus", async (
+    HttpContext context,
+    RulesWikiUiOperationRequest request,
+    RulesCoreRuleConceptCoverageOperation operation) =>
+{
+    await operation.InvokeAsync(context, start: false);
+});
+
+app.MapPost("/_rules-wiki/operations/startRuleConceptCoverageRepair", async (
+    HttpContext context,
+    RulesWikiUiOperationRequest request,
+    RulesCoreRuleConceptCoverageOperation operation) =>
 {
     await operation.InvokeAsync(context, start: true);
 });
