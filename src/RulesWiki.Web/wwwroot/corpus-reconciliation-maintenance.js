@@ -20,6 +20,7 @@ export function installCorpusReconciliationMaintenance(app) {
         await renderActiveView(container);
         if (app.activeView === "source-admin") {
             await renderCorpusReconciliationMaintenance(app, container);
+            await renderRuleConceptCoverageMaintenance(app, container);
         }
     };
 }
@@ -97,6 +98,78 @@ async function renderCorpusReconciliationMaintenance(app, container) {
     await refreshStatus(true);
 }
 
+async function renderRuleConceptCoverageMaintenance(app, container) {
+    const card = element("div", { className: "card card-body mt-3" });
+    const heading = element("div", { className: "d-flex flex-wrap gap-2 align-items-center mb-2" },
+        element("h4", { className: "h6 mb-0", text: "Rules Layer concept coverage" }));
+    const description = element("p", {
+        className: "mb-2",
+        text: "Owner-only database repair. Ensures every non-ignored canonical revision/rename history with Source Layer content has a RuleConcept anchor so unresolved histories can fall back through the normal consumer API."
+    });
+    const detail = element("p", {
+        className: "small text-body-secondary mb-3",
+        text: "Existing concept-backed histories are not merged or rewritten. Missing concepts are created deterministically and bound to their canonical history. This repair is idempotent and can be run again after later reconciliation work."
+    });
+    const statusHost = element("div", { className: "mb-3" });
+    const actionHost = element("div", { className: "d-flex flex-wrap gap-2" });
+    const startButton = element("button", {
+        type: "button",
+        className: "btn btn-warning",
+        text: "Repair RuleConcept coverage"
+    });
+    actionHost.append(startButton);
+    card.append(heading, description, detail, statusHost, actionHost);
+    container.append(card);
+
+    let pollToken = 0;
+
+    async function refreshStatus(scheduleNext = true) {
+        const token = ++pollToken;
+        try {
+            const status = await app.api.operation("getRuleConceptCoverageStatus");
+            if (token !== pollToken) return;
+            applyStatus(status);
+            if (status.state === "running" && scheduleNext && card.isConnected && app.activeView === "source-admin") {
+                window.setTimeout(() => refreshStatus(true), POLL_INTERVAL_MS);
+            }
+        } catch (error) {
+            if (token !== pollToken) return;
+            statusHost.replaceChildren(alertNode("danger", describeError(error)));
+            startButton.disabled = false;
+        }
+    }
+
+    function applyStatus(status) {
+        renderCoverageStatus(statusHost, status);
+        const running = status.state === "running";
+        startButton.disabled = running;
+        startButton.textContent = running
+            ? "Coverage repair running…"
+            : status.state === "completed"
+                ? "Run coverage repair again"
+                : "Repair RuleConcept coverage";
+    }
+
+    startButton.addEventListener("click", async () => {
+        setButtonBusy(startButton, true, "Starting…");
+        statusHost.replaceChildren();
+        try {
+            const status = await app.api.operation("startRuleConceptCoverageRepair");
+            applyStatus(status);
+            if (status.state === "running") {
+                window.setTimeout(() => refreshStatus(true), POLL_INTERVAL_MS);
+            }
+        } catch (error) {
+            statusHost.replaceChildren(alertNode("danger", describeError(error)));
+        } finally {
+            setButtonBusy(startButton, false);
+            await refreshStatus(true);
+        }
+    });
+
+    await refreshStatus(true);
+}
+
 function renderStatus(container, status) {
     const state = status?.state ?? "not-run";
     const tone = state === "completed" ? "success"
@@ -135,6 +208,52 @@ function renderStatus(container, status) {
         container.append(element("div", {
             className: "small text-body-secondary mt-2",
             text: "The durable reference-history and companion-content backfill marker has been recorded."
+        }));
+    }
+}
+
+function renderCoverageStatus(container, status) {
+    const state = status?.state ?? "not-run";
+    const tone = state === "completed" ? "success"
+        : state === "running" ? "warning"
+            : state === "failed" ? "danger"
+                : "secondary";
+    const label = state === "completed" ? "Completed"
+        : state === "running" ? "Running"
+            : state === "failed" ? "Failed"
+                : "Not run";
+    const row = element("div", { className: "d-flex flex-wrap gap-2 align-items-center" },
+        badge(label, tone));
+    if (status?.startedAt) {
+        row.append(element("span", {
+            className: "small text-body-secondary",
+            text: `Started ${formatTimestamp(status.startedAt)}`
+        }));
+    }
+    if (status?.completedAt) {
+        row.append(element("span", {
+            className: "small text-body-secondary",
+            text: `Completed ${formatTimestamp(status.completedAt)}`
+        }));
+    }
+    container.replaceChildren(row);
+
+    if (status?.error) {
+        container.append(alertNode("danger", status.error));
+        return;
+    }
+    if (state === "running") {
+        container.append(element("div", {
+            className: "small text-body-secondary mt-2",
+            text: "Rules Core remains available while missing RuleConcept coverage is repaired."
+        }));
+        return;
+    }
+    if (state === "completed" && status?.result) {
+        const result = status.result;
+        container.append(element("div", {
+            className: "small text-body-secondary mt-2",
+            text: `${result.historiesExamined ?? 0} histories examined · ${result.historiesAlreadyCovered ?? 0} already covered · ${result.conceptsCreated ?? 0} concepts created · ${result.existingConceptsReused ?? 0} orphan concepts reused · ${result.bindingsCreated ?? 0} bindings created · ${result.keyCollisionsResolved ?? 0} key collisions isolated`
         }));
     }
 }
