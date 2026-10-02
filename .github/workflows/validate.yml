@@ -38,6 +38,7 @@ jobs:
           node tools/validate-browser-framework.mjs
           node tools/validate-reference-browser.mjs
           node tools/validate-class-family-workspace.mjs
+          node tools/validate-phase-4-reference.mjs
           node tools/validate-private-core-boundary.mjs
           if grep -R '/tools/rules-core' -n src/RulesWiki.Web/wwwroot tools; then
             echo "Rules Wiki presentation still contains the old Tool mount."

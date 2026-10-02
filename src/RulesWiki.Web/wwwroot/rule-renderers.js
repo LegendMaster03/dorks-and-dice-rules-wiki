@@ -1,7 +1,6 @@
 import {
     renderCompactStatistic,
     renderEntityHeader,
-    renderGeneric,
     renderNamedRuleEntry
 } from "./rule-renderer-support.js";
 import {
@@ -12,25 +11,32 @@ import {
     renderItem,
     renderMonster,
     renderPrestigeClass,
-    renderSkill,
     renderSpecies,
-    renderSpell,
     renderSubclass
 } from "./rule-renderers-specialized.js";
+import {
+    renderBackground,
+    renderCrossEditionSkill,
+    renderCrossEditionSpell,
+    renderGenericReference,
+    renderOptionalFeature
+} from "./phase4-reference-renderers.js";
 import { getEntityBrowserConfig } from "./rules-browser-config.js";
 
 const renderers = new Map([
     ["monster", renderMonster],
-    ["spell", renderSpell],
+    ["spell", renderCrossEditionSpell],
     ["class", renderClass],
     ["subclass", renderSubclass],
     ["prestigeclass", renderPrestigeClass],
     ["race", renderSpecies],
     ["species", renderSpecies],
     ["feat", renderFeat],
+    ["background", renderBackground],
+    ["optionalfeature", renderOptionalFeature],
     ["item", renderItem],
     ["condition", renderCondition],
-    ["skill", renderSkill],
+    ["skill", renderCrossEditionSkill],
     ["houserule", renderGeneralRule],
     ["rule", renderGeneralRule]
 ]);
@@ -38,7 +44,7 @@ const renderers = new Map([
 export function renderResolvedRule(entityType, document, options = {}) {
     const configuration = getEntityBrowserConfig(entityType);
     const rendererKey = String(configuration.renderer ?? entityType ?? "").toLowerCase();
-    const renderer = renderers.get(rendererKey) ?? renderGeneric;
+    const renderer = renderers.get(rendererKey) ?? renderGenericReference;
     return renderer(document, options);
 }
 

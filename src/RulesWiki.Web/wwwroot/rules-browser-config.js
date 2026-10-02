@@ -26,15 +26,26 @@ const FAMILY_CONFIGS = [
         column("level", "Level", "minmax(4.5rem, .6fr)"),
         column("school", "School", "minmax(6rem, 1fr)"),
         column("source", "Source", "minmax(4rem, .65fr)")
-    ], [fieldFilter("level", "Level"), fieldFilter("school", "School"), fieldFilter("castingTime", "Casting time"), fieldFilter("range", "Range")], {
-        rowSummaryFields: ["castingTime", "edition"], renderer: "spell"
+    ], [
+        fieldFilter("level", "Level"),
+        fieldFilter("school", "School"),
+        fieldFilter("castingTime", "Casting time"),
+        fieldFilter("range", "Range"),
+        fieldFilter("components", "Components"),
+        fieldFilter("concentration", "Concentration"),
+        fieldFilter("ritual", "Ritual"),
+        fieldFilter("spellList", "List / class"),
+        fieldFilter("subschool", "Subschool"),
+        fieldFilter("descriptors", "Descriptors")
+    ], {
+        rowSummaryFields: ["castingTime", "spellList", "edition"], renderer: "spell"
     }),
     config("class", "Classes", "classes", [
         column("name", "Name", "minmax(9rem, 2fr)"),
         column("hitDie", "Hit Die", "minmax(4rem, .55fr)", "center"),
         column("source", "Source", "minmax(4rem, .65fr)")
-    ], [fieldFilter("hitDie", "Hit die")], {
-        rowSummaryFields: ["primaryAbility", "edition"], renderer: "class", relationships: ["subclass", "prestige-class"], workspace: "class-family"
+    ], [fieldFilter("hitDie", "Hit die"), fieldFilter("bab", "BAB progression")], {
+        rowSummaryFields: ["bab", "skillPoints", "primaryAbility", "edition"], renderer: "class", relationships: ["subclass", "prestige-class"], workspace: "class-family"
     }),
     config("subclass", "Subclasses", "subclasses", [
         column("name", "Name", "minmax(9rem, 2fr)"),
@@ -46,28 +57,66 @@ const FAMILY_CONFIGS = [
     config("prestigeClass", "Prestige Classes", "prestige-classes", [
         column("name", "Name", "minmax(9rem, 2fr)"),
         column("source", "Source", "minmax(4rem, .65fr)")
-    ], [fieldFilter("prerequisite", "Prerequisite")], {
-        rowSummaryFields: ["prerequisite", "edition"], renderer: "prestigeClass", relationships: ["prerequisite"], workspace: "class-family"
+    ], [fieldFilter("prerequisite", "Prerequisite"), fieldFilter("bab", "BAB progression")], {
+        rowSummaryFields: ["prerequisite", "bab", "skillPoints", "edition"], renderer: "prestigeClass", relationships: ["prerequisite"], workspace: "class-family"
     }),
     config("feat", "Feats", "feats", [
         column("name", "Name", "minmax(9rem, 2fr)"),
         column("category", "Category", "minmax(6rem, 1fr)"),
         column("source", "Source", "minmax(4rem, .65fr)")
-    ], [fieldFilter("category", "Category"), fieldFilter("prerequisite", "Prerequisite")], {
+    ], [fieldFilter("category", "Category"), fieldFilter("prerequisite", "Prerequisite"), fieldFilter("repeatable", "Repeatable")], {
         rowSummaryFields: ["prerequisite", "edition"], renderer: "feat"
     }),
-    config("background", "Backgrounds", "backgrounds", [column("name", "Name", "minmax(9rem, 2fr)"), column("source", "Source", "minmax(4rem, .65fr)")], [], { rowSummaryFields: ["edition"], renderer: "generic" }),
-    config("optionalfeature", "Options & Features", "optional-features", [column("name", "Name", "minmax(9rem, 2fr)"), column("source", "Source", "minmax(4rem, .65fr)")], [], { rowSummaryFields: ["edition"], renderer: "generic" }),
-    config("species", "Species", "species", speciesColumns(), [fieldFilter("size", "Size"), fieldFilter("ability", "Ability")], { rowSummaryFields: ["speed", "edition"], renderer: "species" }),
-    config("subspecies", "Subspecies", "subspecies", speciesColumns(), [fieldFilter("size", "Size"), fieldFilter("ability", "Ability")], { rowSummaryFields: ["speed", "edition"], renderer: "species" }),
+    config("background", "Backgrounds", "backgrounds", [
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("skills", "Skills", "minmax(7rem, 1.1fr)"),
+        column("feat", "Feat", "minmax(6rem, .9fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
+    ], [fieldFilter("ability", "Ability"), fieldFilter("skills", "Skills"), fieldFilter("feat", "Feat")], {
+        rowSummaryFields: ["tools", "languages", "edition"], renderer: "background"
+    }),
+    config("optionalfeature", "Options & Features", "optional-features", [
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("featureType", "Type", "minmax(6rem, 1fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
+    ], [fieldFilter("featureType", "Type"), fieldFilter("prerequisite", "Prerequisite")], {
+        rowSummaryFields: ["prerequisite", "edition"], renderer: "optionalfeature"
+    }),
+    config("species", "Species", "species", speciesColumns(), [
+        fieldFilter("size", "Size"),
+        fieldFilter("ability", "Ability"),
+        fieldFilter("creatureType", "Creature type")
+    ], { rowSummaryFields: ["speed", "creatureType", "edition"], renderer: "species" }),
+    config("subspecies", "Subspecies", "subspecies", speciesColumns(), [
+        fieldFilter("size", "Size"),
+        fieldFilter("ability", "Ability"),
+        fieldFilter("creatureType", "Creature type")
+    ], { rowSummaryFields: ["speed", "creatureType", "edition"], renderer: "species" }),
     config("item", "Items", "items", [
         column("name", "Name", "minmax(9rem, 2fr)"),
         column("type", "Type", "minmax(5rem, .8fr)"),
         column("rarity", "Rarity", "minmax(5rem, .8fr)"),
         column("source", "Source", "minmax(4rem, .65fr)")
-    ], [fieldFilter("type", "Type"), fieldFilter("rarity", "Rarity"), fieldFilter("attunement", "Attunement")], { rowSummaryFields: ["edition"], renderer: "item" }),
+    ], [
+        fieldFilter("type", "Type"),
+        fieldFilter("rarity", "Rarity"),
+        fieldFilter("attunement", "Attunement"),
+        fieldFilter("weaponCategory", "Weapon category"),
+        fieldFilter("properties", "Properties")
+    ], { rowSummaryFields: ["weaponCategory", "value", "weight", "edition"], renderer: "item" }),
     config("condition", "Conditions", "conditions", [column("name", "Name", "minmax(9rem, 2fr)"), column("source", "Source", "minmax(4rem, .65fr)")], [], { rowSummaryFields: ["edition"], renderer: "condition" }),
-    config("skill", "Skills", "skills", [column("name", "Name", "minmax(9rem, 2fr)"), column("ability", "Ability", "minmax(4rem, .65fr)"), column("source", "Source", "minmax(4rem, .65fr)")], [fieldFilter("ability", "Ability"), fieldFilter("family", "Family")], { rowSummaryFields: ["family", "edition"], renderer: "skill" }),
+    config("skill", "Skills", "skills", [
+        column("name", "Name", "minmax(9rem, 2fr)"),
+        column("ability", "Ability", "minmax(4rem, .65fr)"),
+        column("family", "Family", "minmax(5rem, .8fr)"),
+        column("source", "Source", "minmax(4rem, .65fr)")
+    ], [
+        fieldFilter("ability", "Ability"),
+        fieldFilter("family", "Family"),
+        fieldFilter("ranks", "Ranks"),
+        fieldFilter("trainedOnly", "Trained only"),
+        fieldFilter("armorCheckPenalty", "Armor check penalty")
+    ], { rowSummaryFields: ["specialty", "classSkill", "edition"], renderer: "skill" }),
     config("houseRule", "House Rules", null, [column("name", "Name", "minmax(9rem, 2fr)"), column("source", "Source", "minmax(4rem, .65fr)")], [], { rowSummaryFields: ["edition"], renderer: "houseRule" }),
     config("rule", "Other Rules", null, [column("name", "Name", "minmax(9rem, 2fr)"), column("source", "Source", "minmax(4rem, .65fr)")], [], { rowSummaryFields: ["edition"], renderer: "rule" })
 ];

@@ -187,26 +187,33 @@ public sealed class EmbeddedModuleAssetsIntegrationTests
         Assert.Contains("toolBasePath", rulesBrowser, StringComparison.Ordinal);
         Assert.Contains("Override", rulesBrowser, StringComparison.Ordinal);
 
+        var phase4Renderers = await GetAssetAsync(client, "/phase4-reference-renderers.js", "javascript");
         var renderers = string.Join(
             Environment.NewLine,
             await GetAssetAsync(client, "/rule-renderers.js", "javascript"),
             await GetAssetAsync(client, "/rule-renderer-support.js", "javascript"),
-            await GetAssetAsync(client, "/rule-renderers-specialized.js", "javascript"));
+            await GetAssetAsync(client, "/rule-renderers-specialized.js", "javascript"),
+            phase4Renderers);
         Assert.Contains("[\"monster\", renderMonster]", renderers, StringComparison.Ordinal);
-        Assert.Contains("[\"spell\", renderSpell]", renderers, StringComparison.Ordinal);
+        Assert.Contains("[\"spell\", renderCrossEditionSpell]", renderers, StringComparison.Ordinal);
         Assert.Contains("[\"class\", renderClass]", renderers, StringComparison.Ordinal);
         Assert.Contains("[\"subclass\", renderSubclass]", renderers, StringComparison.Ordinal);
         Assert.Contains("[\"prestigeclass\", renderPrestigeClass]", renderers, StringComparison.Ordinal);
         Assert.Contains("[\"species\", renderSpecies]", renderers, StringComparison.Ordinal);
         Assert.Contains("[\"feat\", renderFeat]", renderers, StringComparison.Ordinal);
+        Assert.Contains("[\"background\", renderBackground]", renderers, StringComparison.Ordinal);
+        Assert.Contains("[\"optionalfeature\", renderOptionalFeature]", renderers, StringComparison.Ordinal);
         Assert.Contains("[\"item\", renderItem]", renderers, StringComparison.Ordinal);
         Assert.Contains("[\"condition\", renderCondition]", renderers, StringComparison.Ordinal);
-        Assert.Contains("[\"skill\", renderSkill]", renderers, StringComparison.Ordinal);
+        Assert.Contains("[\"skill\", renderCrossEditionSkill]", renderers, StringComparison.Ordinal);
         Assert.Contains("rules-core-structured-rule", renderers, StringComparison.Ordinal);
         Assert.Contains("Legendary Actions", renderers, StringComparison.Ordinal);
         Assert.Contains("Ability Scores", renderers, StringComparison.Ordinal);
         Assert.Contains("abilityDatum(\"Save\"", renderers, StringComparison.Ordinal);
         Assert.Contains("hasAbilitySaveModel", renderers, StringComparison.Ordinal);
+        Assert.Contains("3.x Spell Mechanics", phase4Renderers, StringComparison.Ordinal);
+        Assert.Contains("Class-Dependent Levels", phase4Renderers, StringComparison.Ordinal);
+        Assert.Contains("Class-Skill State", phase4Renderers, StringComparison.Ordinal);
         Assert.Contains("Normalized rule document", renderers, StringComparison.Ordinal);
 
         var scopeControl = await GetAssetAsync(client, "/scope-control.js", "javascript");
