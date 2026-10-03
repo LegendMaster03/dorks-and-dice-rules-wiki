@@ -1,5 +1,6 @@
 import { codeBlock, element } from "./ui.js";
 import {
+    ITEM_TYPE_LABELS,
     PRESENTATION_METADATA_FIELDS,
     firstDefined,
     formatDetailValue,
@@ -13,9 +14,19 @@ import {
     titleCase
 } from "./rule-renderer-support.js";
 import {
+    renderFeat as renderBaseFeat,
     renderItem as renderBaseItem,
     renderSpell as renderBaseSpell
 } from "./rule-renderers-specialized.js";
+
+const FEAT_CATEGORY_LABELS = new Map([
+    ["D", "Dragonmark"],
+    ["DG", "Dark Gift"],
+    ["G", "General"],
+    ["O", "Origin"],
+    ["FS", "Fighting Style"],
+    ["EB", "Epic Boon"]
+]);
 
 export function renderGenericReference(document = {}, options = {}) {
     const entries = firstDefined(document?.entries, document?.rules, document?.text);
@@ -86,6 +97,15 @@ export function renderCrossEditionSkill(document = {}, options = {}) {
     });
 }
 
+export function renderCrossEditionFeat(document = {}, options = {}) {
+    const category = firstDefined(
+        document?._rulesCore?.epic?.canonicalTerm,
+        formatFeatCategory(document?.categoryDisplay),
+        formatFeatCategory(document?.category),
+        formatFeatCategory(document?.featCategory));
+    return renderBaseFeat({ ...document, category }, options);
+}
+
 export function renderCrossEditionSpell(document = {}, options = {}) {
     const legacyLabels = [
         "School", "Casting Time", "Range", "Components", "Duration", "Subschool",
@@ -142,7 +162,7 @@ export function renderCrossEditionItem(document = {}, options = {}) {
     ];
     const baseDocument = {
         ...document,
-        type: firstDefined(document?.type, threeXField(document, "Type")),
+        type: formatItemType(firstDefined(document?.type, threeXField(document, "Type"))),
         rarity: firstDefined(document?.rarity, threeXField(document, "Rarity")),
         value: firstDefined(document?.value, document?.cost, threeXField(document, "Price", "Market Price", "Cost")),
         weight: firstDefined(document?.weight, threeXField(document, "Weight")),
@@ -286,6 +306,20 @@ function formatAbility(value) {
         strength: "STR", dexterity: "DEX", constitution: "CON",
         intelligence: "INT", wisdom: "WIS", charisma: "CHA"
     })[normalized] ?? value.toUpperCase();
+}
+
+function formatFeatCategory(value) {
+    if (!hasValue(value)) return null;
+    const text = String(value).trim();
+    return FEAT_CATEGORY_LABELS.get(text.toUpperCase()) ?? text;
+}
+
+function formatItemType(value) {
+    if (!hasValue(value)) return null;
+    const text = String(value).trim();
+    const code = text.split("|", 1)[0].toUpperCase();
+    if (code === "SCF") return "Spellcasting Focus";
+    return ITEM_TYPE_LABELS.get(code) ?? text;
 }
 
 function formatSupport(value) {
