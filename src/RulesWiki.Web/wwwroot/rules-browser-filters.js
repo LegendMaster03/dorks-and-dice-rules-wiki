@@ -4,6 +4,14 @@ const COLLATOR = new Intl.Collator(undefined, {
     numeric: true,
     sensitivity: "base"
 });
+const MULTI_VALUE_BROWSER_FIELDS = new Set([
+    "components",
+    "descriptors",
+    "featureType",
+    "properties",
+    "skills",
+    "spellList"
+]);
 
 export function normalizeBrowserFieldFilters(entityType, values = {}) {
     const allowed = new Set(
@@ -199,7 +207,7 @@ export function browserFilterValues(rule, definition) {
     if (source.kind === "browser-field") {
         const value = (rule?.browserFields ?? [])
             .find(field => field.key === source.field)?.value;
-        return normalizeValues(value);
+        return normalizeBrowserFieldValues(source.field, value);
     }
     if (source.kind === "relationship") {
         return (rule?.relationships ?? [])
@@ -240,6 +248,15 @@ function browserFilterDefinitionsEquivalent(left, right) {
         && leftValue.facet === rightValue.facet
         && leftValue.relationshipKind === rightValue.relationshipKind
         && leftValue.relatedEntityType === rightValue.relatedEntityType;
+}
+
+function normalizeBrowserFieldValues(field, value) {
+    const values = normalizeValues(value);
+    if (!MULTI_VALUE_BROWSER_FIELDS.has(field)) return values;
+    return values.flatMap(entry => entry
+        .split(",")
+        .map(candidate => candidate.trim())
+        .filter(Boolean));
 }
 
 function normalizeValues(value) {
