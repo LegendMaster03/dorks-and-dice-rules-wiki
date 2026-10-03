@@ -77,7 +77,7 @@ const rendered = renderResolvedRule("item", {
                 Aura: "Faint divination",
                 "Caster Level": "5th",
                 Prerequisites: "Craft Wondrous Item",
-                Cost: "6,000 gp",
+                "Cost to Create": "6,000 gp",
                 Charges: "3",
                 "Enhancement Bonus": "+1"
             }
