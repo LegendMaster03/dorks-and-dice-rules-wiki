@@ -41,6 +41,7 @@ jobs:
           node tools/validate-phase-4-reference.mjs
           node tools/validate-phase-4-legacy-item.mjs
           node tools/validate-phase-4-modern-codes.mjs
+          node tools/validate-phase-4-multi-value-filters.mjs
           node tools/validate-private-core-boundary.mjs
           if grep -R '/tools/rules-core' -n src/RulesWiki.Web/wwwroot tools; then
             echo "Rules Wiki presentation still contains the old Tool mount."
