@@ -8,7 +8,6 @@ import {
     renderCondition,
     renderFeat,
     renderGeneralRule,
-    renderItem,
     renderMonster,
     renderPrestigeClass,
     renderSpecies,
@@ -16,6 +15,7 @@ import {
 } from "./rule-renderers-specialized.js";
 import {
     renderBackground,
+    renderCrossEditionItem as renderItem,
     renderCrossEditionSkill,
     renderCrossEditionSpell,
     renderGenericReference,
