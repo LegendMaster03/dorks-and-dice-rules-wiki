@@ -136,7 +136,7 @@ export function renderCrossEditionSpell(document = {}, options = {}) {
 
 export function renderCrossEditionItem(document = {}, options = {}) {
     const legacyLabels = [
-        "Type", "Rarity", "Price", "Market Price", "Cost", "Weight", "Attunement",
+        "Type", "Rarity", "Price", "Market Price", "Cost", "Cost to Create", "Weight", "Attunement",
         "Aura", "Caster Level", "Slot", "Prerequisite", "Prerequisites", "Requirements",
         "Charges", "Enhancement Bonus"
     ];
@@ -156,7 +156,7 @@ export function renderCrossEditionItem(document = {}, options = {}) {
         ["Caster Level", threeXField(document, "Caster Level")],
         ["Slot", threeXField(document, "Slot")],
         ["Prerequisites", firstDefined(document?.prerequisite, document?.prerequisites, threeXField(document, "Prerequisites", "Prerequisite", "Requirements"))],
-        ["Cost to Create", threeXField(document, "Cost")],
+        ["Cost to Create", threeXField(document, "Cost to Create", "Cost")],
         ["Charges", firstDefined(document?.charges, threeXField(document, "Charges"))],
         ["Enhancement Bonus", firstDefined(document?.enhancementBonus, document?.bonusWeapon, document?.bonusAc, threeXField(document, "Enhancement Bonus"))]
     ]);
