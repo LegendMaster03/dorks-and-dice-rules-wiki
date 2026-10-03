@@ -12,7 +12,10 @@ import {
     renderRulesTextSection,
     titleCase
 } from "./rule-renderer-support.js";
-import { renderSpell as renderBaseSpell } from "./rule-renderers-specialized.js";
+import {
+    renderItem as renderBaseItem,
+    renderSpell as renderBaseSpell
+} from "./rule-renderers-specialized.js";
 
 export function renderGenericReference(document = {}, options = {}) {
     const entries = firstDefined(document?.entries, document?.rules, document?.text);
@@ -60,7 +63,11 @@ export function renderCrossEditionSkill(document = {}, options = {}) {
         document?.ability,
         document?.stat,
         competency?.governingAbilityKey);
-    return renderReferenceRule(document, options, {
+    const presentationDocument = {
+        ...document,
+        _rulesCore: rulesCoreForPresentation(document?._rulesCore)
+    };
+    return renderReferenceRule(presentationDocument, options, {
         summary: [
             ["Ability", formatAbility(ability)],
             ["Family", competency?.familyName],
@@ -80,33 +87,78 @@ export function renderCrossEditionSkill(document = {}, options = {}) {
 }
 
 export function renderCrossEditionSpell(document = {}, options = {}) {
-    const components = document?.components && typeof document.components === "object" && !Array.isArray(document.components)
-        ? document.components
+    const legacyLabels = [
+        "School", "Casting Time", "Range", "Components", "Duration", "Subschool",
+        "Descriptor", "Descriptors", "Level", "Material Component", "Material Components",
+        "Focus", "Divine Focus", "XP Cost", "Target", "Targets", "Area", "Effect",
+        "Saving Throw", "Spell Resistance"
+    ];
+    const sourceComponents = firstDefined(document?.components, threeXField(document, "Components"));
+    const components = sourceComponents && typeof sourceComponents === "object" && !Array.isArray(sourceComponents)
+        ? sourceComponents
         : null;
     const baseDocument = omitTopLevel({
         ...document,
-        components: components ? omitProperties(components, ["f", "df", "xp", "focus", "divineFocus", "xpCost"]) : document?.components
+        school: firstDefined(document?.school, threeXField(document, "School")),
+        time: firstDefined(document?.time, document?.castingTime, threeXField(document, "Casting Time")),
+        range: firstDefined(document?.range, threeXField(document, "Range")),
+        components: components
+            ? omitProperties(components, ["f", "df", "xp", "focus", "divineFocus", "xpCost"])
+            : sourceComponents,
+        duration: firstDefined(document?.duration, threeXField(document, "Duration")),
+        _rulesCore: rulesCoreForPresentation(document?._rulesCore, legacyLabels)
     }, [
-        "subschool", "descriptor", "descriptors", "classLevels", "spellLevels", "levelsByClass",
+        "castingTime", "subschool", "descriptor", "descriptors", "classLevels", "spellLevels", "levelsByClass",
         "spellLists", "targets", "target", "area", "effect", "savingThrow", "spellResistance",
         "focus", "divineFocus", "xpCost", "materialComponents"
     ]);
 
     const root = renderBaseSpell(baseDocument, { ...options, showDocument: false });
     appendLabeledSection(root, "3.x Spell Mechanics", [
-        ["Subschool", document?.subschool],
-        ["Descriptors", firstDefined(document?.descriptors, document?.descriptor)],
+        ["Subschool", firstDefined(document?.subschool, threeXField(document, "Subschool"))],
+        ["Descriptors", firstDefined(document?.descriptors, document?.descriptor, threeXField(document, "Descriptors", "Descriptor"))],
         ["Class / List Access", firstDefined(document?.classes, document?.groups, document?.spellLists)],
-        ["Class-Dependent Levels", firstDefined(document?.classLevels, document?.spellLevels, document?.levelsByClass)],
-        ["Material Components", firstDefined(document?.materialComponents, components?.m)],
-        ["Focus", firstDefined(document?.focus, components?.f, components?.focus)],
-        ["Divine Focus", firstDefined(document?.divineFocus, components?.df, components?.divineFocus)],
-        ["XP Cost", firstDefined(document?.xpCost, components?.xp, components?.xpCost)],
-        ["Targets", firstDefined(document?.targets, document?.target)],
-        ["Area", document?.area],
-        ["Effect", document?.effect],
-        ["Saving Throw", document?.savingThrow],
-        ["Spell Resistance", document?.spellResistance]
+        ["Class-Dependent Levels", firstDefined(document?.classLevels, document?.spellLevels, document?.levelsByClass, threeXField(document, "Level"))],
+        ["Material Components", firstDefined(document?.materialComponents, components?.m, threeXField(document, "Material Components", "Material Component"))],
+        ["Focus", firstDefined(document?.focus, components?.f, components?.focus, threeXField(document, "Focus"))],
+        ["Divine Focus", firstDefined(document?.divineFocus, components?.df, components?.divineFocus, threeXField(document, "Divine Focus"))],
+        ["XP Cost", firstDefined(document?.xpCost, components?.xp, components?.xpCost, threeXField(document, "XP Cost"))],
+        ["Targets", firstDefined(document?.targets, document?.target, threeXField(document, "Targets", "Target"))],
+        ["Area", firstDefined(document?.area, threeXField(document, "Area"))],
+        ["Effect", firstDefined(document?.effect, threeXField(document, "Effect"))],
+        ["Saving Throw", firstDefined(document?.savingThrow, threeXField(document, "Saving Throw"))],
+        ["Spell Resistance", firstDefined(document?.spellResistance, threeXField(document, "Spell Resistance"))]
+    ]);
+
+    if (options.showDocument !== false) appendDocumentDisclosure(root, document, options.documentLabel);
+    return root;
+}
+
+export function renderCrossEditionItem(document = {}, options = {}) {
+    const legacyLabels = [
+        "Type", "Rarity", "Price", "Market Price", "Cost", "Weight", "Attunement",
+        "Aura", "Caster Level", "Slot", "Prerequisite", "Prerequisites", "Requirements",
+        "Charges", "Enhancement Bonus"
+    ];
+    const baseDocument = {
+        ...document,
+        type: firstDefined(document?.type, threeXField(document, "Type")),
+        rarity: firstDefined(document?.rarity, threeXField(document, "Rarity")),
+        value: firstDefined(document?.value, document?.cost, threeXField(document, "Price", "Market Price", "Cost")),
+        weight: firstDefined(document?.weight, threeXField(document, "Weight")),
+        reqAttune: firstDefined(document?.reqAttune, document?.requiresAttunement, threeXField(document, "Attunement")),
+        _rulesCore: rulesCoreForPresentation(document?._rulesCore, legacyLabels)
+    };
+
+    const root = renderBaseItem(baseDocument, { ...options, showDocument: false });
+    appendLabeledSection(root, "3.x Item Mechanics", [
+        ["Aura", threeXField(document, "Aura")],
+        ["Caster Level", threeXField(document, "Caster Level")],
+        ["Slot", threeXField(document, "Slot")],
+        ["Prerequisites", firstDefined(document?.prerequisite, document?.prerequisites, threeXField(document, "Prerequisites", "Prerequisite", "Requirements"))],
+        ["Cost to Create", threeXField(document, "Cost")],
+        ["Charges", firstDefined(document?.charges, threeXField(document, "Charges"))],
+        ["Enhancement Bonus", firstDefined(document?.enhancementBonus, document?.bonusWeapon, document?.bonusAc, threeXField(document, "Enhancement Bonus"))]
     ]);
 
     if (options.showDocument !== false) appendDocumentDisclosure(root, document, options.documentLabel);
@@ -177,6 +229,38 @@ function appendDocumentDisclosure(root, document, label) {
         element("summary", { text: label ?? "Normalized rule document" }),
         element("div", { className: "rules-core-secondary-details-body" }, codeBlock(document)));
     root.append(raw);
+}
+
+function rulesCoreForPresentation(extension, consumedThreeXFields = []) {
+    if (!extension || typeof extension !== "object" || Array.isArray(extension)) return extension;
+    const result = { ...extension };
+    const threeX = extension.threeX;
+    if (!threeX || typeof threeX !== "object" || Array.isArray(threeX)) return result;
+
+    const cleanedThreeX = { ...threeX };
+    delete cleanedThreeX.sourceBody;
+    if (cleanedThreeX.fields && typeof cleanedThreeX.fields === "object" && !Array.isArray(cleanedThreeX.fields)) {
+        const consumed = new Set(consumedThreeXFields.map(value => String(value).toLowerCase()));
+        const remainingFields = Object.fromEntries(Object.entries(cleanedThreeX.fields)
+            .filter(([key, value]) => !consumed.has(key.toLowerCase()) && hasValue(value)));
+        if (Object.keys(remainingFields).length) cleanedThreeX.fields = remainingFields;
+        else delete cleanedThreeX.fields;
+    }
+
+    if (Object.keys(cleanedThreeX).length) result.threeX = cleanedThreeX;
+    else delete result.threeX;
+    return Object.keys(result).length ? result : null;
+}
+
+function threeXField(document, ...names) {
+    const fields = document?._rulesCore?.threeX?.fields;
+    if (!fields || typeof fields !== "object" || Array.isArray(fields)) return null;
+    const entries = Object.entries(fields);
+    for (const name of names) {
+        const match = entries.find(([key]) => key.toLowerCase() === String(name).toLowerCase());
+        if (match && hasValue(match[1])) return match[1];
+    }
+    return null;
 }
 
 function omitTopLevel(value, names) {
