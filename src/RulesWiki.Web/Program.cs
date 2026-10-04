@@ -5,6 +5,7 @@ var builder = WebApplication.CreateBuilder(args);
 var toolHostBaseUri = RequireHttpUri(builder.Configuration, "ToolHost:BaseUrl");
 var rulesCorePrivateBaseUri = RequireHttpUri(builder.Configuration, "RulesCorePrivate:BaseUrl");
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient<IToolHostAuthenticationClient, DorksAndDiceToolHostAuthenticationClient>(client =>
 {
     client.BaseAddress = toolHostBaseUri;

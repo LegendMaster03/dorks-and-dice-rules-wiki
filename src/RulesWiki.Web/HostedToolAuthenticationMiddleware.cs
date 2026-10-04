@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace RulesWiki.Web;
@@ -8,6 +9,8 @@ public sealed class HostedToolAuthenticationMiddleware(RequestDelegate next)
 
     public async Task InvokeAsync(HttpContext httpContext, IToolHostAuthenticationClient authenticationClient)
     {
+        RulesWikiServerTiming.EnsureRequestTiming(httpContext);
+
         var tickets = httpContext.Request.Headers[ToolHostAuthenticationHeaders.Ticket];
         var introspectionPaths = httpContext.Request.Headers[ToolHostAuthenticationHeaders.IntrospectionPath];
         var hasTicketHeader = tickets.Count > 0;
@@ -27,6 +30,7 @@ public sealed class HostedToolAuthenticationMiddleware(RequestDelegate next)
         }
 
         ToolHostAuthenticationContext? authenticationContext;
+        var authenticationTimer = Stopwatch.StartNew();
         try
         {
             authenticationContext = await authenticationClient.RedeemAsync(
@@ -38,6 +42,14 @@ public sealed class HostedToolAuthenticationMiddleware(RequestDelegate next)
         catch (HttpRequestException) { httpContext.Response.StatusCode = StatusCodes.Status502BadGateway; return; }
         catch (OperationCanceledException) when (!httpContext.RequestAborted.IsCancellationRequested)
         { httpContext.Response.StatusCode = StatusCodes.Status504GatewayTimeout; return; }
+        finally
+        {
+            authenticationTimer.Stop();
+            RulesWikiServerTiming.AppendDuration(
+                httpContext,
+                RulesWikiServerTiming.AuthenticationMetricName,
+                authenticationTimer.Elapsed.TotalMilliseconds);
+        }
 
         if (authenticationContext is null)
         {

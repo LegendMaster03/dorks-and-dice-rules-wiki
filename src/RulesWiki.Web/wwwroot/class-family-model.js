@@ -80,7 +80,7 @@ export function classFamilyIdentityFields(document = {}, category = "class") {
     add("Fortitude Progression", character.saveProgressions?.fortitude);
     add("Reflex Progression", character.saveProgressions?.reflex);
     add("Will Progression", character.saveProgressions?.will);
-    add("Skill Points", firstDefined(character.startingSkillPoints, character.skillPoints));
+    add("Skill Points", firstDefined(character.skillPointsPerLevel, character.startingSkillPoints, character.skillPoints));
     add("Class Skills", character.classSkills);
     add("Spellcasting Profile", character.spellcastingProfile);
 

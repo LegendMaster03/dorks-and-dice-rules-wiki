@@ -197,9 +197,9 @@ export function browserFilterValues(rule, definition) {
         return normalizeValues(rule?.[source.property]);
     }
     if (source.kind === "browser-field") {
-        const value = (rule?.browserFields ?? [])
-            .find(field => field.key === source.field)?.value;
-        return normalizeValues(value);
+        return (rule?.browserFields ?? [])
+            .filter(field => field?.key === source.field)
+            .flatMap(field => normalizeValues(field?.value));
     }
     if (source.kind === "relationship") {
         return (rule?.relationships ?? [])

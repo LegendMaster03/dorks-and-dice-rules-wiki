@@ -72,7 +72,7 @@ const fixtures = [
         document: {
             name: "Arc Spark",
             level: 1,
-            school: "V",
+            school: "Evocation",
             time: [{ number: 1, unit: "action" }],
             range: { type: "point", distance: { type: "feet", amount: 60 } },
             components: { v: true, s: true },
@@ -111,21 +111,28 @@ const fixtures = [
         type: "feat",
         document: {
             name: "Example Feat",
-            category: "G",
+            category: "General",
             repeatable: false,
-            prerequisite: [{ level: 4 }],
-            entries: ["You gain an example benefit."]
+            entries: ["You gain an example benefit."],
+            _rulesCore: {
+                character: {
+                    prerequisites: [{
+                        matchCount: 1,
+                        requirements: [{ kind: "level", operator: ">=", value: 4 }]
+                    }]
+                }
+            }
         },
-        required: ["General", "Repeatable", "Prerequisite", "Example benefit"]
+        required: ["General", "Repeatable", "Prerequisite", "4", "Example benefit"]
     },
     {
         type: "item",
         document: {
             name: "Example Blade",
-            type: "M",
-            rarity: "rare",
+            type: "Melee Weapon",
+            rarity: "Rare",
             dmg1: "1d8",
-            dmgType: "S",
+            dmgType: "Slashing",
             weight: 3,
             value: 1500,
             entries: ["This blade carries an example enchantment."]
@@ -136,8 +143,17 @@ const fixtures = [
         type: "skill",
         document: {
             name: "Example Skill",
-            ability: "int",
-            entries: ["This skill measures specialized knowledge."]
+            entries: ["This skill measures specialized knowledge."],
+            _rulesCore: {
+                competency: {
+                    governingAbilityKey: "intelligence",
+                    supportsRanks: false,
+                    supportsClassSkillState: false,
+                    supportsTrainingState: true,
+                    trainedOnly: false,
+                    armorCheckPenaltyApplies: false
+                }
+            }
         },
         required: ["INT", "Specialized knowledge"]
     }
