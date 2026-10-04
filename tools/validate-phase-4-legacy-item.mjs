@@ -66,40 +66,30 @@ function assert(condition, message) {
 }
 
 const rendered = renderResolvedRule("item", {
-    name: "Legacy Lens",
-    entries: ["A reviewed 3.5e SRD item fixture."],
-    _rulesCore: {
-        threeX: {
-            fields: {
-                Type: "Wondrous Item",
-                Price: "12,000 gp",
-                Weight: "1 lb.",
-                Aura: "Faint divination",
-                "Caster Level": "5th",
-                Prerequisites: "Craft Wondrous Item",
-                "Cost to Create": "6,000 gp",
-                Charges: "3",
-                "Enhancement Bonus": "+1"
-            }
-        }
-    }
+    name: "Canonical Blade",
+    type: "Weapon",
+    value: 1200,
+    weight: 4,
+    charges: 3,
+    enhancementBonus: 2,
+    specialProperties: ["Keen"],
+    entries: ["An older-edition canonical item fixture."]
 }, { showDocument: false });
 
 const text = rendered.textContent;
 for (const required of [
-    "3.x Item Mechanics",
-    "Wondrous Item",
-    "12,000 gp",
-    "1 lb.",
-    "Faint divination",
-    "Caster Level",
-    "Craft Wondrous Item",
-    "Cost to Create",
-    "6,000 gp",
+    "Weapon",
+    "12 gp",
+    "4 lb.",
     "Charges",
-    "Enhancement Bonus"
+    "3",
+    "Enhancement Bonus",
+    "2",
+    "Special Properties",
+    "Keen"
 ]) {
-    assert(text.includes(required), `Legacy 3.x item rendering omitted '${required}'. Rendered text: ${text}`);
+    assert(text.includes(required), `Canonical item rendering omitted '${required}'. Rendered text: ${text}`);
 }
 
-console.log("Phase 4 legacy item renderer validation passed.");
+assert(!text.includes("threeX"), `Canonical item rendering leaked a compatibility container: ${text}`);
+console.log("Phase 4 canonical item renderer validation passed.");

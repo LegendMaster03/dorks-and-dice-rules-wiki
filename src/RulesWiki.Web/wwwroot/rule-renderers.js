@@ -7,6 +7,7 @@ import {
     renderClass,
     renderCondition,
     renderGeneralRule,
+    renderItem,
     renderMonster,
     renderPrestigeClass,
     renderSpecies,
@@ -14,8 +15,7 @@ import {
 } from "./rule-renderers-specialized.js";
 import {
     renderBackground,
-    renderCrossEditionFeat,
-    renderCrossEditionItem as renderItem,
+    renderCrossEditionFeat as renderFeat,
     renderCrossEditionSkill,
     renderCrossEditionSpell,
     renderGenericReference,
@@ -31,7 +31,7 @@ const renderers = new Map([
     ["prestigeclass", renderPrestigeClass],
     ["race", renderSpecies],
     ["species", renderSpecies],
-    ["feat", renderCrossEditionFeat],
+    ["feat", renderFeat],
     ["background", renderBackground],
     ["optionalfeature", renderOptionalFeature],
     ["item", renderItem],

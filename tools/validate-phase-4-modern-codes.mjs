@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 class FakeNode {
     constructor(tagName = "", text = "") {
         this.tagName = String(tagName).toUpperCase();
@@ -69,34 +71,24 @@ function assertIncludes(rendered, expected, context) {
 }
 
 const rod = renderResolvedRule("item", {
-    name: "+1 Rod of the Pact Keeper",
-    type: "RD|XDMG",
-    rarity: "uncommon",
-    entries: ["A modern source-shaped item fixture."]
+    name: "Canonical Rod",
+    type: "Rod",
+    rarity: "Uncommon",
+    entries: ["A normalized item fixture."]
 }, { showDocument: false });
-assertIncludes(rod, "Rod", "Source-qualified item type");
-if (rod.textContent.includes("RD|XDMG") || rod.textContent.includes("Rd|xdmg")) {
-    throw new Error(`Source-qualified item type leaked raw code: ${rod.textContent}`);
-}
-
-const focus = renderResolvedRule("item", {
-    name: "Arcane Focus",
-    type: "SCF",
-    rarity: "none",
-    entries: ["A source-shaped spellcasting focus fixture."]
-}, { showDocument: false });
-assertIncludes(focus, "Spellcasting Focus", "Spellcasting-focus item type");
+assertIncludes(rod, "Rod", "Canonical item type");
+assertIncludes(rod, "Uncommon", "Canonical item rarity");
 
 const generalFeat = renderResolvedRule("feat", {
     name: "Ability Score Improvement",
-    category: "G",
-    entries: ["A modern general feat fixture."]
+    category: "General",
+    entries: ["A normalized feat fixture."]
 }, { showDocument: false });
-assertIncludes(generalFeat, "General", "Modern general feat category");
+assertIncludes(generalFeat, "General", "Canonical feat category");
 
 const epicFeat = renderResolvedRule("feat", {
     name: "Boon Fixture",
-    category: "EB",
+    category: "Epic Feat",
     entries: ["An epic feat fixture."],
     _rulesCore: {
         epic: {
@@ -106,6 +98,15 @@ const epicFeat = renderResolvedRule("feat", {
         }
     }
 }, { showDocument: false });
-assertIncludes(epicFeat, "Epic Feat", "Normalized epic feat category");
+assertIncludes(epicFeat, "Epic Feat", "Core-owned epic feat category");
 
-console.log("Phase 4 modern source-code presentation validation passed.");
+const phase4Source = readFileSync(
+    new URL("../src/RulesWiki.Web/wwwroot/phase4-reference-renderers.js", import.meta.url),
+    "utf8");
+for (const sourceEncoding of ["RD|XDMG", "SCF", "FEAT_CATEGORY_LABELS", "ITEM_TYPE_LABELS"]) {
+    if (phase4Source.includes(sourceEncoding)) {
+        throw new Error(`Phase 4 renderer contains source-code translation '${sourceEncoding}'.`);
+    }
+}
+
+console.log("Phase 4 source-independent canonical presentation validation passed.");

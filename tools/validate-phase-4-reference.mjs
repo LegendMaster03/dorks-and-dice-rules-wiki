@@ -138,7 +138,7 @@ const normalizedPrerequisites = [{
     matchCount: 1,
     requirements: [{ kind: "skill-ranks", targetName: "Spellcraft", operator: ">=", value: 8 }]
 }];
-const threeXClass = {
+const canonicalClass = {
     hd: { number: 1, faces: 6 },
     _rulesCore: {
         character: {
@@ -152,16 +152,16 @@ const threeXClass = {
         }
     }
 };
-const classFields = new Map(classFamilyIdentityFields(threeXClass, "prestigeClass")
+const classFields = new Map(classFamilyIdentityFields(canonicalClass, "prestigeClass")
     .map(value => [value.label, value.value]));
-assert(classFields.get("Base Attack Progression") === "half", "3.x BAB progression must remain Core-owned and visible.");
-assert(classFields.get("Fortitude Progression") === "poor", "3.x Fortitude progression must remain distinct.");
-assert(classFields.get("Reflex Progression") === "poor", "3.x Reflex progression must remain distinct.");
-assert(classFields.get("Will Progression") === "good", "3.x Will progression must remain distinct.");
-assert(classFields.get("Skill Points") === 4, "3.x skillPointsPerLevel must render in the existing class workspace.");
-assert(Array.isArray(classFields.get("Class Skills")), "3.x class skills must remain structurally available.");
-assert(classFields.get("Spellcasting Profile") === "dnd-3x", "3.x spellcasting profile must remain visible.");
-assert(explicitPrestigePrerequisites(threeXClass) === normalizedPrerequisites, "Prestige prerequisites must use normalized Core structure.");
+assert(classFields.get("Base Attack Progression") === "half", "Canonical BAB progression must remain Core-owned and visible.");
+assert(classFields.get("Fortitude Progression") === "poor", "Canonical Fortitude progression must remain distinct.");
+assert(classFields.get("Reflex Progression") === "poor", "Canonical Reflex progression must remain distinct.");
+assert(classFields.get("Will Progression") === "good", "Canonical Will progression must remain distinct.");
+assert(classFields.get("Skill Points") === 4, "Canonical skillPointsPerLevel must render in the class workspace.");
+assert(Array.isArray(classFields.get("Class Skills")), "Canonical class skills must remain structurally available.");
+assert(classFields.get("Spellcasting Profile") === "dnd-3x", "Canonical spellcasting profile must remain visible.");
+assert(explicitPrestigePrerequisites(canonicalClass) === normalizedPrerequisites, "Prestige prerequisites must use normalized Core structure.");
 
 assertRendered("skill", {
     name: "Craft (alchemy)",
@@ -178,7 +178,17 @@ assertRendered("skill", {
             armorCheckPenaltyApplies: false
         }
     }
-}, ["INT", "Craft", "alchemy", "Ranks", "Supported", "Class-Skill State"], "3.x ranked skill");
+}, ["INT", "Craft", "alchemy", "Ranks", "Supported", "Class-Skill State"], "canonical ranked skill");
+
+assertRendered("feat", {
+    name: "Arcane Qualification",
+    category: "General",
+    repeatable: false,
+    entries: ["A canonical feat fixture."],
+    _rulesCore: {
+        character: { prerequisites: normalizedPrerequisites }
+    }
+}, ["General", "Prerequisite", "Spellcraft", "8"], "canonical feat prerequisite");
 
 assertRendered("background", {
     name: "Sage",
@@ -188,82 +198,93 @@ assertRendered("background", {
     languageProficiencies: ["Draconic"],
     feat: "Magic Initiate",
     entries: ["You spent years learning."]
-}, ["Ability Scores", "Skills", "Arcana", "Feat", "Magic Initiate", "Tools", "Languages"], "5.5e background");
+}, ["Ability Scores", "Skills", "Arcana", "Feat", "Magic Initiate", "Tools", "Languages"], "background");
 
 assertRendered("optionalfeature", {
     name: "Invocation Fixture",
-    featureType: ["EI"],
+    featureType: ["Eldritch Invocation"],
     prerequisite: "5th level",
     entries: ["A class-independent feature-like rule."]
-}, ["Feature Type", "Prerequisite", "5th level", "Rules"], "Option/feature");
+}, ["Feature Type", "Prerequisite", "5th level", "Rules"], "option/feature");
 
-const spellText = assertRendered("spell", {
+const modernSpellText = assertRendered("spell", {
+    name: "Modern Ward",
+    level: 2,
+    school: "Abjuration",
+    time: "1 action",
+    range: "Touch",
+    components: { v: true, s: true },
+    duration: "1 hour",
+    entries: ["A modern canonical spell fixture."]
+}, ["2nd level", "Abjuration", "1 action", "Touch", "V, S"], "modern canonical spell");
+assert(!modernSpellText.includes("Subschool"), "Omitted older-edition spell fields must not create bogus values.");
+assert(!modernSpellText.includes("Spell Resistance"), "Omitted older-edition spell fields must not create bogus values.");
+
+const olderSpellText = assertRendered("spell", {
     name: "Legacy Gate",
     level: 5,
-    school: "C",
+    school: "Conjuration",
+    time: "1 standard action",
+    range: "Medium",
+    components: { v: true, s: true },
+    duration: "1 round/level",
     subschool: "Teleportation",
     descriptors: ["Teleportation"],
-    components: {
-        v: true,
-        s: true,
-        m: "a silver key",
-        f: "a tuned fork",
-        df: true,
-        xp: 100
-    },
+    spellLists: ["Wizard", "Sorcerer"],
     classLevels: { Wizard: 5, Sorcerer: 5 },
-    castingTime: "1 standard action",
-    range: "Medium",
+    materialComponents: "a silver key",
+    focus: "a tuned fork",
+    divineFocus: true,
+    xpCost: 100,
     targets: "One creature",
-    duration: "1 round/level",
     savingThrow: "Will negates",
     spellResistance: "Yes",
     entries: ["You open a temporary gate."],
-    legacyMystery: "Preserved legacy mechanic",
-    _rulesCore: {
-        pcgen: {
-            unmappedSegments: [{ tag: "CLASSES", value: "Wizard=5|Sorcerer=5" }]
-        }
-    }
+    canonicalFutureMechanic: "Preserved canonical extension"
 }, [
     "Subschool", "Teleportation", "Descriptors", "Class-Dependent Levels",
     "Material Components", "silver key", "Focus", "tuned fork", "Divine Focus",
-    "XP Cost", "100", "Targets", "Will negates", "Spell Resistance", "Yes",
-    "Source-Specific Mechanics", "CLASSES", "Wizard=5|Sorcerer=5", "Preserved legacy mechanic"
-], "3.x spell");
-assert(!spellText.includes("Class-Dependent Levels[object Object]"), "3.x class-dependent spell levels must remain structured.");
+    "XP Cost", "100", "Targets", "Will negates", "Spell Resistance", "Yes"
+], "older-edition canonical spell");
+assert(!olderSpellText.includes("[object Object]"), "Class-dependent spell levels must remain structured.");
 
 assertRendered("item", {
     name: "Legacy Blade",
-    type: "weapon",
+    type: "Weapon",
     enhancementBonus: 2,
     charges: 3,
     value: 1200,
     weight: 4,
     specialProperties: ["Keen"],
-    legacyProperty: "Edition-native item mechanic",
-    entries: ["A 3.x weapon fixture."]
-}, ["Weight", "4 lb.", "Value", "12 gp", "Enhancement Bonus", "2", "Charges", "3", "Edition-native item mechanic"], "3.x item");
+    entries: ["An older-edition canonical item fixture."]
+}, ["Weight", "4 lb.", "Value", "12 gp", "Enhancement Bonus", "2", "Charges", "3", "Keen"], "canonical item");
 
 assertRendered("species", {
-    name: "Legacy Race",
+    name: "Evidence Fixture",
     size: ["M"],
     speed: 30,
     ability: [{ dex: 2, con: -2 }],
-    entries: [{ name: "Legacy Trait", entries: ["A source-native older-edition trait."] }],
+    entries: [{ name: "Trait", entries: ["A normalized trait."] }],
     _rulesCore: {
         pcgen: {
             unmappedSegments: [{ tag: "RACESUBTYPE", value: "Elf" }]
         }
     }
-}, ["Medium", "30 ft.", "DEX +2", "CON -2", "Legacy Trait", "Source-Specific Mechanics", "RACESUBTYPE"], "3.x race/species");
+}, ["Medium", "30 ft.", "Trait", "Source-Specific Mechanics", "RACESUBTYPE"], "source evidence presentation");
 
 const unknownRendered = renderResolvedRule("unknownMechanicalFamily", {
     name: "Unknown Fixture",
     entries: ["Known prose remains readable."],
     unmodeledMechanic: "Preserve this value"
 }, { showDocument: false });
-assert(unknownRendered.textContent.includes("Preserve this value"), "Specialization must not hide unknown supplied fields.");
+assert(unknownRendered.textContent.includes("Preserve this value"), "Unknown canonical fields must remain visible.");
+
+const phase4RendererSource = readFileSync(
+    new URL("../src/RulesWiki.Web/wwwroot/phase4-reference-renderers.js", import.meta.url),
+    "utf8");
+for (const forbidden of ["threeXField", "_rulesCore?.threeX", "legacy-srd", "pcgen?.unmappedSegments", "RD|XDMG"]) {
+    assert(!phase4RendererSource.includes(forbidden), `Phase 4 renderer must not contain source-format compatibility token '${forbidden}'.`);
+}
 
 const referenceApiSource = readFileSync(
     new URL("../src/RulesWiki.Web/wwwroot/rules-reference-api.js", import.meta.url),
@@ -272,4 +293,4 @@ assert(referenceApiSource.includes("/api/wiki/references"), "Rules Wiki referenc
 assert(referenceApiSource.includes("/api/wiki/references/comparison"), "The Core-owned semantic comparison entry point must remain available.");
 assert(!referenceApiSource.includes("/api/resolved-rules"), "Phase 4 must not add a public resolved-rules dependency to the Wiki reference API.");
 
-console.log("Phase 4 cross-edition reference validation passed.");
+console.log("Phase 4 canonical reference validation passed.");
