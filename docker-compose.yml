@@ -1,6 +1,6 @@
 services:
   rules-wiki:
-    image: dorks-and-dice-rules-wiki:latest
+    image: ${RULES_WIKI_IMAGE:?RULES_WIKI_IMAGE must identify the reviewed release}
     build:
       context: .
       dockerfile: src/RulesWiki.Web/Dockerfile

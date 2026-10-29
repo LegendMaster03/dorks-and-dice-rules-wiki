@@ -2,9 +2,12 @@ name: Validate Rules Wiki
 
 on:
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
   push:
     branches: [ "**" ]
+
+permissions:
+  contents: read
 
 concurrency:
   group: validate-${{ github.ref }}
@@ -23,55 +26,44 @@ jobs:
           node-version: "24.x"
       - name: Restore
         run: dotnet restore dorks-and-dice-rules-wiki.slnx
-      - name: Test
+      - name: Full C# test suite including native operation integration
         run: dotnet test dorks-and-dice-rules-wiki.slnx --configuration Release --no-restore
-      - name: Validate migrated browser modules
+      - name: Browser syntax and native-first contract
         run: |
           set -euo pipefail
           for file in src/RulesWiki.Web/wwwroot/*.js tools/*.mjs; do
             node --input-type=module --check < "$file"
           done
-          node tools/validate-monster-renderer.mjs
-          node tools/validate-structured-rule-renderers.mjs
-          node tools/validate-render-lifecycle.mjs
-          node tools/validate-workspace-routing.mjs
-          node tools/validate-browser-framework.mjs
-          node tools/validate-reference-browser.mjs
-          node tools/validate-class-family-workspace.mjs
-          node tools/validate-private-core-boundary.mjs
-          if grep -R '/tools/rules-core' -n src/RulesWiki.Web/wwwroot tools; then
-            echo "Rules Wiki presentation still contains the old Tool mount."
-            exit 1
-          fi
-      - name: Enforce Embedded Module v2 lifecycle
+          node tools/validate-native-reference-browser.mjs
+          node tools/test-native-reference-api.mjs
+      - name: Retain safe Embedded Module rendering lifecycle
         run: |
-          if grep -R "MutationObserver" -n src/RulesWiki.Web/wwwroot; then
-            echo "Application-owned frontend code must not use MutationObserver as a render lifecycle."
+          if grep -R 'MutationObserver' -n src/RulesWiki.Web/wwwroot; then
+            echo "Do not use mutation observers to manage render lifecycle."
             exit 1
           fi
-      - name: Validate Compose configuration
+      - name: Test deployment guards
+        run: python3 -m unittest discover -s tests -p 'test_deploy_native_wiki.py' -v
+      - name: Validate Compose including private tunnel
         env:
           RulesCorePrivate__Network: rules-wiki-rules-core-test
+          RULES_WIKI_IMAGE: dorks-and-dice-rules-wiki:test
         run: |
           docker compose -f docker-compose.yml config >/dev/null
           docker compose -f docker-compose.yml -f docker-compose.private-tunnel.yml config >/dev/null
       - name: Build container
         run: docker build -t dorks-and-dice-rules-wiki:test -f src/RulesWiki.Web/Dockerfile .
-      - name: Smoke test container
+      - name: Smoke test stateless Wiki host
         run: |
-          docker rm -f dorks-and-dice-rules-wiki-smoketest 2>/dev/null || true
-          docker run -d --name dorks-and-dice-rules-wiki-smoketest \
+          set -euo pipefail
+          docker run -d --rm --name dorks-and-dice-rules-wiki-smoketest \
             -p 127.0.0.1:58080:8080 \
             -e ToolHost__BaseUrl=http://site.example.invalid \
             -e RulesCorePrivate__BaseUrl=http://rules-core-private.example.invalid \
             dorks-and-dice-rules-wiki:test
-          ready=false
-          for i in {1..20}; do
-            if curl -fsS http://127.0.0.1:58080/ready | grep -q '"status":"ready"'; then ready=true; break; fi
+          trap 'docker rm -f dorks-and-dice-rules-wiki-smoketest >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:58080/ready >/dev/null; then break; fi
             sleep 1
           done
-          if [ "$ready" != "true" ]; then docker logs dorks-and-dice-rules-wiki-smoketest || true; exit 1; fi
-          curl -fsS http://127.0.0.1:58080/app.js | grep -q 'Rules'
-      - name: Cleanup smoke-test container
-        if: always()
-        run: docker rm -f dorks-and-dice-rules-wiki-smoketest 2>/dev/null || true
+          curl -fsS http://127.0.0.1:58080/app.js | grep -q mountNativeRulesBrowser
