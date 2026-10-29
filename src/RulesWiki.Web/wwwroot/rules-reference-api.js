@@ -56,7 +56,7 @@ export function installWikiReferenceApi(api) {
     return api;
 }
 function browserCategory(kind) {
-    return kind === "leveled-condition" ? "condition" : kind === "rule-chapter" ? "rule" : kind;
+    return kind === "leveled-condition" ? "condition" : (kind === "ruleChapter" || kind === "rule-chapter") ? "rule" : kind;
 }
 export function referenceCategoryMode() { return "effective"; }
 export function referenceFacetFilters() { return { package: "", edition: "" }; }

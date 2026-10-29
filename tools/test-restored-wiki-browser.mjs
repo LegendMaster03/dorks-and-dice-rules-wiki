@@ -9,6 +9,7 @@ const fingerprint = '870ca5e89a97b9176f0a3b55fb6cb9467227d13562a83dd7d72ecee5a57
 const records = [
     {id:'condition.blinded',name:'Blinded',kind:'condition'},
     {id:'condition.exhaustion',name:'Exhaustion',kind:'leveled-condition'},
+    {id:'rules.conditions',name:'Conditions chapter',kind:'ruleChapter'},
     ...Array.from({length:100}, (_, i) => ({id:`rule.${i}`,name:`Rule ${i}`,kind:'rule'}))
 ];
 const calls=[];
