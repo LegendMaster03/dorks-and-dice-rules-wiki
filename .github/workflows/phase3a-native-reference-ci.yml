@@ -31,7 +31,8 @@ jobs:
       - name: Validate native browser
         run: |
           node tools/validate-native-reference-browser.mjs
-          node tools/test-native-reference-api.mjs
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test
           for file in src/RulesWiki.Web/wwwroot/*.js; do node --input-type=module --check < "$file"; done
       - name: Build Docker
         run: docker build -t rules-wiki-phase3a:ci -f src/RulesWiki.Web/Dockerfile .
@@ -47,4 +48,4 @@ jobs:
             if curl -fsS http://127.0.0.1:58080/ready >/dev/null; then break; fi
             sleep 1
           done
-          curl -fsS http://127.0.0.1:58080/app.js | grep -q 'mountNativeRulesBrowser'
+          curl -fsS http://127.0.0.1:58080/app.js | grep -q 'installResolvedRulesBrowser'

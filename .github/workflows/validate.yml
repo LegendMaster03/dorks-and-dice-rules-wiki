@@ -35,7 +35,8 @@ jobs:
             node --input-type=module --check < "$file"
           done
           node tools/validate-native-reference-browser.mjs
-          node tools/test-native-reference-api.mjs
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm test
       - name: Retain safe Embedded Module rendering lifecycle
         run: |
           if grep -R 'MutationObserver' -n src/RulesWiki.Web/wwwroot; then
@@ -66,4 +67,4 @@ jobs:
             if curl -fsS http://127.0.0.1:58080/ready >/dev/null; then break; fi
             sleep 1
           done
-          curl -fsS http://127.0.0.1:58080/app.js | grep -q mountNativeRulesBrowser
+          curl -fsS http://127.0.0.1:58080/app.js | grep -q installResolvedRulesBrowser

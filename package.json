@@ -1,0 +1,1 @@
+{"name":"rules-wiki-browser-tests","private":true,"type":"module","scripts":{"test":"node tools/test-native-reference-api.mjs && node tools/test-restored-wiki-browser.mjs"},"devDependencies":{"jsdom":"30.1.3"}}
