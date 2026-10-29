@@ -1,0 +1,50 @@
+name: Rules Wiki Phase 3A Native Reference CI
+
+on:
+  push:
+    branches:
+      - feature/rules-wiki-phase3a-native-api
+      - integration/rules-wiki-phase3a-native-api
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-reference:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - name: Build release
+        run: dotnet build dorks-and-dice-rules-wiki.slnx -c Release
+      - name: Run full .NET test suite
+        run: dotnet test dorks-and-dice-rules-wiki.slnx -c Release --no-build
+      - name: Validate native browser
+        run: |
+          node tools/validate-native-reference-browser.mjs
+          node tools/test-native-reference-api.mjs
+          for file in src/RulesWiki.Web/wwwroot/*.js; do node --input-type=module --check < "$file"; done
+      - name: Build Docker
+        run: docker build -t rules-wiki-phase3a:ci -f src/RulesWiki.Web/Dockerfile .
+      - name: Docker smoke
+        run: |
+          set -euo pipefail
+          docker run -d --rm --name rules-wiki-phase3a -p 127.0.0.1:58080:8080 \
+            -e ToolHost__BaseUrl=http://site.example.invalid \
+            -e RulesCorePrivate__BaseUrl=http://rules-core-private.example.invalid \
+            rules-wiki-phase3a:ci
+          trap 'docker rm -f rules-wiki-phase3a >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:58080/ready >/dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:58080/app.js | grep -q 'mountNativeRulesBrowser'

@@ -4,18 +4,10 @@ using System.Text.Json;
 
 namespace RulesWiki.Web;
 
-public sealed record ToolPrivateTunnelTicketResponse(
-    string TargetKey,
-    string Ticket,
-    string IntrospectionPath);
+public sealed record ToolPrivateTunnelTicketResponse(string TargetKey, string Ticket, string IntrospectionPath);
+public sealed record RulesCorePrivateRequest(HttpMethod Method, string PathAndQuery, JsonElement? Body = null);
 
-public sealed record RulesCorePrivateRequest(
-    HttpMethod Method,
-    string PathAndQuery,
-    JsonElement? Body = null);
-
-public sealed class RulesCorePrivateTunnelException(string message, int statusCode = StatusCodes.Status503ServiceUnavailable)
-    : Exception(message)
+public sealed class RulesCorePrivateTunnelException(string message, int statusCode = 503) : Exception(message)
 {
     public int StatusCode { get; } = statusCode;
 }
@@ -34,6 +26,7 @@ public sealed class RulesCorePrivateClient(IHttpClientFactory httpClientFactory)
     public const string RulesCoreClientName = "rules-core-private";
     public const string TargetToolKey = "rules-core";
     public const string TicketExchangePath = "/tool-host/rules-wiki/api/private-tunnel/rules-core/ticket";
+    public const string TargetIntrospectionPath = "/tool-host/registrations/rules-core/api/introspect";
 
     public async Task<HttpResponseMessage> SendAsync(
         ToolHostAuthenticationContext authentication,
@@ -44,52 +37,46 @@ public sealed class RulesCorePrivateClient(IHttpClientFactory httpClientFactory)
         ArgumentNullException.ThrowIfNull(request);
 
         if (string.IsNullOrWhiteSpace(authentication.PrivateTunnelCapability))
-        {
-            throw new RulesCorePrivateTunnelException(
-                "Rules Wiki did not receive a private-tunnel capability for Rules Core.");
-        }
+            throw new RulesCorePrivateTunnelException("Rules Wiki private authorization is unavailable.");
 
         var toolHostClient = httpClientFactory.CreateClient(ToolHostClientName);
         using var exchange = new HttpRequestMessage(HttpMethod.Post, TicketExchangePath);
         exchange.Headers.Authorization = new AuthenticationHeaderValue(
-            "Bearer",
-            authentication.PrivateTunnelCapability);
-
+            "Bearer", authentication.PrivateTunnelCapability);
         using var exchangeResponse = await toolHostClient.SendAsync(
-            exchange,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken);
+            exchange, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         if (!exchangeResponse.IsSuccessStatusCode)
-        {
-            throw new RulesCorePrivateTunnelException(
-                $"Rules Core private ticket exchange failed with HTTP {(int)exchangeResponse.StatusCode}.");
-        }
+            throw new RulesCorePrivateTunnelException("Rules Wiki private ticket exchange failed.");
 
-        var targetTicket = await exchangeResponse.Content.ReadFromJsonAsync<ToolPrivateTunnelTicketResponse>(
-            cancellationToken: cancellationToken)
-            ?? throw new RulesCorePrivateTunnelException("Rules Core private ticket exchange returned no ticket.");
-        if (!string.Equals(targetTicket.TargetKey, TargetToolKey, StringComparison.Ordinal)
-            || string.IsNullOrWhiteSpace(targetTicket.Ticket)
-            || string.IsNullOrWhiteSpace(targetTicket.IntrospectionPath))
+        ToolPrivateTunnelTicketResponse ticket;
+        try
         {
-            throw new RulesCorePrivateTunnelException("Rules Core private ticket exchange returned an invalid target credential.");
+            ticket = await exchangeResponse.Content.ReadFromJsonAsync<ToolPrivateTunnelTicketResponse>(
+                cancellationToken: cancellationToken)
+                ?? throw new RulesCorePrivateTunnelException("Rules Wiki private ticket is unavailable.");
         }
+        catch (JsonException)
+        {
+            throw new RulesCorePrivateTunnelException("Rules Wiki received an invalid ticket response.");
+        }
+        if (!string.Equals(ticket.TargetKey, TargetToolKey, StringComparison.Ordinal) ||
+            string.IsNullOrWhiteSpace(ticket.Ticket) ||
+            !string.Equals(ticket.IntrospectionPath, TargetIntrospectionPath, StringComparison.Ordinal))
+            throw new RulesCorePrivateTunnelException("Rules Wiki received an invalid target credential.");
+
+        // Never send an arbitrary method or path, even if a future dispatcher changes.
+        if (request.Method != HttpMethod.Get || request.Body is not null ||
+            !Uri.TryCreate(request.PathAndQuery, UriKind.Relative, out var relative) ||
+            !request.PathAndQuery.StartsWith("/api/private/rulesets", StringComparison.Ordinal) ||
+            request.PathAndQuery.Contains('#'))
+            throw new RulesCorePrivateTunnelException("The requested native operation is not permitted.", 400);
 
         var rulesCoreClient = httpClientFactory.CreateClient(RulesCoreClientName);
-        using var outbound = new HttpRequestMessage(request.Method, request.PathAndQuery);
-        outbound.Headers.TryAddWithoutValidation(ToolHostAuthenticationHeaders.Ticket, targetTicket.Ticket);
-        outbound.Headers.TryAddWithoutValidation(
-            ToolHostAuthenticationHeaders.IntrospectionPath,
-            targetTicket.IntrospectionPath);
+        using var outbound = new HttpRequestMessage(HttpMethod.Get, relative);
+        outbound.Headers.TryAddWithoutValidation(ToolHostAuthenticationHeaders.Ticket, ticket.Ticket);
+        outbound.Headers.TryAddWithoutValidation(ToolHostAuthenticationHeaders.IntrospectionPath, TargetIntrospectionPath);
         outbound.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        if (request.Body is { } body)
-        {
-            outbound.Content = JsonContent.Create(body);
-        }
-
         return await rulesCoreClient.SendAsync(
-            outbound,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken);
+            outbound, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
     }
 }
