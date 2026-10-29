@@ -1,94 +1,32 @@
 name: Deploy Rules Wiki
-
+run-name: Native Wiki at ${{ github.event.workflow_run.head_sha || github.sha }}
 on:
   workflow_run:
-    workflows: [ "Validate Rules Wiki" ]
-    types: [ completed ]
-    branches: [ main ]
-  workflow_dispatch:
-
+    workflows: [Validate Rules Wiki]
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
 concurrency:
   group: dorks-and-dice-rules-wiki
-  cancel-in-progress: true
-
+  cancel-in-progress: false
 jobs:
   deploy:
-    if: >-
-      (github.event_name == 'workflow_dispatch' && github.ref_name == 'main') ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.event == 'push' &&
-       github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success')
+    if: github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.conclusion == 'success'
     runs-on: [self-hosted, dorks-and-dice-rules-wiki]
+    timeout-minutes: 20
+    env:
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha }}
+      RULES_WIKI_ENV_FILE: /mnt/HDDs/www/dorks-and-dice-rules-wiki/.env
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
-      - name: Build image
-        run: docker build -t dorks-and-dice-rules-wiki:latest -f src/RulesWiki.Web/Dockerfile .
-      - name: Deploy
-        run: |
-          ENV_FILE=/mnt/HDDs/www/dorks-and-dice-rules-wiki/.env
-          if [ ! -f "$ENV_FILE" ]; then
-            echo "Rules Wiki deployment configuration is missing: $ENV_FILE"
-            exit 1
-          fi
-
-          for required_key in RulesCorePrivate__Network RULES_CORE_PRIVATE_BASE_URL; do
-            if ! grep -q "^${required_key}=" "$ENV_FILE"; then
-              echo "Rules Wiki private deployment configuration is missing: ${required_key}"
-              exit 1
-            fi
-          done
-
-          docker compose \
-            --project-name dorks-and-dice-rules-wiki \
-            --env-file "$ENV_FILE" \
-            -f docker-compose.yml \
-            -f docker-compose.private-tunnel.yml \
-            config >/dev/null
-
-          docker compose \
-            --project-name dorks-and-dice-rules-wiki \
-            --env-file "$ENV_FILE" \
-            -f docker-compose.yml \
-            -f docker-compose.private-tunnel.yml \
-            up -d --force-recreate --remove-orphans
-      - name: Verify deployed service
-        run: |
-          ENV_FILE=/mnt/HDDs/www/dorks-and-dice-rules-wiki/.env
-          PRIVATE_NETWORK=$(grep '^RulesCorePrivate__Network=' "$ENV_FILE" | tail -n 1 | cut -d= -f2-)
-          if [ -z "$PRIVATE_NETWORK" ]; then
-            echo "RulesCorePrivate__Network is missing."
-            exit 1
-          fi
-
-          for i in {1..60}; do
-            response=$(docker run --rm \
-              --network dorks-and-dice-backend \
-              curlimages/curl:8.12.1 \
-              -fsS http://dorks-and-dice-rules-wiki:8080/ready 2>/dev/null || true)
-            if echo "$response" | grep -q '"status":"ready"' \
-              && echo "$response" | grep -q '"rulesBackend":"rules-core-private"' \
-              && echo "$response" | grep -q '"authentication":"tool-host-private-tunnel"'; then
-              break
-            fi
-            if [ "$i" -eq 60 ]; then
-              docker logs --tail 200 dorks-and-dice-rules-wiki || true
-              exit 1
-            fi
-            sleep 1
-          done
-
-          if ! docker network inspect "$PRIVATE_NETWORK" \
-            --format '{{range .Containers}}{{println .Name}}{{end}}' \
-            | grep -qx 'dorks-and-dice-rules-wiki'; then
-            echo "Rules Wiki is not attached to the configured private Rules Core network."
-            exit 1
-          fi
-
-          if ! docker exec dorks-and-dice-rules-wiki \
-            getent hosts dorks-and-dice-rules-core-private >/dev/null 2>&1; then
-            echo "Rules Wiki can not resolve the private Rules Core ingress."
-            exit 1
-          fi
-
-          echo "$response"
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Reject a superseded release
+        run: test "$(git ls-remote origin refs/heads/main | cut -f1)" = "$RELEASE_SHA"
+      - name: Require a running native Core before replacing Wiki
+        run: python3 tools/deploy_native_wiki.py preflight
+      - name: Build commit-pinned Wiki
+        run: docker build --label "org.opencontainers.image.revision=$RELEASE_SHA" -t "dorks-and-dice-rules-wiki:rewrite-$RELEASE_SHA" -f src/RulesWiki.Web/Dockerfile .
+      - name: Deploy and observe Wiki
+        run: python3 tools/deploy_native_wiki.py deploy

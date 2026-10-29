@@ -42,9 +42,12 @@ jobs:
             echo "Do not use mutation observers to manage render lifecycle."
             exit 1
           fi
+      - name: Test deployment guards
+        run: python3 -m unittest discover -s tests -p 'test_deploy_native_wiki.py' -v
       - name: Validate Compose including private tunnel
         env:
           RulesCorePrivate__Network: rules-wiki-rules-core-test
+          RULES_WIKI_IMAGE: dorks-and-dice-rules-wiki:test
         run: |
           docker compose -f docker-compose.yml config >/dev/null
           docker compose -f docker-compose.yml -f docker-compose.private-tunnel.yml config >/dev/null
