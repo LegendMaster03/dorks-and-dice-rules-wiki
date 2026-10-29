@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/rules-wiki-phase3a-native-api
+      - integration/rules-wiki-phase3a-native-api
   pull_request:
     branches:
       - main
