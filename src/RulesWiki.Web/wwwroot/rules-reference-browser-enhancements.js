@@ -35,7 +35,7 @@ export function installWikiReferenceBrowserEnhancements(app) {
         await renderActiveView(container);
         if (app.activeView !== "library") return;
         installServerReferenceFacetControls(app, container);
-        installCategoryModeControl(app, container);
+        if (!app.nativeReferenceOnly) installCategoryModeControl(app, container);
         relocateBrowserContextControls(container);
         clarifyReferenceCatalogStatus(container);
         enhanceWikiReferenceFragment(app, container);
@@ -113,6 +113,12 @@ function installServerReferenceFacetControls(app, container) {
     bindReferenceFacetChange(app, packageSelect, "package");
     bindReferenceFacetChange(app, editionSelect, "edition");
     refresh();
+    if (app.nativeReferenceOnly) {
+        for (const select of [packageSelect, editionSelect]) {
+            select.disabled = true;
+            select.title = "Publication metadata is not supplied by the native catalog.";
+        }
+    }
 
     // Package and Edition are server-authoritative in the Wiki reference API.
     // The Phase 2 note only applies to the remaining type-specific client filters.

@@ -167,6 +167,7 @@ function wrapInPlaceViewRender(app, methodName) {
 }
 
 function installPresentationOrdering(app) {
+    if (app.nativeReferenceOnly) return;
     const getGlobalOverview = app.api.getGlobalAuthoringOverview.bind(app.api);
     app.api.getGlobalAuthoringOverview = async () => {
         const overview = await getGlobalOverview();
@@ -279,6 +280,9 @@ function renderNavMenuItem(app, item) {
         type: "button",
         className: `rules-core-nav-menu-item${active ? " is-active" : ""}`,
         text: item.label,
+        disabled: app.nativeReferenceOnly && !hasEntityType(item),
+        title: app.nativeReferenceOnly && !hasEntityType(item)
+            ? "This workspace is not available in the native Core yet." : undefined,
         attributes: {
             role: "menuitem",
             ...(active ? { "aria-current": "page" } : {})
@@ -303,6 +307,7 @@ function renderNavMenuItem(app, item) {
 
 function navItemAvailable(app, item) {
     if (hasEntityType(item)) return Boolean(app.canBrowseRules);
+    if (app.nativeReferenceOnly) return true;
     return !item.capability || Boolean(app[item.capability]);
 }
 

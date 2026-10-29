@@ -1,59 +1,491 @@
-// Structured native JSON renderer. Treat all catalog values as untrusted text.
-const label = name => String(name).replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/[_-]/g, " ").replace(/^./, c => c.toUpperCase());
+import {
+    alertNode,
+    badge,
+    clear,
+    definitionList,
+    describeError,
+    element,
+    setButtonBusy
+} from "./ui.js";
+import { renderNativeDetail } from "./native-rule-detail.js";
+import { renderResolvedRule } from "./rule-renderers.js";
+import { renderSemanticComparison } from "./semantic-comparison.js";
+import {
+    isClassFamilyReference,
+    renderClassFamilyReferenceDetail
+} from "./class-family-workspace.js";
 
-function node(tag, className, value) {
-    const result = document.createElement(tag);
-    if (className) result.className = className;
-    if (value !== undefined) result.textContent = String(value);
-    return result;
-}
+export async function renderRuleDetailPane(
+    app,
+    container,
+    referenceIdentity,
+    scopeValue,
+    requestSerial,
+    getCurrentSerial,
+    onBackToList)
+{
+    container.replaceChildren(element("div", {
+        className: "rules-core-library-detail-loading",
+        text: "Loading reference…"
+    }));
 
-function renderValue(value) {
-    if (value === null || typeof value !== "object") {
-        return node("span", "native-value", value === null ? "None" : value);
-    }
-    if (Array.isArray(value)) {
-        const list = node("ol", "native-value-list");
-        for (const item of value) {
-            const entry = node("li");
-            entry.append(renderValue(item));
-            list.append(entry);
+    const campaignId = scopeValue.startsWith("campaign:")
+        ? scopeValue.slice("campaign:".length)
+        : null;
+    try {
+        const detail = await app.api.getWikiReferenceDetail(referenceIdentity, campaignId);
+        if (requestSerial !== getCurrentSerial()) return;
+
+        if (detail.native) {
+            renderNativeDetail(container, detail.native, onBackToList);
+            app.presentRenderedFragment?.(container);
+            return;
         }
-        if (!value.length) list.append(node("li", "native-empty", "None"));
-        return list;
+
+        if (isClassFamilyReference(detail)) {
+            await renderClassFamilyReferenceDetail(
+                app,
+                container,
+                detail,
+                campaignId,
+                onBackToList,
+                {
+                    renderResolutionStatus: (reference, activeCampaignId) =>
+                        renderResolutionStatus(app, reference, activeCampaignId),
+                    isCurrent: () => requestSerial === getCurrentSerial()
+                });
+            if (requestSerial !== getCurrentSerial()) return;
+            app.presentRenderedFragment?.(container);
+            return;
+        }
+
+        renderGenericReferenceDetail(app, container, detail, campaignId, onBackToList);
+        app.presentRenderedFragment?.(container);
+    } catch (error) {
+        if (requestSerial !== getCurrentSerial()) return;
+        container.replaceChildren(alertNode("danger", describeError(error)));
+        app.presentRenderedFragment?.(container);
     }
-    const definition = node("dl", "native-definition");
-    for (const [key, item] of Object.entries(value)) {
-        definition.append(node("dt", "", label(key)), node("dd"));
-        definition.lastChild.append(renderValue(item));
-    }
-    return definition;
 }
 
-export function renderNativeDetail(container, detail, onBack) {
-    container.replaceChildren();
-    const rule = detail?.rule;
-    if (!rule || !rule.definition) {
-        container.append(node("p", "native-error", "Native rule detail is unavailable."));
-        return;
+function renderGenericReferenceDetail(app, container, detail, campaignId, onBackToList) {
+    const reference = detail.reference;
+    const variations = detail.variations ?? [];
+    const tabBar = element("div", {
+        className: "rules-core-version-tabs",
+        attributes: { role: "tablist", "aria-label": "Reference views" }
+    });
+    tabBar.append(element("button", {
+        type: "button",
+        className: "btn btn-sm btn-outline-secondary rules-core-library-mobile-back",
+        text: "← Back to list",
+        onClick: onBackToList
+    }));
+    const body = element("div", { className: "rules-core-library-detail-body" });
+
+    const effectiveLabel = campaignId ? campaignName(app, campaignId) : "Dorks & Dice";
+    const tabs = [{
+        key: "effective",
+        label: effectiveLabel,
+        title: "Effective/default variation in the selected rules scope",
+        render: () => renderEffectiveReference(app, body, detail, campaignId)
+    }];
+    for (const variation of variations) {
+        tabs.push({
+            key: `variation:${variation.sourceEntityRevisionId}`,
+            label: variationTabLabel(variation, variations),
+            title: variationLabel(variation),
+            render: () => renderVariation(body, reference, variation)
+        });
     }
-    const back = node("button", "native-back", "Back to results");
-    back.type = "button";
-    back.addEventListener("click", onBack);
-    const title = node("h2", "native-detail-title", rule.name);
-    const kind = node("p", "native-kind", label(rule.kind));
-    const identity = node("code", "native-id", rule.id);
-    const body = node("article", "native-rule-document");
-    const document = rule.definition;
-    if (typeof document.description === "string") {
-        body.append(node("p", "native-description", document.description));
+    if (variations.length > 1) {
+        tabs.push({
+            key: "compare",
+            label: "Compare",
+            title: "Compare accessible source variations",
+            render: () => renderComparison(body, app, reference, variations, campaignId)
+        });
     }
-    for (const [key, value] of Object.entries(document)) {
-        if (["id", "name", "kind", "description"].includes(key) || key.startsWith("_")) continue;
-        const section = node("section", "native-rule-section");
-        section.append(node("h3", "", label(key)), renderValue(value));
-        body.append(section);
+
+    const buttons = new Map();
+    const activate = key => {
+        for (const [buttonKey, button] of buttons) {
+            const selected = buttonKey === key;
+            button.classList.toggle("is-active", selected);
+            button.setAttribute("aria-selected", selected ? "true" : "false");
+            button.tabIndex = selected ? 0 : -1;
+        }
+        const tab = tabs.find(value => value.key === key) ?? tabs[0];
+        tab.render();
+        app.presentRenderedFragment?.(body);
+    };
+
+    tabBar.append(element("span", {
+        className: "rules-core-version-tabs-label",
+        text: "View"
+    }));
+    for (const tab of tabs) {
+        const button = element("button", {
+            type: "button",
+            className: "rules-core-version-tab",
+            text: tab.label,
+            title: tab.title,
+            attributes: {
+                role: "tab",
+                "aria-selected": tab.key === "effective" ? "true" : "false",
+                tabindex: tab.key === "effective" ? "0" : "-1"
+            }
+        });
+        button.addEventListener("click", () => activate(tab.key));
+        buttons.set(tab.key, button);
+        tabBar.append(button);
     }
-    container.append(back, title, kind, identity, body);
+    installTabKeyboardNavigation(tabBar, buttons, activate);
+
+    const context = element("div", { className: "rules-core-version-tabs-context" },
+        badge(humanizeEntityType(reference.effectiveCategory), "secondary"));
+    if (variations.length > 1) {
+        context.append(element("span", {
+            className: "rules-core-version-count",
+            text: `${variations.length} accessible variations`
+        }));
+    }
+    tabBar.append(context);
+
+    container.replaceChildren(tabBar, body);
+    activate("effective");
+}
+
+function installTabKeyboardNavigation(tabBar, buttons, activate) {
+    tabBar.addEventListener("keydown", event => {
+        if (!event.target?.matches?.("[role='tab']")) return;
+        const entries = [...buttons.entries()];
+        const index = entries.findIndex(([, button]) => button === event.target);
+        if (index < 0) return;
+        let nextIndex = index;
+        if (event.key === "ArrowRight" || event.key === "ArrowDown") nextIndex = (index + 1) % entries.length;
+        else if (event.key === "ArrowLeft" || event.key === "ArrowUp") nextIndex = (index - 1 + entries.length) % entries.length;
+        else if (event.key === "Home") nextIndex = 0;
+        else if (event.key === "End") nextIndex = entries.length - 1;
+        else return;
+        event.preventDefault();
+        const [key, button] = entries[nextIndex];
+        button.focus();
+        activate(key);
+    });
+}
+
+function renderEffectiveReference(app, container, detail, campaignId) {
+    clear(container);
+    const reference = detail.reference;
+    const effective = reference.effectiveVariation;
+    container.append(renderResolutionStatus(app, reference, campaignId));
+    container.append(element("section", { className: "rules-core-effective-rule" },
+        renderResolvedRule(reference.effectiveCategory, detail.effectiveDocument, {
+            displayName: reference.displayName,
+            showDocument: String(reference.effectiveCategory).toLowerCase() !== "monster"
+        })));
+
+    const metadata = element("section", { className: "card card-body mb-3 rules-core-detail-context-card" });
+    metadata.append(
+        element("h3", { className: "h5", text: "Reference context" }),
+        definitionList([
+            ["Scope", campaignId ? "Campaign" : "Dorks & Dice"],
+            ["Effective category", humanizeEntityType(reference.effectiveCategory)],
+            ["Effective edition", reference.effectiveEditionDisplayName],
+            ["Source", effective.sourceCode],
+            ["Publication", effective.publicationDisplayName],
+            ["Package", effective.packageDisplayName],
+            ["Reference identity", reference.referenceIdentity]
+        ]));
+    container.append(metadata);
+
+    if ((reference.categoryHistory?.length ?? 0) > 0) {
+        const history = element("section", { className: "card card-body mb-3 rules-core-detail-context-card" });
+        history.append(element("h3", { className: "h5", text: "Category history" }));
+        const list = element("ul", { className: "mb-0" });
+        for (const entry of reference.categoryHistory) {
+            list.append(element("li", {
+                text: `${humanizeEntityType(entry.category)}${entry.editions?.length ? ` · ${entry.editions.join(", ")}` : ""}`
+            }));
+        }
+        history.append(list);
+        container.append(history);
+    }
+}
+
+function renderResolutionStatus(app, reference, campaignId) {
+    const state = reference.resolutionState;
+    let title;
+    let detail;
+    if (state === "campaign-override") {
+        title = "Campaign override";
+        detail = "This campaign explicitly selects the effective variation shown below.";
+    } else if (state === "inherited") {
+        title = "Inherited Dorks & Dice ruling";
+        detail = "This campaign inherits its effective variation from the published global baseline.";
+    } else if (state === "resolved") {
+        title = "Dorks & Dice ruling";
+        detail = "A published Rules Layer decision selects the effective variation shown below.";
+    } else {
+        title = "Unresolved default";
+        detail = "No applicable published ruling exists. Rules Core is showing the newest accessible applicable variation without creating a rule decision.";
+    }
+
+    return element("div", { className: "rules-core-ruling-status" },
+        element("div", {},
+            element("div", { className: "rules-core-ruling-status-title", text: title }),
+            element("div", { className: "small text-body-secondary", text: detail })),
+        element("div", { className: "d-flex align-items-center gap-2" },
+            badge(campaignId ? "Campaign scope" : "Global scope", state === "unresolved-fallback" ? "secondary" : "primary"),
+            adjudicationButton(app, reference.ruleConceptId, campaignId),
+            normalizationButton(app, reference)));
+}
+
+function renderVariation(container, reference, variation) {
+    clear(container);
+    const category = variation.category || reference.effectiveCategory;
+    container.append(element("div", { className: "rules-core-source-version-heading" },
+        element("div", {},
+            element("div", { className: "rules-core-eyebrow", text: "SOURCE VARIATION" }),
+            element("h3", { className: "h4 mb-1", text: variation.name || reference.displayName }),
+            element("div", {
+                className: "text-body-secondary",
+                text: [
+                    variation.editionDisplayName,
+                    humanizeEntityType(variation.category),
+                    variation.sourceCode,
+                    variation.publicationDisplayName
+                ].filter(Boolean).join(" · ")
+            })),
+        variation.isEffective ? badge("Effective in scope", "primary") : badge("Inspecting source", "secondary")));
+
+    if (!variation.isEffective) {
+        container.append(alertNode(
+            "secondary",
+            `This is an accessible source variation. The effective rule remains ${reference.effectiveEditionDisplayName || "the current Dorks & Dice/campaign variation"}.`));
+    }
+
+    container.append(element("section", { className: "rules-core-effective-rule" },
+        renderResolvedRule(category, variation.document, {
+            displayName: variation.name || reference.displayName,
+            showDocument: String(category).toLowerCase() !== "monster"
+        })));
+
+    const provenance = element("details", { className: "rules-core-context-disclosure" });
+    provenance.append(
+        element("summary", { text: "Source provenance" }),
+        element("div", { className: "rules-core-context-disclosure-body" },
+            definitionList([
+                ["Edition", variation.editionDisplayName],
+                ["Category", humanizeEntityType(variation.category)],
+                ["Source", variation.sourceCode],
+                ["Publication", variation.publicationDisplayName],
+                ["Publication date", variation.publicationDate],
+                ["Package", variation.packageDisplayName],
+                ["Source revision", `#${variation.sourceRevisionNumber}`]
+            ])));
+    container.append(provenance);
+}
+
+function renderComparison(container, app, reference, variations, campaignId) {
+    clear(container);
+    container.append(element("div", { className: "rules-core-comparison-heading" },
+        element("div", {},
+            element("div", { className: "rules-core-eyebrow", text: "VERSION DIFFERENCES" }),
+            element("h3", { className: "h4 mb-1", text: `Compare ${reference.displayName}` }),
+            element("p", {
+                className: "small text-body-secondary mb-0",
+                text: "Comparison is read-only. Accessible historical variations do not require Rules Lawyer authority."
+            }))));
+
+    const left = element("select", { className: "form-select form-select-sm", ariaLabel: "Left source variation" });
+    const right = element("select", { className: "form-select form-select-sm", ariaLabel: "Right source variation" });
+    for (const variation of variations) {
+        const label = variationLabel(variation);
+        left.append(element("option", { value: variation.sourceEntityRevisionId, text: label }));
+        right.append(element("option", { value: variation.sourceEntityRevisionId, text: label }));
+    }
+    left.value = variations[0].sourceEntityRevisionId;
+    right.value = variations[1].sourceEntityRevisionId;
+
+    const compare = element("button", {
+        type: "button",
+        className: "btn btn-sm btn-primary",
+        text: "Compare"
+    });
+    const result = element("div", { className: "rules-core-comparison-result" });
+    container.append(element("div", { className: "rules-core-comparison-controls" },
+        comparisonField("Left", left),
+        comparisonField("Right", right),
+        element("div", { className: "rules-core-comparison-action" }, compare)),
+    result);
+
+    compare.addEventListener("click", async () => {
+        result.replaceChildren();
+        if (left.value === right.value) {
+            result.append(alertNode("secondary", "Choose two different source variations."));
+            return;
+        }
+        setButtonBusy(compare, true, "Comparing…");
+        try {
+            const comparison = await app.api.compareRuleVersions({
+                referenceIdentity: reference.referenceIdentity,
+                leftSourceEntityRevisionId: left.value,
+                rightSourceEntityRevisionId: right.value
+            });
+            const leftVariation = variations.find(value => value.sourceEntityRevisionId === left.value);
+            const rightVariation = variations.find(value => value.sourceEntityRevisionId === right.value);
+            renderSemanticComparison(result, comparison, {
+                leftLabel: leftVariation ? variationLabel(leftVariation) : "Left",
+                rightLabel: rightVariation ? variationLabel(rightVariation) : "Right"
+            });
+            const adjudication = adjudicationButton(app, reference.ruleConceptId, campaignId);
+            if (adjudication) {
+                result.append(element("div", { className: "rules-core-comparison-adjudication" },
+                    element("div", {},
+                        element("strong", { text: "Need a ruling?" }),
+                        element("div", {
+                            className: "small text-body-secondary",
+                            text: campaignId
+                                ? "Open this reference in the campaign rule editor."
+                                : "Open this reference in the global Rules Lawyer editor."
+                        })),
+                    adjudication));
+            }
+        } catch (error) {
+            result.replaceChildren(alertNode("danger", describeError(error)));
+        } finally {
+            setButtonBusy(compare, false);
+        }
+    });
+    compare.click();
+}
+
+export function referenceAdjudicationTarget(app, ruleConceptId, campaignId) {
+    if (!ruleConceptId) return null;
+
+    const campaignCanEdit = campaignId
+        && app.dmCampaigns?.some(value => String(value.id) === String(campaignId));
+    if (!campaignId && !app.canEditGlobal) return null;
+    if (campaignId && !campaignCanEdit) return null;
+
+    return {
+        ruleConceptId,
+        campaignId: campaignId ?? null,
+        scope: campaignId ? "campaign" : "global",
+        label: campaignId ? "Edit campaign rule" : "Edit Dorks & Dice rule"
+    };
+}
+
+export function referenceNormalizationTarget(app, reference) {
+    if (!app.canEditGlobal || reference?.ruleConceptId) return null;
+    const sourceEntityId = reference?.effectiveVariation?.sourceEntityId;
+    if (!sourceEntityId) return null;
+    return {
+        sourceEntityId,
+        scope: "global",
+        label: "Create/bind Dorks & Dice rule"
+    };
+}
+
+function adjudicationButton(app, ruleConceptId, campaignId) {
+    const target = referenceAdjudicationTarget(app, ruleConceptId, campaignId);
+    if (!target) return null;
+
+    return element("button", {
+        type: "button",
+        className: "btn btn-sm btn-outline-primary",
+        text: target.label,
+        onClick: async () => openReferenceAdjudication(app, target.ruleConceptId, target.campaignId)
+    });
+}
+
+function normalizationButton(app, reference) {
+    const target = referenceNormalizationTarget(app, reference);
+    if (!target) return null;
+
+    return element("button", {
+        type: "button",
+        className: "btn btn-sm btn-outline-primary",
+        text: target.label,
+        onClick: async event => {
+            const button = event.currentTarget;
+            setButtonBusy(button, true, "Creating…");
+            try {
+                await openReferenceNormalization(app, target.sourceEntityId);
+            } catch (error) {
+                window.alert(describeError(error));
+                setButtonBusy(button, false);
+            }
+        }
+    });
+}
+
+export async function openReferenceAdjudication(app, ruleConceptId, campaignId) {
+    if (campaignId) {
+        app.activeView = "campaign";
+        app.activeCampaignId = campaignId;
+    } else {
+        app.activeView = "global";
+    }
+
+    await app.render();
+    const body = app.root.querySelector(".rules-core-main");
+    if (!body) return;
+
+    if (campaignId) {
+        await app.renderCampaignConcept(body, ruleConceptId);
+    } else {
+        await app.renderGlobalConcept(body, ruleConceptId);
+    }
+}
+
+export async function openReferenceNormalization(app, sourceEntityId) {
+    const accepted = await app.api.acceptSourceNormalization(sourceEntityId);
+    const ruleConceptId = accepted?.concept?.id;
+    if (!ruleConceptId) {
+        throw new Error("Source normalization did not return a Rules Layer concept.");
+    }
+    await openReferenceAdjudication(app, ruleConceptId, null);
+    return accepted;
+}
+
+function comparisonField(label, control) {
+    return element("label", { className: "rules-core-comparison-field" },
+        element("span", { text: label }),
+        control);
+}
+
+function variationTabLabel(variation, variations) {
+    const edition = String(variation.editionDisplayName ?? "").trim();
+    const sameEdition = variations.filter(value =>
+        String(value.editionDisplayName ?? "").trim().toLowerCase() === edition.toLowerCase()).length;
+    if (edition && sameEdition === 1) return edition;
+    return [edition, variation.sourceCode, humanizeEntityType(variation.category)]
+        .filter(Boolean)
+        .join(" · ");
+}
+
+function variationLabel(variation) {
+    return [
+        variation.editionDisplayName,
+        humanizeEntityType(variation.category),
+        variation.sourceCode,
+        variation.publicationDisplayName,
+        `rev. ${variation.sourceRevisionNumber}`
+    ].filter(Boolean).join(" · ");
+}
+
+function campaignName(app, campaignId) {
+    return app.campaigns.find(value => String(value.id) === String(campaignId))?.name
+        ?? "Campaign";
+}
+
+function humanizeEntityType(entityType) {
+    const value = String(entityType ?? "");
+    if (!value) return "Rule";
+    return value
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/^./, match => match.toUpperCase());
 }

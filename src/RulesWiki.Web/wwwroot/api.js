@@ -20,6 +20,10 @@ export class RulesCoreApi {
         this.operationBaseUrl = `${hostContext.apiBaseUrl.replace(/\/$/, "")}/upstream/_rules-wiki/operations`;
     }
 
+    getOptionalSession() {
+        return requestJson(`${this.hostContext.apiBaseUrl.replace(/\/$/, "")}/session`);
+    }
+
     operation(name, args = []) {
         if (!["getNativeRulesets", "searchNativeRules", "getNativeRule"].includes(name)) {
             throw new Error("This operation is unavailable in the read-only native Wiki.");
