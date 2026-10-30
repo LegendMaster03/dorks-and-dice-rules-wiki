@@ -1,4 +1,5 @@
 import { renderClassCustomizations, discoverOwnedOptions } from "./native-class-customization.js";
+import { createClassReturnState } from "./native-class-view-state.js";
 // Native class reference. The class document and linked feature records are
 // authoritative; this renderer only presents their contents.
 const CLASS_STYLE_ID = "rules-wiki-native-class-styles";
@@ -400,6 +401,7 @@ export function renderNativeClass(rule, {
         .filter(feature => feature && typeof feature.id === "string")
         .map(feature => [feature.id, feature]));
     const root = node("div", { className: "native-class-reference" });
+    const returnState = createClassReturnState(root, { classId: rule.id, fingerprint: catalogFingerprint });
     const header = node("header", { className: "native-class-header" },
         node("span", { className: "native-class-eyebrow", text: "Base class" }),
         node("h2", { text: rule.name }));
@@ -487,6 +489,7 @@ export function renderNativeClass(rule, {
     });
     const customization = renderClassCustomizations(definition, {
         node, renderValue, hrefForRule, getRule: loadRule, fallbackFields: CUSTOMIZATION_FIELDS,
+        onOptionsRendered: () => queueMicrotask(returnState.restore),
         maximumClassLevel: rows.length ? rows.at(-1).level :
             (Array.isArray(definition.levelRange) ? definition.levelRange[1] : null),
         discoverOptions: searchRules && loadRule ? category => discoverOwnedOptions(category, rule.id, {
@@ -573,7 +576,8 @@ export function renderNativeClass(rule, {
         }
         revealFragment(fragment);
     }, true);
-    if (typeof window !== "undefined" && window.location?.hash?.startsWith("#native-class-")) {
+    if (returnState.restored) queueMicrotask(returnState.restore);
+    else if (typeof window !== "undefined" && window.location?.hash?.startsWith("#native-class-")) {
         const requested = decodeURIComponent(window.location.hash.slice(1));
         queueMicrotask(() => revealFragment(requested));
     }

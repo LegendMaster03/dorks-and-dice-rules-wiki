@@ -8,7 +8,7 @@ The post-deployment review found that generic option filters, equal-height card 
 - Pact and Invocation disclosures occupy the full reading width. Opening one never stretches an adjacent closed option. Pact level-5 improvements and published prerequisites are primary rules, not source metadata.
 - Direct Patron, Pact, and Invocation routes share the embedded rule presentation. Unknown rule fields remain accessible in secondary details, and native IDs remain authoritative.
 - Normal advancement exposes published class resource counts, including Invocations, cantrips, known spells, and Pact slots. Uncommon statistics remain available separately.
-- Fragment click and history handling synchronizes the focus selector, highlighted advancement row, and expanded feature. It preserves unrelated disclosures.
+- Fragment click and history handling synchronizes the focus selector, highlighted advancement row, and expanded feature. It preserves unrelated disclosures. Returning from a full rule also restores expanded catalogs/options, filters, and reading position through session-scoped view state; no character selections or rules are stored.
 - `tools/test-class-reading-experience.mjs` exercises real DOM event propagation through the mounted application, direct routes, and Back history using native-shaped fixtures. Live desktop and narrow-screen review follows the normal main validation/deployment workflow.
 
 Status: iterative implementation workstream. This document records the current design direction, implemented foundation, and decisions that remain open. It is not approval of untested class mechanics.

@@ -402,6 +402,8 @@ function renderSystem(system, dependencies) {
             category: system.category,
             compactOverview: system.category === "patron" || name.toLowerCase() === "patron" }));
         if (system.id) appendRuleLink(body, system.id, dependencies);
+        wrapper.setAttribute("data-options-ready", "true");
+        dependencies.onOptionsRendered?.();
     };
     if (!system.id && system.category && !system.options.length
         && typeof dependencies.discoverOptions === "function") {
