@@ -92,6 +92,49 @@ for (const name of ["Invocations", "Cantrips", "Spells known", "Pact slots", "Sl
 assert.deepEqual([...root.querySelectorAll(".native-class-table tbody tr")]
     .filter(row => row.textContent.includes("Ability Score Improvement")).map(row => Number(row.getAttribute("data-class-level"))), [4, 8, 12, 16, 19]);
 
+// Returning from an independent rule remounts the class in the hosted shell.
+// Restore deferred catalogs and their filters, not just the URL fragment.
+const invocationSystem = systems.find(system => system.querySelector("summary strong").textContent === "Invocations");
+invocationSystem.querySelector("summary").click();
+await wait(() => invocationSystem.querySelector("input"));
+const invocationSearch = invocationSystem.querySelector("input");
+invocationSearch.value = "Devouring";
+invocationSearch.dispatchEvent(new Event("input", { bubbles: true }));
+const pane = root.closest(".rules-core-library-detail");
+pane.scrollTop = 420;
+const fullReference = patron.querySelector(".native-class-rule-link");
+// Prevent jsdom's external document navigation after the real capture handler.
+fullReference.addEventListener("click", event => event.preventDefault());
+fullReference.click();
+const stored = JSON.parse(window.sessionStorage.getItem("rulesWikiClassReturn"));
+assert.ok(stored.details.includes("pact.warlock.blade"));
+const { renderNativeClass } = await import("../src/RulesWiki.Web/wwwroot/native-class-detail.js");
+const { renderNativeValue } = await import("../src/RulesWiki.Web/wwwroot/native-rule-detail.js");
+const returned = renderNativeClass(records.find(record => record.id === "class.warlock"), {
+    renderValue: renderNativeValue, catalogFingerprint: fingerprint,
+    getRule: async id => {
+        const record = records.find(record => record.id === id);
+        return { fingerprint, rule: { id, name: record.name, kind: record.kind, definition: record } };
+    },
+    searchRules: async ({ category }) => {
+        const found = records.filter(record => record.kind === category);
+        return { fingerprint, total: found.length, rules: found };
+    }
+});
+const returnPane = document.createElement("section");
+returnPane.className = "rules-core-library-detail";
+returnPane.append(returned);
+document.body.append(returnPane);
+await wait(() => returned.querySelector('[aria-label="Filter Invocations options by name"]')?.value === "Devouring"
+    && returned.querySelector('[data-option-id="pact.warlock.blade"] > details')?.open);
+assert.equal(returned.querySelector('[aria-label="Focus class level"]').value, "9");
+assert.equal(window.sessionStorage.getItem("rulesWikiClassReturn"), null, "Return state is consumed, not a persistent character configuration");
+await wait(() => returnPane.scrollTop === 420);
+// Malformed or stale reading state must never prevent the class from rendering.
+window.sessionStorage.setItem("rulesWikiClassReturn", JSON.stringify({ ...stored, systems: {} }));
+assert.doesNotThrow(() => renderNativeClass(records.find(record => record.id === "class.warlock"), { renderValue: renderNativeValue }));
+window.sessionStorage.removeItem("rulesWikiClassReturn");
+
 // Direct routes use the same presentation as embedded options, including nesting.
 const { renderNativeDetail } = await import("../src/RulesWiki.Web/wwwroot/native-rule-detail.js");
 for (const record of records.filter(record => ["patron", "pact", "invocation"].includes(record.kind))) {

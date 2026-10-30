@@ -42,7 +42,8 @@ export function renderClassOptionContent(rule, { node, renderValue, hrefForRule,
         facts.append(node("div", {}, node("dt", { text: label }),
             node("dd", {}, value instanceof Node ? value : String(value))));
     };
-    if (definition.parentClass && hrefForRule) fact("parentClass", "Class",
+    if (embedded) handled.add("parentClass");
+    else if (definition.parentClass && hrefForRule) fact("parentClass", "Class",
         node("a", { text: referenceName(definition.parentClass),
             attributes: { href: hrefForRule(definition.parentClass) } }));
     for (const key of ["availableAtWarlockLevel", "minimumWarlockLevel", "availableAtClassLevel", "minimumClassLevel", "minimumLevel"]) {
