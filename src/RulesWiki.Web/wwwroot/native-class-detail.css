@@ -521,8 +521,22 @@
 }
 .native-class-feature-level { scroll-margin-top: 1rem; }
 @container (max-width: 520px) {
-    /* The compact table can scroll on demand without imposing a fixed
-       desktop-sized minimum width on a narrow Wiki detail pane. */
     .native-class-table { width: 100%; min-width: 0; }
     .native-class-table-features { min-width: 12rem; }
 }
+
+/* Primary native class mechanics should read as play rules, not nested JSON. */
+.native-class-option-rules { margin: 1rem 0; }
+.native-class-option-rules > h6 { font-size: .96rem; font-weight: 700; margin: 0 0 .5rem; }
+.native-class-option-feature { padding: .65rem 0; border-top: 1px solid var(--class-divider); }
+.native-class-option-feature h6 { font-size: .9rem; font-weight: 700; margin: 0 0 .3rem; }
+.native-class-option-feature p { max-width: 85ch; line-height: 1.6; margin: 0; }
+.native-class-option-spells { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.native-class-option-spells th, .native-class-option-spells td {
+    padding: .45rem .6rem; text-align: left; vertical-align: top;
+    border-bottom: 1px solid var(--class-divider);
+}
+.native-class-option-spells th:first-child { white-space: nowrap; }
+.native-class-published-selections p { max-width: 85ch; line-height: 1.55; margin: .45rem 0; }
+.native-class-reference [id^="native-class-feature-"] { scroll-margin-top: 1rem; }
+.native-class-reference .native-class-section:focus { outline: 2px solid var(--bs-primary); outline-offset: .25rem; }

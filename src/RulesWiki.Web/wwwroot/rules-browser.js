@@ -6,6 +6,7 @@ import {
     DEFAULT_PAGE_SIZE
 } from "./ui.js";
 import { renderRuleDetailPane } from "./rules-browser-detail.js";
+import { restoreMountedClassFragment } from "./native-class-navigation.js";
 import {
     catalogRouteForEntity,
     currentToolRoute,
@@ -155,13 +156,14 @@ export function installResolvedRulesBrowser(app) {
         await renderActiveView(container);
     };
 
-    window.addEventListener("popstate", async () => {
+    window.addEventListener("popstate", async event => {
         if (!app.canBrowseRules) return;
 
         const toolRoute = currentToolRoute(app);
         if (toolRoute === "/sources" || toolRoute.startsWith("/sources/")) return;
 
         const next = parseToolRoute(toolRoute);
+        if (restoreMountedClassFragment(app, event.state, next, window.location.hash)) return;
         const nextEntityType = next.entityType ?? "";
         const nextViewState = parseBrowserViewStateFromLocation(nextEntityType);
         app.browserScope = parseBrowserScopeFromLocation(app) ?? "global";

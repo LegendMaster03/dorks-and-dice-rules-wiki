@@ -219,6 +219,53 @@ function appendRuleLink(container, id, { node, hrefForRule }) {
     container.append(node("a", { text: "Open full rule", attributes: { href: hrefForRule(id) } }));
 }
 
+function optionPlayRules(node, renderValue, definition) {
+    const primary = [];
+    const handled = new Set();
+    if (Array.isArray(definition.features) && definition.features.every(feature =>
+        feature && typeof feature.name === "string" && Number.isInteger(feature.level))) {
+        handled.add("features");
+        primary.push(node("section", { className: "native-class-option-rules" },
+            node("h6", { text: definition.kind === "patron" ? "Patron features" : "Option features" }),
+            ...definition.features.map(feature => {
+                const body = node("section", { className: "native-class-option-feature" },
+                    node("h6", { text: `Level ${feature.level} · ${feature.name}` }));
+                if (typeof feature.description === "string") body.append(node("p", { text: feature.description }));
+                const additional = Object.fromEntries(Object.entries(feature).filter(([key]) =>
+                    !["level", "name", "description"].includes(key)));
+                if (Object.keys(additional).length) body.append(renderValue(additional));
+                return body;
+            })));
+    }
+    const access = definition.spellAccess;
+    if (access && Array.isArray(access.grants) && access.grants.every(grant =>
+        Number.isInteger(grant?.level) && Array.isArray(grant.spells))) {
+        handled.add("spellAccess");
+        const schedule = node("section", { className: "native-class-option-rules" },
+            node("h6", { text: "Spell grants" }));
+        if (access.defaultMode === "automatic-known-no-ordinary-selection-cost") {
+            schedule.append(node("p", { text: "These spells are automatically known and do not use ordinary spells-known selections." }));
+        }
+        const table = node("table", { className: "native-class-option-spells" },
+            node("thead", {}, node("tr", {}, node("th", { text: "Class level", attributes: { scope: "col" } }),
+                node("th", { text: "Spells", attributes: { scope: "col" } }))));
+        table.append(node("tbody", {}, ...access.grants.map(grant => node("tr", {},
+            node("th", { text: grant.level, attributes: { scope: "row" } }),
+            node("td", { text: grant.spells.join(", ") })))));
+        schedule.append(table);
+        const extra = Object.fromEntries(Object.entries(access).filter(([key]) =>
+            key !== "grants" && !(key === "defaultMode"
+                && access.defaultMode === "automatic-known-no-ordinary-selection-cost")));
+        const grantsWithOtherFields = access.grants.filter(grant =>
+            Object.keys(grant).some(key => !["level", "spells"].includes(key)));
+        if (grantsWithOtherFields.length) extra.completeGrantRecords = grantsWithOtherFields;
+        if (Object.keys(extra).length) schedule.append(node("details", { className: "native-class-technical-details" },
+            node("summary", { text: "Other spell-access rules and playtest modes" }), renderValue(extra)));
+        primary.push(schedule);
+    }
+    return { primary, handled };
+}
+
 function renderOption(option, dependencies) {
     const { node, renderValue, getRule } = dependencies;
     const { id } = option;
@@ -247,11 +294,14 @@ function renderOption(option, dependencies) {
                 if (typeof loaded.definition.description === "string") {
                     detail.append(node("p", { text: loaded.definition.description }));
                 }
+                const { primary, handled } = optionPlayRules(node, renderValue, loaded.definition);
+                detail.append(...primary);
                 const other = Object.fromEntries(Object.entries(loaded.definition).filter(([key]) =>
-                    !["id", "name", "kind", "description", "parentClass", "definition"].includes(key)));
+                    !["id", "name", "kind", "description", "parentClass", "definition"].includes(key)
+                    && !handled.has(key)));
                 if (Object.keys(other).length) detail.append(node("details", {
                     className: "native-class-technical-details" },
-                    node("summary", { text: "Full requirements and mechanics" }), renderValue(other)));
+                    node("summary", { text: "Additional prerequisites and source details" }), renderValue(other)));
                 appendRuleLink(detail, id, dependencies);
             }).catch(() => {
                 requested = false;
@@ -283,8 +333,6 @@ function renderOptionList(options, systemName, dependencies) {
         .filter(level => Number.isInteger(level) && level >= 1);
     let levelFilter = null;
     if (levels.length) {
-        // Native classes are not universally capped at level 20. Preserve the
-        // class's reported range and any documented minimum outside that range.
         const lastLevel = Math.max(1,
             ...(Number.isInteger(maximumClassLevel) && maximumClassLevel > 0 ? [maximumClassLevel] : []),
             ...levels);
@@ -502,6 +550,35 @@ function renderPreset(preset, dependencies) {
     return card;
 }
 
+function renderPublishedSelections(key, source, { node, renderValue }) {
+    if (!source || typeof source !== "object") return null;
+    const section = node("section", { className: "native-class-published-selections" });
+    if (key === "wizardSpecialization" && Array.isArray(source.classLevelGrants)
+        && Array.isArray(source.eligibleOptionFamilies)) {
+        section.append(node("p", { text:
+            `At Wizard levels ${source.classLevelGrants.join(", ")}, choose ${source.selectionsPerClassLevelGrant ?? 1} eligible specialization option per grant from ${source.eligibleOptionFamilies.map(formatName).join(" or ")}.` }));
+        if (source.additionalToOtherClassGrants === true)
+            section.append(node("p", { text: "These specialization choices are additional to other class grants." }));
+        if (source.optionPrerequisitesApply === true)
+            section.append(node("p", { text: "Each option's own prerequisites apply." }));
+        if (source.ordinaryGeneralFeatMayBeReplacedByOneEligibleSpecializationOption === true)
+            section.append(node("p", { text: "An ordinary general feat choice may instead be used for an eligible specialization option, consuming that feat choice." }));
+        if (source.underlyingMetamagicAndCraftingDetails === "deferred-to-shared-mechanics")
+            section.append(node("p", { text: "Shared Metamagic and crafting mechanics remain deferred; this entry does not define their effects." }));
+        if (source.doesNotGrantSorceryPoints === true && source.doesNotGrantSorcererMetamagicClassFeature === true)
+            section.append(node("p", { text: "This specialization does not grant Sorcery Points or the Sorcerer Metamagic class feature." }));
+    } else if (key === "companionPathChoice" && Array.isArray(source.paths)
+        && Number.isInteger(source.selectionFromWizardLevel)) {
+        section.append(node("p", { text:
+            `Beginning at Wizard level ${source.selectionFromWizardLevel}, choose ${source.exclusive === true ? "one exclusive path" : "a path"}: ${source.paths.map(formatName).join(" or ")}.` }));
+        if (source.implementation === "deferred-to-shared-companion-system")
+            section.append(node("p", { text: "The shared companion mechanics remain deferred; no companion powers are supplied by this reference." }));
+    } else return null;
+    section.append(node("details", { className: "native-class-technical-details" },
+        node("summary", { text: "Complete published selection data" }), renderValue(source)));
+    return section;
+}
+
 export function renderClassCustomizations(definition, dependencies) {
     const { node, renderValue, fallbackFields } = dependencies;
     const systems = normalizedSystems(definition);
@@ -534,7 +611,8 @@ export function renderClassCustomizations(definition, dependencies) {
     }
     for (const [heading, key] of extras) {
         wrapper.append(node("div", { className: "native-class-option-family" },
-            node("h4", { text: heading }), renderValue(definition[key])));
+            node("h4", { text: heading }),
+            renderPublishedSelections(key, definition[key], dependencies) ?? renderValue(definition[key])));
     }
     if (typeof definition.subclasses === "string") {
         wrapper.append(node("p", { className: "native-class-help", text:
