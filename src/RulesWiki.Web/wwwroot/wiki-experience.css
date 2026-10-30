@@ -95,5 +95,5 @@
     grid-template-rows: auto minmax(0, 1fr);
 }
 .wiki-experience .rules-core-library-index,
-.wiki-experience .rules-core-library-list,
+.wiki-experience .rules-core-library-index-list,
 .wiki-experience .rules-core-library-detail { overscroll-behavior-y: contain; }
