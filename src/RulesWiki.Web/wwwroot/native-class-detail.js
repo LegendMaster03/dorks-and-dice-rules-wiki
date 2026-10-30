@@ -153,7 +153,7 @@ function relatedFeatureLinks(row, hrefForRule) {
 
 function renderProgression(rows, renderValue, firstLevel, registerLabel, hrefForRule) {
     if (!rows.length) return { sectionNode: section("native-class-progression", "Class advancement",
-        node("p", { text: "This class has no structured advancement table." })), select: null };
+        node("p", { text: "This class has no structured advancement table." })) };
     const keys = ["level", "featureGrants", ...PREFERRED_COLUMNS,
         "baseAttackBonus", "fortitude", "reflex", "will",
         ...[...new Set(rows.flatMap(row => Object.keys(row).filter(key =>
@@ -210,26 +210,16 @@ function renderProgression(rows, renderValue, firstLevel, registerLabel, hrefFor
         role: "region", tabindex: "0", "aria-label": "Class advancement table"
     } }, table);
     const sectionNode = section("native-class-progression", "Class advancement",
-        node("p", { className: "native-class-help", text: "Choose a level to inspect its features. Additional progression statistics remain available below." }));
-    const select = node("select", { className: "native-class-level-select", attributes: {
-        "aria-label": "Focus class level"
-    } });
-    select.append(node("option", { text: "All levels", attributes: { value: "" } }));
-    for (const row of rows) select.append(node("option", { text: `Level ${row.level}`, attributes: { value: row.level } }));
-    select.addEventListener("change", () => {
-        for (const [level, tr] of levelRows) tr.classList.toggle("is-selected", level === select.value);
-        levelRows.get(select.value)?.scrollIntoView?.({ block: "nearest" });
-    });
-    const controls = node("div", { className: "native-class-controls" },
-        node("label", { className: "native-class-control-label" },
-            node("span", { text: "Focus level" }), select));
+        node("p", { className: "native-class-help", text: "Follow a feature link to read its rules. Additional progression statistics remain available below." }));
+    const controls = node("div", { className: "native-class-controls" });
     if (displayed.some(key => !focused.has(key))) {
         const extended = node("input", { attributes: { type: "checkbox", "aria-label": "Show all progression columns" } });
         extended.addEventListener("change", () => wrap.classList.toggle("is-expanded", extended.checked));
         controls.append(node("label", { className: "native-class-columns-toggle" }, extended,
             node("span", { text: "Show all columns" })));
     }
-    sectionNode.append(controls, wrap);
+    if (controls.children.length) sectionNode.append(controls);
+    sectionNode.append(wrap);
     if (rows.some(row => Array.isArray(row.spellSlotsBySpellLevel))) {
         const slots = node("details", { className: "native-class-disclosure" },
             node("summary", { text: "Spell slot progression by spell level" }));
@@ -265,7 +255,7 @@ function renderProgression(rows, renderValue, firstLevel, registerLabel, hrefFor
             node("summary", { text: `Level ${row.level}` }), renderValue(fields)));
     }
     sectionNode.append(detail);
-    return { sectionNode, select, levelRows, controls };
+    return { sectionNode, levelRows };
 }
 
 function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, renderValue, registerLabel) {
@@ -467,30 +457,6 @@ export function renderNativeClass(rule, {
     });
     const features = renderFeatures(rows, inline, renderValue, hrefForRule, loadRule, firstLevel, registerLabel);
     const progression = renderProgression(rows, renderValue, firstLevel, registerLabel, hrefForRule);
-    let jump = null;
-    if (progression.select) {
-        const select = progression.select;
-        jump = node("a", { text: "Read level features", className: "native-class-feature-jump",
-            attributes: { href: "#native-class-features" } });
-        jump.hidden = true;
-        progression.controls.append(jump);
-        select.addEventListener("change", () => {
-            const group = [...features.groups.children].find(item =>
-                item.getAttribute("data-class-level") === select.value);
-            for (const card of features.groups.children) {
-                const active = card === group;
-                card.classList.toggle("is-selected", active);
-                if (select.value) card.open = active;
-            }
-            // Do not unexpectedly scroll away from the table. A separate
-            // link permits deliberate movement to an expanded feature group.
-            jump.hidden = !group || !select.value;
-            if (group && select.value) {
-                jump.textContent = `Read level ${select.value} features`;
-                jump.setAttribute("href", `#native-class-features-level-${select.value}`);
-            }
-        });
-    }
     // A progression link must reveal its destination before the browser follows
     // the fragment. Otherwise the anchor sits inside two closed <details> and
     // the click appears to do nothing. Keep the native anchor behavior intact.
@@ -505,7 +471,6 @@ export function renderNativeClass(rule, {
         if (group) group.open = true;
         const card = features.featureCards.get(target);
         if (card) card.open = true;
-        if (progression.select) progression.select.value = String(level);
         for (const [itemLevel, row] of progression.levelRows ?? []) {
             row.classList.toggle("is-selected", itemLevel === String(level));
         }
@@ -560,16 +525,10 @@ export function renderNativeClass(rule, {
         const level = features.featureLevels.get(id) ??
             (target.className?.includes("native-class-feature-level") ? Number(target.getAttribute("data-class-level")) : undefined);
         if (level !== undefined) {
-            if (progression.select) progression.select.value = String(level);
             for (const [rowLevel, row] of progression.levelRows ?? [])
                 row.classList.toggle("is-selected", rowLevel === String(level));
             for (const group of features.groups.children)
                 group.classList.toggle("is-selected", group.getAttribute("data-class-level") === String(level));
-            if (jump) {
-                jump.hidden = false;
-                jump.textContent = `Read level ${level} features`;
-                jump.setAttribute("href", `#native-class-features-level-${level}`);
-            }
             const group = [...features.groups.children].find(item =>
                 item.getAttribute("data-class-level") === String(level));
             if (group) group.open = true;

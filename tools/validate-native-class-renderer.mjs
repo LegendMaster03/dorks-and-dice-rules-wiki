@@ -91,24 +91,8 @@ assert.equal(requested.length, 0, "Feature definitions should not be fetched unt
 const detail = nodes(content, el => el.tagName === "DETAILS" && el.className === "native-class-feature")[1];
 const link = nodes(detail, el => el.tagName === "A")[0];
 assert.equal(link.attrs.href, "/tools/rules-wiki/rules/class-feature.sorcerer.font-of-magic-level-2");
-const levelSelect = nodes(content, el => el.tagName === "SELECT")[0];
-levelSelect.value = "2";
-levelSelect.dispatch("change");
-const highlighted = nodes(content, el => el.tagName === "TR" && el.classList.contains("is-selected"));
-assert.equal(highlighted.length, 1);
-assert.equal(highlighted[0].attrs["data-class-level"], "2");
-const jumpToFeatures = nodes(content, el => el.tagName === "A"
-    && el.className === "native-class-feature-jump")[0];
-assert.equal(jumpToFeatures.hidden, false);
-assert.equal(jumpToFeatures.attrs.href, "#native-class-features-level-2");
-assert.match(jumpToFeatures.textContent, /Read level 2 features/);
-const openFeatureGroup = nodes(content, el => el.tagName === "DETAILS"
-    && el.attrs.id === "native-class-features-level-2")[0];
-assert.equal(openFeatureGroup.open, true);
-const featuresSection = nodes(content, el => el.tagName === "SECTION"
-    && el.attrs.id === "native-class-features")[0];
-assert.equal(featuresSection.scrolled, undefined,
-    "Changing a level must not automatically jump away from the advancement table");
+assert.equal(nodes(content, el => el.tagName === "SELECT" && el.attrs["aria-label"] === "Focus class level").length, 0);
+assert.equal(nodes(content, el => el.className === "native-class-feature-jump").length, 0);
 detail.open = true;
 detail.dispatch("toggle");
 await new Promise(resolve => setImmediate(resolve));
@@ -525,7 +509,7 @@ await assert.rejects(discoverOwnedOptions("pact", "class.example", {
 console.log("Native catalog pagination, bounded concurrency, and strict fingerprint matching OK");
 
 // Visual remediation contracts: progressive disclosure is an interaction, not
-// deletion of underlying rules.  Class customization leads, and level selection
+// deletion of underlying rules.  Class customization leads, and feature navigation
 // focuses the relevant feature group.
 const visual = renderNativeClass(rule("Visual", {
     hitDie: { number: 1, faces: 8 }, skillChoices: { count: 2, from: ["arcana", "history"] },
@@ -552,12 +536,6 @@ assert.equal(visualGroups.length, 2);
 assert.equal(visualGroups[0].tagName, "DETAILS");
 assert.equal(visualGroups[0].open, true);
 assert.equal(visualGroups[1].open, false);
-const visualLevel = nodes(visual, el => el.tagName === "SELECT")[0];
-visualLevel.value = "2";
-visualLevel.dispatch("change");
-assert.equal(visualGroups[0].open, false);
-assert.equal(visualGroups[1].open, true);
-assert.ok(visualGroups[1].classList.contains("is-selected"));
 // Progression anchors reveal both containing <details> before fragment navigation.
 visualGroups[0].open = false;
 const visualFeature = nodes(visual, el => el.className === "native-class-feature"
@@ -573,7 +551,6 @@ for (const callback of progressSection.listeners.get("click") ?? []) {
 }
 assert.equal(visualGroups[0].open, true);
 assert.equal(visualFeature.open, true);
-assert.equal(visualLevel.value, "1");
 assert.ok(visualGroups[0].classList.contains("is-selected"));
 const columnToggle = nodes(visual, el => el.tagName === "INPUT" &&
     el.attrs["aria-label"] === "Show all progression columns")[0];
@@ -640,7 +617,7 @@ selectors[1].value = "none";
 selectors[1].dispatch("change");
 assert.equal(filterRows.filter(el => !el.hidden).length, 2);
 console.log("Reference interactions: progression feature reveal, explicit preset choices, and prerequisite filters OK");
-console.log("Visual remediation: compact traits, hierarchy, progression disclosure, focused feature levels, and option pagination OK");
+console.log("Visual remediation: compact traits, hierarchy, progression disclosure, direct feature navigation, and option pagination OK");
 
 // Future class systems must not inherit a Warlock or 5e level-20 ceiling.
 const extendedClass = renderNativeClass(rule("Extended", {

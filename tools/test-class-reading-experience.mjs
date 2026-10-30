@@ -74,16 +74,16 @@ featureLink.click();
 await wait(() => root.querySelector('[id="native-class-feature-class-feature.warlock.contact-patron"] p')?.textContent.includes("Contact Other Plane"));
 assert.equal(document.querySelector(".native-class-reference"), root, "Navigation must retain the mounted class");
 assert.equal(escapedFragments, 0, "Fragment navigation must not reach the host route handler");
-assert.equal(root.querySelector('[aria-label="Focus class level"]').value, "9");
+assert.equal(root.querySelector('[aria-label="Focus class level"]'), null);
 assert.equal(root.querySelector(".native-class-table tr.is-selected").getAttribute("data-class-level"), "9");
 assert.equal(pact.open, true);
 assert.equal(blade.querySelector("details").open, true);
 const asiLink = root.querySelector('a[href="#native-class-feature-class-feature.warlock.ability-score-improvement-level-8"]');
 asiLink.click();
-assert.equal(root.querySelector('[aria-label="Focus class level"]').value, "8");
+assert.equal(root.querySelector(".native-class-table tr.is-selected").getAttribute("data-class-level"), "8");
 window.history.back();
 await wait(() => window.location.hash.endsWith("contact-patron")
-    && root.querySelector('[aria-label="Focus class level"]').value === "9");
+    && root.querySelector(".native-class-table tr.is-selected")?.getAttribute("data-class-level") === "9");
 assert.equal(document.querySelector(".native-class-reference"), root, "History must retain the mounted class");
 for (const name of ["Invocations", "Cantrips", "Spells known", "Pact slots", "Slot level"]) {
     const header = [...root.querySelectorAll(".native-class-table thead th")].find(header => header.textContent === name);
@@ -168,7 +168,8 @@ returnPane.append(returned);
 document.body.append(returnPane);
 await wait(() => returned.querySelector('[aria-label="Filter Invocations options by name"]')?.value === "Devouring"
     && returned.querySelector('[data-option-id="pact.warlock.blade"] > details')?.open);
-assert.equal(returned.querySelector('[aria-label="Focus class level"]').value, "9");
+assert.equal(returned.querySelector('[aria-label="Focus class level"]'), null);
+assert.equal(returned.querySelector('[id="native-class-feature-class-feature.warlock.contact-patron"]').open, true);
 assert.equal(window.sessionStorage.getItem("rulesWikiClassReturn"), null, "Return state is consumed, not a persistent character configuration");
 await wait(() => returnPane.scrollTop === 420);
 // Leave again while the deferred Invocation catalog is still loading.
