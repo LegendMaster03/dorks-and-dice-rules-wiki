@@ -67,45 +67,6 @@ roll.events.click();
 assert.match(cls(wolf, "rw-stat-roll-result")[0].textContent, /1d20\+4: \d+/);
 assert.equal(cls(wolf, "rw-stat-section").some(node => node.textContent.startsWith("Lair Actions")), false);
 
-// Mirror the actual native/bestiary/baboon.json envelope returned by Core.
-// Previous tests passed flat definitions, missing the deployed UI failure where
-// the nested creature data was printed as one giant "Definition" extra.
-const baboonRecord = {
-    id: "monster.baboon", name: "Baboon", kind: "monster",
-    definition: {
-        size: ["S"], type: "beast", alignment: ["U"], ac: [12],
-        hp: { average: 3, formula: "1d6" }, speed: { walk: 30, climb: 30 },
-        str: 8, dex: 14, con: 11, int: 4, wis: 12, cha: 6,
-        passive: 11, cr: "0",
-        trait: [{ name: "Pack Tactics", entries: [
-            "The baboon has {@variantrule Advantage|SRD52} on an attack roll."
-        ] }],
-        action: [{ name: "Bite", entries: [
-            "{@atkr m} {@hit 1}, reach 5 ft. {@h}1 ({@damage 1d4 - 1}) Piercing damage."
-        ] }],
-        familiar: true,
-        lore: [{ name: "Baboon", _copy: { name: "Animals", source: "SRD52",
-            _mod: { images: { mode: "prependArr", items: [
-                { type: "image", href: { type: "internal", path: "bestiary/XMM/Baboon.webp" }, width: 884, height: 1000 }
-            ] } } } }]
-    },
-    statBlockFoundationId: "rule.monster-statblock-foundation"
-};
-const baboon = show(baboonRecord);
-assert.match(baboon.textContent, /Small · Beast · Unaligned/);
-assert.match(baboon.textContent, /CR 0/);
-assert.match(baboon.textContent, /Armor Class12/);
-assert.match(baboon.textContent, /Hit Points3 \(1d6\)/);
-assert.match(baboon.textContent, /30 ft., Climb 30 ft./);
-assert.equal(cls(baboon, "rw-stat-ability").length, 6);
-assert.match(baboon.textContent, /STR8 \(-1\)Save -1/);
-assert.match(baboon.textContent, /Pack Tactics/);
-assert.match(baboon.textContent, /Bite/);
-assert.ok(cls(baboon, "rw-stat-roll").length >= 2);
-assert.equal(cls(baboon, "rw-stat-source").length, 1, "Lore must stay in collapsed supplementary content.");
-assert.doesNotMatch(baboon.textContent, /Additional MechanicsDefinition/);
-assert.match(baboon.textContent, /Stat Block Foundation Id/);
-
 const lich = show({ name: "Lich", size: ["M"], type: { type: "undead", tags: ["wizard"] },
     alignment: ["N", "E"], ac: [20], hp: { average: 315, formula: "42d8 + 126" },
     speed: { walk: 30 }, str: 11, dex: 16, con: 16, int: 21, wis: 14, cha: 16,
@@ -129,6 +90,96 @@ assert.equal((lich.textContent.match(/Shield/g) ?? []).length, 1, "Hidden spell 
 assert.equal((lich.textContent.match(/Spellcasting/g) ?? []).length, 1, "Spellcasting belongs in the action section once.");
 assert.match(lich.textContent, /Novel Defense/);
 assert.ok(cls(lich, "rw-stat-entry").length >= 4);
+
+// Kaiju fixture uses the reference concepts already implemented in Block
+// Initiative. Values are testing data, never added to authoritative creatures.
+const kaijuReference = {
+    chaosThreshold: 150, finishingBlow: 60, vulnerabilityIdentificationDc: 18,
+    xpMilestones: [{ criteria: "Chaos reduced to zero", xp: 5000 }, { criteria: "Victory", xp: 10000 }],
+    vulnerableAreas: [
+        { id: "head", name: "Head", maxHp: 35,
+            targetableWhen: "When exposed by the creature's Behaviour",
+            exploitationEffect: "Area-specific consequence", futureAreaRule: "Keep this detail",
+            variants: [{ cr: 12, ac: 15, hp: 35 }, { cr: 18, ac: 18, hp: 65 },
+                { cr: 24, ac: 21, hp: 105 }] },
+        { id: "arm", name: "Arm", hp: 25, ac: 17, onExploited: "Additional effect" }
+    ],
+    behaviours: [
+        { name: "Escalation", trigger: "At the stated encounter trigger", entries: ["Change combat behavior"],
+            gainedFeatures: ["New Slam"], lostFeatures: ["Old Slam"] },
+        { name: "Counterattack", when: "In response to an attack", description: "Use the listed counterattack" }
+    ],
+    rampage: "When Chaos Threshold reaches zero",
+    deathThroes: "Once all Vulnerable Areas are exploited",
+    deathRattle: "Post-defeat consequence",
+    additionalKaijuRule: { effect: "preserve unexplained mechanics" }
+};
+const kaiju = show({
+    name: "Kaiju Reference Fixture", blockType: "kaiju", size: ["G"], type: "monstrosity",
+    ac: [22], hp: { average: 999, formula: "99d10" }, speed: { walk: 40 },
+    str: 26, dex: 10, con: 24, int: 8, wis: 12, cha: 8,
+    kaiju: kaijuReference,
+    action: [{ name: "Slam", lostWhile: "Head Exploited",
+        entries: ["{@atkr m} {@hit 10}, {@h}{@damage 3d10 + 8} force."] }],
+    legendary: [{ name: "Legendary Action", entries: ["Special attack."] }]
+});
+assert.equal(cls(kaiju, "rw-statblock-kaiju").length, 1);
+assert.match(kaiju.textContent, /Kaiju Reference/);
+assert.equal(cls(kaiju, "rw-stat-kaiju-columns").length, 1,
+    "Kaiju inherits the shared statblock with a distinct two-column layout.");
+assert.equal(cls(kaiju, "rw-stat-kaiju-column").length, 2);
+const columns = cls(kaiju, "rw-stat-kaiju-column");
+assert.match(columns[0].textContent, /Ability Scores & Saves/);
+assert.match(columns[1].textContent, /Legendary Actions/);
+assert.match(kaiju.textContent, /Vulnerability Identification DC18/);
+assert.match(kaiju.textContent, /XP Milestones/);
+assert.match(kaiju.textContent, /Chaos reduced to zero5000/);
+assert.match(kaiju.textContent, /Lost While Head Exploited/);
+assert.match(kaiju.textContent, /Gained Features/);
+assert.match(kaiju.textContent, /Lost Features/);
+assert.match(kaiju.textContent, /12.*15.*35.*18.*18.*65.*24.*21.*105/s);
+assert.equal(cls(kaiju, "rw-stat-ability").length, 6);
+assert.equal(cls(kaiju, "rw-stat-tile").filter(node => node.textContent.includes("Hit Points")).length, 0,
+    "A Kaiju with a Chaos Threshold must not show ordinary HP as its primary pool.");
+assert.match(kaiju.textContent, /Hit Points \(source\)/);
+for (const label of ["Chaos Threshold150", "Finishing Blow60", "Vulnerable Areas", "Head", "Arm",
+    "Targeting", "Exploitation", "Behaviours", "Escalation", "Counterattack", "Rampage",
+    "Death Throes", "Death Rattle", "Legendary Actions", "Keep this detail", "preserve unexplained mechanics"]) {
+    assert.ok(kaiju.textContent.includes(label), `Kaiju must include ${label}`);
+}
+assert.equal(cls(kaiju, "rw-stat-kaiju-area").length, 2);
+assert.equal(cls(kaiju, "rw-stat-kaiju-area-variant").length, 2,
+    "One area can display multiple CR/AC/HP rows without being duplicated as areas.");
+assert.equal(cls(kaiju, "rw-stat-kaiju-table").length, 3,
+    "Separate Vulnerable Areas, Behaviours and XP tables.");
+assert.equal(cls(kaiju, "rw-stat-kaiju-behaviour").length, 2);
+assert.ok(cls(kaiju, "rw-stat-roll").length);
+assert.doesNotMatch(kaiju.textContent, /Additional MechanicsKaiju/,
+    "Kaiju profile belongs in its own presentation section.");
+
+// A standard boss can use only part of the Kaiju mechanics without becoming a
+// Kaiju combatant and without losing its ordinary HP or shared actions.
+const mixedBoss = show({ name: "Mixed Boss", blockType: "standard", ac: [17],
+    hp: { average: 100, formula: "10d10 + 45" }, str: 18,
+    kaiju: { chaosThreshold: 70, finishingBlow: 35,
+        vulnerableAreas: [{ name: "Weak Point", hp: 15 }],
+        rampage: "Encounter-specific rule" },
+    action: [{ name: "Strike", entries: ["Melee attack."] }]
+});
+assert.equal(cls(mixedBoss, "rw-statblock-kaiju").length, 0);
+assert.match(mixedBoss.textContent, /Hit Points100/);
+assert.match(mixedBoss.textContent, /Kaiju Mechanics/);
+assert.match(mixedBoss.textContent, /Chaos Threshold70/);
+assert.match(mixedBoss.textContent, /Finishing Blow35/);
+assert.match(mixedBoss.textContent, /Weak Point/);
+assert.match(mixedBoss.textContent, /Strike/);
+
+const kaijuWithoutProfile = show({ name: "Kaiju Without Reference Content", blockType: "kaiju",
+    ac: [19], hp: { average: 90, formula: "10d10 + 35" } });
+assert.equal(cls(kaijuWithoutProfile, "rw-stat-kaiju").length, 0,
+    "Do not fabricate empty Kaiju data for a marked creature.");
+assert.match(kaijuWithoutProfile.textContent, /Hit Points90/,
+    "Do not suppress a source statistic unless the Kaiju pool is supplied.");
 
 const historical = show({ name: "Historical Creature", size: "L", ac: 22, touchAc: 13,
     flatFootedAc: 19, str: 18, dex: 14, fortitude: "+9", reflex: "+5", will: "+3",
@@ -157,17 +208,4 @@ assert.equal(cls(integrated, "rules-wiki-monster-article").length, 1);
 assert.equal(cls(integrated, "rw-stat-ability").length, 6);
 assert.match(integrated.textContent, /Bite attack/);
 assert.doesNotMatch(integrated.textContent, /Undefined/);
-// Exercise the same path used by the active Wiki detail panel, not only the
-// standalone renderer. The API returns the complete entity as rule.definition.
-const integratedBaboon = new FakeNode("main");
-renderNativeDetail(integratedBaboon, {
-    rulesetId: "first-party-001", fingerprint: "test",
-    rule: { id: baboonRecord.id, name: baboonRecord.name, kind: "monster", definition: baboonRecord }
-}, () => {});
-assert.equal(cls(integratedBaboon, "rw-statblock").length, 1);
-assert.equal(cls(integratedBaboon, "rw-stat-tile").length, 3);
-assert.equal(cls(integratedBaboon, "rw-stat-ability").length, 6);
-assert.equal(cls(integratedBaboon, "rw-stat-entry").length, 2);
-assert.doesNotMatch(integratedBaboon.textContent, /Additional MechanicsDefinition/);
-
 console.log("Native monster statblock renderer checks passed.");

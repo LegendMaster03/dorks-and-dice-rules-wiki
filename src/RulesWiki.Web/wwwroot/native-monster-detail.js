@@ -169,12 +169,19 @@ function renderEntry(item, renderRaw) {
     if (typeof item !== "object" || !item || Array.isArray(item)) return element("div", { className: "rw-stat-entry" }, renderContent(item, renderRaw));
     const body = element("div", { className: "rw-stat-entry" });
     if (item.name) body.append(element("strong", { className: "rw-stat-entry-name", text: valueText(item.name) }));
+    // The original Kaiju statblock marks attacks and traits that are gained,
+    // lost, or available only while a Vulnerable Area has been exploited.
+    // Display only explicit source conditions; never derive combat state here.
+    const availability = [["Lost While", item.lostWhile], ["Only While", item.onlyWhile],
+        ["Gained While", item.gainedWhile]].filter(([, value]) => !empty(value));
+    if (availability.length) body.append(element("span", { className: "rw-stat-entry-availability",
+        text: ` (${availability.map(([label, value]) => `${label} ${valueText(value)}`).join("; ")})` }));
     const entries = ["headerEntries", "entries", "entry", "items", "attackEntries", "hitEntries", "footerEntries"];
     let found = false;
     for (const key of entries) if (!empty(item[key])) { body.append(renderContent(item[key], renderRaw)); found = true; }
     if (!found) body.append(renderRaw(item));
     else {
-        const extras = Object.entries(item).filter(([key, v]) => !["name", "type", ...entries].includes(key) && !empty(v));
+        const extras = Object.entries(item).filter(([key, v]) => !["name", "type", "lostWhile", "onlyWhile", "gainedWhile", ...entries].includes(key) && !empty(v));
         if (extras.length) body.append(element("div", { className: "rw-stat-entry-extra" },
             extras.map(([key, v]) => element("div", {}, element("b", { text: `${pretty(key)}: ` }), renderContent(v, renderRaw)))));
     }
@@ -265,10 +272,6 @@ function abilityGrid(definition) {
             element("div", {}, element("span", { text: label }), element("strong", { text: signed(value) })))) : null]);
 }
 
-// Rules Core's native entity is an envelope: { id, name, kind, definition }.
-// Its private detail response can contain that entire entity in rule.definition.
-// Preserve independent envelope metadata, but read statistics from the nested
-// definition. A direct/flat definition remains supported for other consumers.
 function monsterDefinition(record) {
     if (!record || typeof record !== "object" || Array.isArray(record)) return {};
     const nested = record.definition;
@@ -277,9 +280,157 @@ function monsterDefinition(record) {
     return { ...metadata, ...nested };
 }
 
+// The statblock type is a presentation choice. Kaiju is a distinct combat
+// block type in Block Initiative; it is not a new Rules Core category.
+// A normal boss may carry some Kaiju mechanics without switching layouts.
+function isKaijuStatblock(definition) {
+    return definition.blockType === "kaiju" || definition.statblockType === "kaiju";
+}
+
+// These are reference-only fields. Encounter state remains in Block Initiative.
+// The Kaiju Fighting Lite reference keeps a base creature statblock and adds
+// Vulnerable Areas and Behaviours tables beside it (pp. 7 and 9).
+const KAIJU_AREA_FIELDS = ["vulnerableAreas", "areas"];
+const KAIJU_BEHAVIOUR_FIELDS = ["behaviours", "behaviors", "behaviour", "behavior"];
+const KAIJU_STATE_RULES = [["Rampage", "rampage"], ["Death Throes", "deathThroes"]];
+
+const oneOrMany = value => empty(value) ? [] : Array.isArray(value) ? value : [value];
+function kaijuSpecialTrait(label, value, renderRaw) {
+    return empty(value) ? null : element("div", { className: "rw-stat-kaiju-trait" },
+        element("strong", { text: `${label}. ` }), renderContent(value, renderRaw));
+}
+function renderKaijuArea(area, renderRaw) {
+    if (!area || typeof area !== "object" || Array.isArray(area)) {
+        return [element("tr", { className: "rw-stat-kaiju-area" },
+            element("th", { attributes: { scope: "row" } }, renderContent(area, renderRaw)),
+            element("td", {}), element("td", {}), element("td", {}), element("td", {}))];
+    }
+    const used = new Set(["id", "name", "currentHp", "currentHitPoints", "targetable", "exploited", "exploitedOverride"]);
+    const read = keys => { keys.forEach(key => used.add(key)); return field(area, keys); };
+    const stats = read(["variants", "crVariants", "byChallengeRating", "statistics"]);
+    const scalarCR = read(["cr", "challengeRating"]);
+    const scalarAC = read(["ac", "armorClass"]);
+    const scalarHP = read(["hp", "hitPoints", "maxHp"]);
+    const targeting = read(["targeting", "targetableWhen", "targetingConditions", "targetability"]);
+    const damageTypes = read(["damageTypes", "damageTypeRules", "immunity", "immunities"]);
+    const special = read(["specialTraits", "traits"]);
+    const exploitation = read(["exploitation", "exploitationEffect", "effectWhenExploited", "onExploited"]);
+    const notes = read(["description", "entries", "entry"]);
+    const extras = Object.entries(area).filter(([key, value]) => !used.has(key) && !key.startsWith("_") && !empty(value));
+    const rows = oneOrMany(stats).filter(v => v && typeof v === "object" && !Array.isArray(v));
+    if (!rows.length) rows.push({ cr: scalarCR, ac: scalarAC, hp: scalarHP });
+    const details = element("div", { className: "rw-stat-kaiju-traits" },
+        kaijuSpecialTrait("Targeting", targeting, renderRaw),
+        kaijuSpecialTrait("Damage Types", damageTypes, renderRaw),
+        kaijuSpecialTrait("Special Traits", special, renderRaw),
+        kaijuSpecialTrait("Exploitation", exploitation, renderRaw),
+        !empty(notes) ? renderContent(notes, renderRaw) : null,
+        extras.length ? element("details", { className: "rw-stat-kaiju-extra" },
+            element("summary", { text: "Other area information" }),
+            renderRaw(Object.fromEntries(extras))) : null);
+    return rows.map((statsRow, index) => element("tr", { className: index === 0 ? "rw-stat-kaiju-area" : "rw-stat-kaiju-area-variant" },
+        index === 0 ? element("th", { attributes: { scope: "rowgroup", rowspan: String(rows.length) }, className: "rw-stat-kaiju-area-name", text: valueText(area.name ?? area.id ?? "Vulnerable Area") }) : null,
+        index === 0 ? element("td", { attributes: { rowspan: String(rows.length) } }, details) : null,
+        element("td", { className: "rw-stat-kaiju-numeric", text: valueText(field(statsRow, ["cr", "challengeRating"])) || "—" }),
+        element("td", { className: "rw-stat-kaiju-numeric", text: !empty(field(statsRow, ["ac", "armorClass"])) ? armorValue(field(statsRow, ["ac", "armorClass"])) : "—" }),
+        element("td", { className: "rw-stat-kaiju-numeric", text: valueText(field(statsRow, ["hp", "hitPoints", "maxHp"])) || "—" })));
+}
+function renderKaijuBehaviour(item, renderRaw) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+        return element("tr", { className: "rw-stat-kaiju-behaviour" },
+            element("td", {}, renderContent(item, renderRaw)), element("td", {}), element("td", {}));
+    }
+    const used = new Set(["id", "name", "trigger", "when", "entries", "entry", "description", "effect", "effects", "gainedFeatures", "lostFeatures"]);
+    const effect = field(item, ["effect", "effects", "entries", "entry", "description"]);
+    const extras = Object.entries(item).filter(([key, value]) => !used.has(key) && !key.startsWith("_") && !empty(value));
+    return element("tr", { className: "rw-stat-kaiju-behaviour" },
+        element("th", { attributes: { scope: "row" }, text: valueText(item.name) || "—" }),
+        element("td", {}, renderContent(field(item, ["trigger", "when"]), renderRaw)),
+        element("td", { className: "rw-stat-kaiju-traits" },
+            !empty(effect) ? renderContent(effect, renderRaw) : null,
+            kaijuSpecialTrait("Gained Features", item.gainedFeatures, renderRaw),
+            kaijuSpecialTrait("Lost Features", item.lostFeatures, renderRaw),
+            extras.length ? element("details", { className: "rw-stat-kaiju-extra" },
+                element("summary", { text: "Other behaviour information" }), renderRaw(Object.fromEntries(extras))) : null));
+}
+function kaijuTable(headers, rows, className) {
+    return element("div", { className: "rw-stat-kaiju-table-wrap" },
+        element("p", { className: "rw-stat-kaiju-scroll-hint", text: "Scroll table horizontally for more columns" }),
+        element("div", { className: "rw-stat-kaiju-table-scroll", attributes: { tabindex: "0", role: "region", "aria-label": `${headers.join(", ")} table` } },
+        element("table", { className: `rw-stat-kaiju-table ${className}` },
+            element("thead", {}, element("tr", {}, headers.map(name => element("th", { attributes: { scope: "col" }, text: name })))),
+            element("tbody", {}, rows))));
+}
+function renderKaijuMilestones(milestones, renderRaw) {
+    const rows = oneOrMany(milestones);
+    return !rows.length ? null : element("section", { className: "rw-stat-kaiju-group" },
+        element("h4", { className: "rw-stat-kaiju-heading", text: "XP Milestones" }),
+        kaijuTable(["Criteria", "Total XP"], rows.map(item => {
+            const key = item && typeof item === "object" ? field(item, ["criteria", "criterion", "milestone", "name", "event"]) : item;
+            const value = item && typeof item === "object" ? field(item, ["xp", "totalXp", "experience"]) : null;
+            return element("tr", {}, element("th", { attributes: { scope: "row" } }, renderContent(key, renderRaw)),
+                element("td", { className: "rw-stat-kaiju-numeric" }, renderContent(value, renderRaw)));
+        }), "rw-stat-kaiju-xp-table"));
+}
+
+// Shared statblock statistics belong above this supplemental reference. The
+// official layout presents Vulnerable Areas and Behaviours as adjacent tables,
+// not as encounter-state editors or individual cards.
+function renderKaijuProfile(profile, renderRaw, kaijuLayout) {
+    if (!profile || typeof profile !== "object" || Array.isArray(profile)) return null;
+    const used = new Set(["chaosCurrent", "finishingBlowDamageThisTurn", "finishingBlowDamageByTurn",
+        "behaviourPhase", "defeatedRound", "rampageOverride", "deathThroesOverride", "defeatedOverride"]);
+    const read = keys => { keys.forEach(key => used.add(key)); return field(profile, keys); };
+    // Primary values are rendered in the shared statblock summary.
+    const chaos = read(["chaosThreshold", "chaosMax"]);
+    const finishing = read(["finishingBlow", "finishingBlowTarget"]);
+    const identification = read(["vulnerabilityIdentificationDc", "vulnerabilityIdentificationDC", "identificationDc", "weakPointIdentificationDc"]);
+    const areas = oneOrMany(read(KAIJU_AREA_FIELDS));
+    const behaviours = oneOrMany(read(KAIJU_BEHAVIOUR_FIELDS));
+    const milestones = read(["xpMilestones", "experienceMilestones"]);
+    const deathRattle = read(["deathRattle"]);
+    const stateRules = KAIJU_STATE_RULES.map(([name, key]) => [name, read([key])]).filter(([, value]) => !empty(value));
+    const extras = Object.entries(profile).filter(([key, value]) => !used.has(key) && !key.startsWith("_") && !empty(value));
+    if (!areas.length && !behaviours.length && empty(milestones) && empty(deathRattle) && !stateRules.length
+        && !extras.length && (kaijuLayout || (empty(chaos) && empty(finishing) && empty(identification)))) return null;
+    return element("section", { className: `rw-stat-section rw-stat-kaiju${kaijuLayout ? " is-kaiju" : ""}` },
+        element("h3", { className: "rw-stat-section-title", text: kaijuLayout ? "Kaiju Reference" : "Kaiju Mechanics" }),
+        !kaijuLayout && (!empty(chaos) || !empty(finishing) || !empty(identification))
+            ? element("div", { className: "rw-stat-kaiju-summary" },
+                !empty(chaos) ? tile("Chaos Threshold", valueText(chaos)) : null,
+                !empty(finishing) ? tile("Finishing Blow", valueText(finishing)) : null,
+                !empty(identification) ? tile("Vulnerability Identification DC", valueText(identification)) : null)
+            : null,
+        areas.length ? element("section", { className: "rw-stat-kaiju-group" },
+            element("h4", { className: "rw-stat-kaiju-heading", text: "Vulnerable Areas" }),
+            kaijuTable(["Vulnerable Area", "Special Traits", "CR", "AC", "HP"],
+                areas.flatMap(area => renderKaijuArea(area, renderRaw)), "rw-stat-kaiju-areas")) : null,
+        behaviours.length ? element("section", { className: "rw-stat-kaiju-group" },
+            element("h4", { className: "rw-stat-kaiju-heading", text: "Behaviours" }),
+            kaijuTable(["Behaviour", "Trigger", "Effect"],
+                behaviours.map(item => renderKaijuBehaviour(item, renderRaw)), "rw-stat-kaiju-behaviours")) : null,
+        stateRules.length ? element("section", { className: "rw-stat-kaiju-group" },
+            element("h4", { className: "rw-stat-kaiju-heading", text: "Combat State Rules" }),
+            element("div", { className: "rw-stat-kaiju-states" }, stateRules.map(([name, value]) =>
+                element("div", { className: "rw-stat-kaiju-state" }, element("h5", { text: name }), renderContent(value, renderRaw))))) : null,
+        !empty(deathRattle) ? element("section", { className: "rw-stat-kaiju-group" },
+            element("h4", { className: "rw-stat-kaiju-heading", text: "Death Rattle" }),
+            renderContent(deathRattle, renderRaw)) : null,
+        renderKaijuMilestones(milestones, renderRaw),
+        extras.length ? element("details", { className: "rw-stat-kaiju-extra" },
+            element("summary", { text: "Other Kaiju reference fields" }),
+            element("dl", { className: "rw-stat-detail-grid" }, extras.flatMap(([key, value]) => [
+                element("dt", { text: pretty(key) }), element("dd", {}, renderRaw(value))]))) : null);
+}
+
 export function renderNativeMonster(rule, renderRaw) {
     const d = monsterDefinition(rule.definition);
+    const kaijuLayout = isKaijuStatblock(d);
+    const kaijuProfile = d.kaiju && typeof d.kaiju === "object" && !Array.isArray(d.kaiju)
+        ? d.kaiju : null;
     const seen = new Set(SOURCE_FIELDS);
+    if (kaijuLayout) { seen.add("blockType"); seen.add("statblockType"); }
+    if (kaijuProfile) seen.add("kaiju");
     const consume = keys => keys.forEach(key => seen.add(key));
     const titleParts = [displayValue(d.size, value => Array.isArray(value) ? value.map(v => SIZE[String(v).toUpperCase()] ?? pretty(v)).join("/") : SIZE[String(value).toUpperCase()] ?? pretty(value)),
         displayValue(d.type, value => {
@@ -289,11 +440,12 @@ export function renderNativeMonster(rule, renderRaw) {
             return tags ? `${type} (${tags})` : type;
         }),
         displayValue(d.alignment, value => Array.isArray(value)
-            ? value.map(v => ALIGNMENT[String(v).toUpperCase()] ?? pretty(v)).join(" ") : ALIGNMENT[String(value).toUpperCase()] ?? pretty(value))].filter(Boolean);
+            ? value.map(v => ALIGNMENT[String(v).toUpperCase()] ?? pretty(v)).join(" ") : ALIGNMENT[String(value).toUpperCase()] ?? pretty(value)),
+        kaijuLayout ? "Kaiju" : null].filter(Boolean);
     const cr = field(d, ["cr", "challenge", "challengeRating"]);
     consume(["size", "type", "alignment", "cr", "challenge", "challengeRating", "xp", "initiative", "init", "ac", "armorClass", "hp", "hitPoints", "speed", "touchAc", "touchAC", "acTouch", "flatFootedAc", "flatFootedAC", "acFlatFooted", "flatFooted", "touch", "save", "saves", "savingThrows", "legendaryActionsLair"]);
     for (const [, key] of ABILITIES) seen.add(key);
-    const root = element("div", { className: "rw-statblock" });
+    const root = element("div", { className: `rw-statblock${kaijuLayout ? " rw-statblock-kaiju" : ""}` });
     const header = element("header", { className: "rw-stat-header" },
         element("div", {}, element("h2", { className: "rw-stat-name", text: rule.name }),
             element("p", { className: "rw-stat-subtitle", text: titleParts.join(" · ") })),
@@ -303,31 +455,53 @@ export function renderNativeMonster(rule, renderRaw) {
             cr && typeof cr === "object" && !empty(cr.xpLair)
                 ? element("small", { text: `Lair XP ${Number(cr.xpLair).toLocaleString("en-US")}` }) : null) : null);
     root.append(header, element("div", { className: "rw-stat-accent" }));
+    // A Kaiju inherits ordinary statblock components. Only their layout and
+    // source-backed combat summary values change; actions retain shared rolls.
+    const kaijuLeft = kaijuLayout ? element("div", { className: "rw-stat-kaiju-column" }) : root;
+    const kaijuRight = kaijuLayout ? element("div", { className: "rw-stat-kaiju-column" }) : root;
+    if (kaijuLayout) root.append(element("div", { className: "rw-stat-kaiju-columns" }, kaijuLeft, kaijuRight));
+    const chaos = kaijuProfile ? field(kaijuProfile, ["chaosThreshold", "chaosMax"]) : null;
+    const finish = kaijuProfile ? field(kaijuProfile, ["finishingBlow", "finishingBlowTarget"]) : null;
+    const identification = kaijuProfile ? field(kaijuProfile,
+        ["vulnerabilityIdentificationDc", "vulnerabilityIdentificationDC", "identificationDc", "weakPointIdentificationDc"]) : null;
     const defenseTiles = [
         ["Armor Class", field(d, ["ac", "armorClass"]), armorValue],
-        ["Hit Points", field(d, ["hp", "hitPoints"]), valueText],
+        ["Hit Points", kaijuLayout && kaijuProfile && !empty(field(kaijuProfile, ["chaosThreshold", "chaosMax"]))
+            ? null : field(d, ["hp", "hitPoints"]), valueText],
         ["Speed", d.speed, speedValue],
-        ["Initiative", field(d, ["initiative", "init"]), initValue]
+        ["Initiative", field(d, ["initiative", "init"]), initValue],
+        ...(kaijuLayout ? [
+            ["Chaos Threshold", chaos, valueText],
+            ["Finishing Blow", finish, valueText],
+            ["Vulnerability Identification DC", identification, valueText]
+        ] : [])
     ].filter(([, value]) => !empty(value));
     if (defenseTiles.length) {
         const tiles = element("div", { className: "rw-stat-tiles" }, defenseTiles.map(([name, value, format]) => tile(name, format(value))));
         const extraAc = [["Touch AC", ["touchAc", "touchAC", "acTouch", "touch"]],
             ["Flat-Footed AC", ["flatFootedAc", "flatFootedAC", "acFlatFooted", "flatFooted"]]]
             .map(([name, keys]) => [name, field(d, keys)]).filter(([, value]) => !empty(value));
-        root.append(section("Defenses & Movement", [tiles,
+        kaijuLeft.append(section("Defenses & Movement", [tiles,
             extraAc.length ? element("div", { className: "rw-stat-defense-variants" }, extraAc.map(([name, value]) =>
                 element("div", {}, element("span", { text: name }), element("strong", { text: armorValue(value) })))) : null]));
     }
-    root.append(abilityGrid(d));
+    kaijuLeft.append(abilityGrid(d));
     consume(["fort", "fortitude", "ref", "reflex", "will"]);
+    const kaijuReference = renderKaijuProfile(kaijuProfile, renderRaw, kaijuLayout);
     const details = [];
+    // An imported ordinary HP value is not a Kaiju's primary damage tracker.
+    // Preserve it as secondary reference if a Chaos Threshold supersedes it.
+    if (kaijuLayout && kaijuProfile && !empty(field(kaijuProfile, ["chaosThreshold", "chaosMax"]))
+        && !empty(field(d, ["hp", "hitPoints"]))) {
+        details.push(["Hit Points (source)", field(d, ["hp", "hitPoints"])]);
+    }
     seen.add("saves");
     for (const [label, keys] of STAT_DETAILS) {
         consume(keys);
         const value = field(d, keys);
         if (!empty(value)) details.push([label, value]);
     }
-    if (details.length) root.append(section("Combat & Reference", element("dl", { className: "rw-stat-detail-grid" },
+    if (details.length) kaijuLeft.append(section("Combat & Reference", element("dl", { className: "rw-stat-detail-grid" },
         details.flatMap(([label, value]) => [element("dt", { text: label }), element("dd", {}, renderContent(value, renderRaw))]))));
 
     const spells = Array.isArray(d.spellcasting) ? d.spellcasting : !empty(d.spellcasting) ? [d.spellcasting] : [];
@@ -343,7 +517,7 @@ export function renderNativeMonster(rule, renderRaw) {
         consume(keys);
         const rows = keys.flatMap(key => empty(d[key]) ? [] : Array.isArray(d[key]) ? d[key] : [d[key]]);
         const magic = spellCategories.get(title) ?? [];
-        if (rows.length || magic.length) root.append(section(title, [
+        if (rows.length || magic.length) (kaijuLayout && title !== "Traits" ? kaijuRight : kaijuLeft).append(section(title, [
             title === "Legendary Actions" && !empty(d.legendaryActionsLair)
                 ? element("p", { className: "rw-stat-legendary-note", text: `${d.legendaryActionsLair} legendary actions in its lair` }) : null,
             element("div", { className: "rw-stat-entries" }, [
@@ -351,8 +525,9 @@ export function renderNativeMonster(rule, renderRaw) {
             ])
         ]));
     }
-    if (spellCategories.has("Spellcasting")) root.append(section("Spellcasting", element("div", { className: "rw-stat-entries" },
+    if (spellCategories.has("Spellcasting")) kaijuRight.append(section("Spellcasting", element("div", { className: "rw-stat-entries" },
         spellCategories.get("Spellcasting").map(row => renderSpellcasting(row, renderRaw)))));
+    if (kaijuReference) root.append(kaijuReference);
     if (!empty(d.description)) root.append(section("Description", renderContent(d.description, renderRaw)));
 
     // Unknown native mechanics remain inspectable. Presentation fields and
