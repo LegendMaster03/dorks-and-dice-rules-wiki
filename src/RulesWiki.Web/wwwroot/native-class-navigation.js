@@ -1,3 +1,12 @@
+// Scroll the reader alone so section jumps do not move the Site ribbon.
+export function scrollNativeClassTarget(target, inset = 120) {
+    const pane = target.closest?.(".rules-core-library-detail");
+    if (pane && target.getBoundingClientRect && pane.getBoundingClientRect) {
+        pane.scrollTop = Math.max(0, pane.scrollTop
+            + target.getBoundingClientRect().top - pane.getBoundingClientRect().top - inset);
+    } else target.scrollIntoView?.({ block: "start" });
+}
+
 // Fragment history inside a mounted native class must not reconstruct the
 // browser pane. Ordinary rule routes still use the existing browser router.
 export function restoreMountedClassFragment(app, state, route, hash) {
@@ -10,6 +19,6 @@ export function restoreMountedClassFragment(app, state, route, hash) {
         catch { return false; }
     }
     if (hash) return false;
-    root.scrollIntoView?.({ block: "start" });
+    scrollNativeClassTarget(root, 0);
     return true;
 }

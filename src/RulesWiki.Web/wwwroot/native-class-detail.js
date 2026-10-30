@@ -1,3 +1,4 @@
+import { scrollNativeClassTarget } from "./native-class-navigation.js";
 import { renderClassCustomizations, discoverOwnedOptions } from "./native-class-customization.js";
 import { createClassReturnState } from "./native-class-view-state.js";
 import { ruleParagraphs } from "./native-class-option-detail.js";
@@ -563,7 +564,7 @@ export function renderNativeClass(rule, {
         } else if (target.className?.includes("native-class-feature-level")) {
             target.open = true;
         }
-        target.scrollIntoView?.({ block: "start" });
+        scrollNativeClassTarget(target);
         target.setAttribute("tabindex", "-1");
         target.focus?.({ preventScroll: true });
         return true;

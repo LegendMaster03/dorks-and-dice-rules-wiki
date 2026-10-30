@@ -705,7 +705,7 @@ async function renderRulesBrowser(app, container) {
 
         if (isCompactLibraryViewport(shell) && serial === detailSerial) {
             detail.focus({ preventScroll: true });
-            detail.scrollIntoView({ block: "start" });
+            if (!app.nativeReferenceOnly) detail.scrollIntoView({ block: "start" });
         }
     };
 

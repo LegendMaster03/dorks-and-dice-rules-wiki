@@ -87,3 +87,13 @@
     .wiki-experience .native-class-navigation { gap: .15rem; }
     .wiki-experience .native-class-navigation a { padding-inline: .45rem; font-size: .9rem; }
 }
+
+/* Fit the reference below the Site header; keep reader scrolling inside the tool. */
+.wiki-experience.rules-core-app:has(.rules-core-main[data-rules-view="library"]) {
+    height: calc(100dvh - var(--wiki-host-offset, 0px));
+    max-height: calc(100dvh - var(--wiki-host-offset, 0px));
+    grid-template-rows: auto minmax(0, 1fr);
+}
+.wiki-experience .rules-core-library-index,
+.wiki-experience .rules-core-library-list,
+.wiki-experience .rules-core-library-detail { overscroll-behavior-y: contain; }
