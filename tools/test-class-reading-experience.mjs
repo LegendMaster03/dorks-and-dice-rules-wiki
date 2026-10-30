@@ -106,6 +106,26 @@ assert.match(root.textContent, /Cantrip totals exclude automatic Eldritch Blast 
 const invocationSystem = systems.find(system => system.querySelector("summary strong").textContent === "Invocations");
 invocationSystem.querySelector("summary").click();
 await wait(() => invocationSystem.querySelector("input"));
+// Published prerequisite data must expose every Talisman elective, without
+// including generic options or sharing charges with the intrinsic Pact.
+const pactRequirement = invocationSystem.querySelector('[aria-label="Filter Invocations by required Pact"]');
+assert.ok([...pactRequirement.options].some(option => option.value === "pact.warlock.talisman"));
+pactRequirement.value = "pact.warlock.talisman";
+pactRequirement.dispatchEvent(new Event("change", { bubbles: true }));
+const shownInvocations = () => [...invocationSystem.querySelectorAll("[data-option-id]")]
+    .filter(row => !row.hidden).map(row => row.getAttribute("data-option-id"));
+assert.deepEqual(shownInvocations().sort(), ["invocation.bond-of-the-talisman", "invocation.protection-of-the-talisman", "invocation.rebuke-of-the-talisman"]);
+const availableLevel = invocationSystem.querySelector('[aria-label="Show Invocations options by documented class level"]');
+availableLevel.value = "7";
+availableLevel.dispatchEvent(new Event("change", { bubbles: true }));
+assert.deepEqual(shownInvocations().sort(), ["invocation.protection-of-the-talisman", "invocation.rebuke-of-the-talisman"]);
+availableLevel.value = "1";
+availableLevel.dispatchEvent(new Event("change", { bubbles: true }));
+assert.deepEqual(shownInvocations(), ["invocation.rebuke-of-the-talisman"]);
+pactRequirement.value = "";
+pactRequirement.dispatchEvent(new Event("change", { bubbles: true }));
+availableLevel.value = "";
+availableLevel.dispatchEvent(new Event("change", { bubbles: true }));
 const invocationSearch = invocationSystem.querySelector("input");
 invocationSearch.value = "Devouring";
 invocationSearch.dispatchEvent(new Event("input", { bubbles: true }));
