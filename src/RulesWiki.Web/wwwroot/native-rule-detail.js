@@ -1,3 +1,4 @@
+import { renderClassOptionContent, installClassReferenceStyles } from "./native-class-option-detail.js";
 import { renderNativeClass } from "./native-class-detail.js";
 import { renderNativeMonster } from "./native-monster-detail.js";
 import { renderConditionDefinition } from "./condition-detail.js";
@@ -34,7 +35,17 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
     const body = element("div", { className: "rules-core-library-detail-body" });
     const article = element("article", { className: "rules-core-effective-rule card card-body mb-3" },
         element("h2", { className: "h3", text: rule.name }));
-    if (rule.kind === "monster") {
+    const classOption = ["patron", "pact", "invocation"].includes(rule.kind);
+    if (classOption) {
+        installClassReferenceStyles();
+        article.classList.add("rules-wiki-native-class-article");
+        const hrefForRule = id => app ? browserHref({ ...app,
+            browserFilters: { ...app.browserFilters, query: "", sourceCode: "", overridesOnly: false, fieldFilters: {} },
+            browserSort: { key: null, direction: "asc" }
+        }, `/rules/${encodeURIComponent(id)}`) : `/rules/${encodeURIComponent(id)}`;
+        article.replaceChildren(element("div", { className: "native-class-reference native-class-option-page" },
+            renderClassOptionContent(payload, { node: element, renderValue: renderNativeValue, hrefForRule })));
+    } else if (rule.kind === "monster") {
         // Preserve the existing native monster renderer on Wiki main.
         // Monster content remains owned by its specialized stat-block view.
         article.classList.add("rules-wiki-monster-article");
@@ -89,7 +100,7 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
                 }, route);
             }
         }));
-    } else if (rule.kind !== "class" && rule.kind !== "monster") {
+    } else if (!classOption && rule.kind !== "class" && rule.kind !== "monster") {
         for (const [key, value] of Object.entries(rule.definition)) {
             if (["id", "name", "kind", "description"].includes(key) || key.startsWith("_")) continue;
             article.append(element("section", { className: "mb-3" },

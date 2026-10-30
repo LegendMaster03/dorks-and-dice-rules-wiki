@@ -150,8 +150,8 @@ function renderProgression(rows, renderValue, firstLevel, registerLabel) {
     const displayed = candidates.filter(key => key === "level" || key === "featureGrants"
         || rows.some(row => progressionCell(row, key) !== "—"));
     const focused = new Set(["level", "featureGrants"]);
-    // No more than three additional numerical columns are initially visible.
-    for (const key of displayed.filter(key => key !== "level" && key !== "featureGrants").slice(0, 3)) focused.add(key);
+    // Class resources belong in the normal reference; uncommon statistics remain optional.
+    for (const key of displayed.filter(key => PREFERRED_COLUMNS.includes(key))) focused.add(key);
     const table = node("table", { className: "native-class-table" });
     const head = node("thead");
     head.append(node("tr", {}, ...displayed.map(key => node("th", {
@@ -269,24 +269,25 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
                 const rule = result?.rule;
                 if (!rule || rule.id !== id) throw new Error("The requested feature was not returned.");
                 const featureDefinition = rule.definition?.definition ?? rule.definition;
-                content.replaceChildren(node("h5", { text: rule.name ?? featureName(id) }));
+                content.replaceChildren();
                 if (featureDefinition?.description) content.append(node("p", { text: featureDefinition.description }));
                 if (featureDefinition && typeof featureDefinition === "object") {
                     const other = Object.fromEntries(Object.entries(featureDefinition)
                         .filter(([key]) => key !== "description"));
-                    if (Object.keys(other).length) content.append(renderValue(other));
+                    if (Object.keys(other).length) content.append(node("details", { className: "native-class-technical-details" },
+                        node("summary", { text: "Additional feature data" }), renderValue(other)));
                 }
-                content.append(node("a", { text: "Open full rule", attributes: { href: hrefForRule(id) } }));
+                content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
             }).catch(() => {
                 requested = false;
                 content.replaceChildren(node("p", { text:
                     "Feature definition unavailable. Close and reopen to retry, or open the full rule." }),
-                    node("a", { text: "Open full rule", attributes: { href: hrefForRule(id) } }));
+                    node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
             });
         });
     }
     if (!inlineFeature) {
-        content.append(node("a", { text: "Open full rule", attributes: { href: hrefForRule(id) } }));
+        content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
     }
     card.append(content);
     return card;
@@ -438,9 +439,10 @@ export function renderNativeClass(rule, {
     });
     const features = renderFeatures(rows, inline, renderValue, hrefForRule, loadRule, firstLevel, registerLabel);
     const progression = renderProgression(rows, renderValue, firstLevel, registerLabel);
+    let jump = null;
     if (progression.select) {
         const select = progression.select;
-        const jump = node("a", { text: "Read level features", className: "native-class-feature-jump",
+        jump = node("a", { text: "Read level features", className: "native-class-feature-jump",
             attributes: { href: "#native-class-features" } });
         jump.hidden = true;
         progression.controls.append(jump);
@@ -524,8 +526,19 @@ export function renderNativeClass(rule, {
     const revealFragment = id => {
         const target = localTargets.get(id);
         if (!target) return false;
-        const level = features.featureLevels.get(id);
+        const level = features.featureLevels.get(id) ??
+            (target.className?.includes("native-class-feature-level") ? Number(target.getAttribute("data-class-level")) : undefined);
         if (level !== undefined) {
+            if (progression.select) progression.select.value = String(level);
+            for (const [rowLevel, row] of progression.levelRows ?? [])
+                row.classList.toggle("is-selected", rowLevel === String(level));
+            for (const group of features.groups.children)
+                group.classList.toggle("is-selected", group.getAttribute("data-class-level") === String(level));
+            if (jump) {
+                jump.hidden = false;
+                jump.textContent = `Read level ${level} features`;
+                jump.setAttribute("href", `#native-class-features-level-${level}`);
+            }
             const group = [...features.groups.children].find(item =>
                 item.getAttribute("data-class-level") === String(level));
             if (group) group.open = true;
@@ -540,6 +553,7 @@ export function renderNativeClass(rule, {
     };
     root.revealNativeClassFragment = revealFragment;
     root.addEventListener("click", event => {
+        if ((event.button ?? 0) !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         const link = event.target?.closest?.('a[href^="#native-class-"]');
         const fragment = link?.getAttribute("href")?.slice(1);
         if (!fragment || !localTargets.has(fragment)) return;

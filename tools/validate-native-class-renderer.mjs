@@ -114,7 +114,7 @@ detail.dispatch("toggle");
 await new Promise(resolve => setImmediate(resolve));
 assert.deepEqual(requested, ["class-feature.sorcerer.font-of-magic-level-2"]);
 assert.match(detail.textContent, /Resource recovery feature/);
-assert.equal(nodes(detail, el => el.tagName === "A" && el.textContent === "Open full rule").length, 1,
+assert.equal(nodes(detail, el => el.tagName === "A" && el.className === "native-class-rule-link").length, 1,
     "Loaded feature must preserve navigation to its native record");
 detail.dispatch("toggle");
 assert.equal(requested.length, 1, "The feature is fetched once per detail view");
@@ -248,7 +248,7 @@ await new Promise(resolve => setImmediate(resolve));
 assert.deepEqual(requestedWarlock, ["pact.warlock.blade"]);
 assert.match(pactCard.textContent, /Manifest a pact weapon/);
 assert.match(pactCard.textContent, /Attack twice/);
-assert.equal(nodes(pactCard, el => el.tagName === "A" && el.textContent === "Open full rule").length, 1);
+assert.equal(nodes(pactCard, el => el.tagName === "A" && el.className === "native-class-rule-link").length, 1);
 const invocationSearch = nodes(warlockView, el => el.tagName === "INPUT"
     && el.attrs["aria-label"] === "Filter Invocations options by name")[0];
 invocationSearch.value = "Agonizing";
@@ -326,7 +326,7 @@ await new Promise(resolve => setImmediate(resolve));
 assert.deepEqual(separatedRequests, ["class-system.separated.traditions"]);
 assert.match(systemView.textContent, /Choose a tradition/);
 assert.match(systemView.textContent, /selected-for-playtest/, "Outer native metadata must survive nesting");
-assert.match(systemView.textContent, /2 referenced options/);
+assert.match(systemView.textContent, /2 options/);
 assert.equal(nodes(systemView, el => el.className === "native-class-customization-option").length, 2);
 assert.equal(nodes(systemView, el => el.tagName === "A" && el.attrs.href?.endsWith("class-system.separated.traditions")).length, 1);
 const independentOption = nodes(systemView, el => el.className === "native-class-customization-option")[0];
@@ -531,9 +531,9 @@ const visual = renderNativeClass(rule("Visual", {
     hitDie: { number: 1, faces: 8 }, skillChoices: { count: 2, from: ["arcana", "history"] },
     progression: [
         { level: 1, featureGrants: ["class-feature.visual.alpha"], proficiencyBonus: 2,
-            pactSlots: 1, pactSlotLevel: 1, invocationsElectiveTotal: 1, ordinarySpellsKnown: 2 },
+            pactSlots: 1, pactSlotLevel: 1, invocationsElectiveTotal: 1, ordinarySpellsKnown: 2, damageReduction: 0 },
         { level: 2, featureGrants: ["class-feature.visual.beta"], proficiencyBonus: 2,
-            pactSlots: 2, pactSlotLevel: 1, invocationsElectiveTotal: 2, ordinarySpellsKnown: 3 }
+            pactSlots: 2, pactSlotLevel: 1, invocationsElectiveTotal: 2, ordinarySpellsKnown: 3, damageReduction: 1 }
     ],
     selectionRules: { pact: { requiredAtWarlockLevel: 1, firstChoiceFree: true } },
     separateGrants: { automaticEldritchBlast: true, mysticArcanumSeparate: true,
@@ -545,8 +545,8 @@ assert.ok(sections.findIndex(el => el.attrs.id === "native-class-customization")
     "Class-specific choices must appear ahead of detailed advancement");
 assert.match(visual.textContent, /Choose 2 from Arcana, History/);
 const visualThs = nodes(visual, el => el.tagName === "TH" && el.attrs.scope === "col");
-assert.equal(visualThs.filter(el => !el.className.includes("native-class-extra-column")).length, 5,
-    "The primary progression table should focus on level, features and no more than three other fields");
+assert.equal(visualThs.filter(el => !el.className.includes("native-class-extra-column")).length, 7,
+    "Published class resource counts must be visible in the primary progression table");
 const visualGroups = nodes(visual, el => el.className === "native-class-feature-level");
 assert.equal(visualGroups.length, 2);
 assert.equal(visualGroups[0].tagName, "DETAILS");

@@ -1,5 +1,16 @@
 # Rules Wiki — class reference and customization UI development plan
 
+## October 30: complete class reading flows
+
+The post-deployment review found that generic option filters, equal-height card grids, and separate embedded/direct renderers prevented the class UI from working as a coherent reference. The user authorized fixes, merging, deployment review, and iteration before the next visual review.
+
+- Patron uses a compact overview and a clearly labeled link to its complete reference. Patron and Pact catalogs have no search or level filters; Invocation search explicitly searches names and its level control shows options available by a class level.
+- Pact and Invocation disclosures occupy the full reading width. Opening one never stretches an adjacent closed option. Pact level-5 improvements and published prerequisites are primary rules, not source metadata.
+- Direct Patron, Pact, and Invocation routes share the embedded rule presentation. Unknown rule fields remain accessible in secondary details, and native IDs remain authoritative.
+- Normal advancement exposes published class resource counts, including Invocations, cantrips, known spells, and Pact slots. Uncommon statistics remain available separately.
+- Fragment click and history handling synchronizes the focus selector, highlighted advancement row, and expanded feature. It preserves unrelated disclosures.
+- `tools/test-class-reading-experience.mjs` exercises real DOM event propagation through the mounted application, direct routes, and Back history using native-shaped fixtures. Live desktop and narrow-screen review follows the normal main validation/deployment workflow.
+
 Status: iterative implementation workstream. This document records the current design direction, implemented foundation, and decisions that remain open. It is not approval of untested class mechanics.
 
 ## Goals and governing boundaries
