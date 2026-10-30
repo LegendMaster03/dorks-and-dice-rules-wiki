@@ -534,6 +534,8 @@ export function renderNativeClass(rule, {
             target.open = true;
         }
         target.scrollIntoView?.({ block: "start" });
+        target.setAttribute("tabindex", "-1");
+        target.focus?.({ preventScroll: true });
         return true;
     };
     root.revealNativeClassFragment = revealFragment;
