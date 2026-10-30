@@ -27,7 +27,12 @@ export function installWikiExperience(app) {
     app.root.classList.add("wiki-experience");
     const style = el("link", { attributes: { rel: "stylesheet", href: new URL("./wiki-experience.css", import.meta.url).href } });
     document.head.append(style);
+    const fitHost = () => app.root.style.setProperty("--wiki-host-offset",
+        `${Math.max(0, app.root.getBoundingClientRect().top + window.scrollY)}px`);
+    fitHost();
+    const resetPageScroll = () => document.scrollingElement?.scrollTo?.({ top: 0 });
     const go = async (path, query = "") => {
+        resetPageScroll();
         const base = (app.hostContext.toolBasePath ?? "/tools/rules-wiki").replace(/\/$/, "");
         window.history.pushState({}, "", `${base}${path}${query ? `?q=${encodeURIComponent(query)}` : ""}`);
         app.browserFilters = { ...app.browserFilters, entityType: "", query, fieldFilters: {}, sourceCode: "", overridesOnly: false };
@@ -39,6 +44,7 @@ export function installWikiExperience(app) {
     app.navigateWikiHome = () => go("/");
     const navigate = app.navigateRuleFamily.bind(app);
     app.navigateRuleFamily = async type => {
+        resetPageScroll();
         app.browserFilters.query = "";
         await navigate(type);
     };
@@ -116,6 +122,7 @@ export function installWikiExperience(app) {
     };
     const render = app.renderActiveView.bind(app);
     app.renderActiveView = async container => {
+        fitHost();
         container.classList.add("rules-core-main");
         const home = currentToolRoute(app) === "/" && !new URLSearchParams(window.location.search).get("q");
         if (home) { container.dataset.rulesView = "home"; renderHome(container); }
@@ -152,6 +159,7 @@ export function installWikiExperience(app) {
     document.addEventListener("visibilitychange", checkUpdates);
     let compactMenu = window.innerWidth <= 560;
     window.addEventListener("resize", () => {
+        fitHost();
         const compact = window.innerWidth <= 560;
         if (compact === compactMenu) return;
         compactMenu = compact;

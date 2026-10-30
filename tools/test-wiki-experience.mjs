@@ -1,10 +1,17 @@
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { installWikiExperience, installPaneDivider } from "../src/RulesWiki.Web/wwwroot/wiki-experience.js";
+import { scrollNativeClassTarget } from "../src/RulesWiki.Web/wwwroot/native-class-navigation.js";
 import { classReturnLink } from "../src/RulesWiki.Web/wwwroot/native-class-view-state.js";
 
 const dom = new JSDOM('<main id="tool-root"></main>', { url: "https://site.test/tools/rules-wiki/", pretendToBeVisual: true });
 for (const name of ["window", "document", "Node", "Element", "HTMLElement", "Event", "KeyboardEvent"]) globalThis[name] = dom.window[name];
+const reader = { scrollTop: 200, getBoundingClientRect: () => ({ top: 100 }) };
+let outerScroll = false;
+scrollNativeClassTarget({ closest: () => reader, getBoundingClientRect: () => ({ top: 500 }),
+    scrollIntoView: () => { outerScroll = true; } });
+assert.equal(reader.scrollTop, 480);
+assert.equal(outerScroll, false, "Class section navigation scrolls only the reader");
 const fingerprint = "a".repeat(64);
 let published = fingerprint;
 const searches = [];
