@@ -1,0 +1,739 @@
+{
+  "pacts/blade": {
+    "id": "pact.warlock.blade",
+    "name": "Pact of the Blade",
+    "kind": "pact",
+    "parentClass": "class.warlock",
+    "availableAtWarlockLevel": 1,
+    "invocationCost": 0,
+    "description": "Manifest the agreement in a weapon. Use a Bonus Action to conjure or bind an eligible melee weapon; gain proficiency, Charisma option for attacks and damage, and Warlock focus use; choose ordinary, Necrotic, Psychic, or Radiant damage per attack. Follow the host's modern bond and ending restrictions.",
+    "deepenedAtLevel5": "Attack twice with your Pact weapon during one Attack action; this is intrinsic and does not cost an Invocation. Devouring Blade can upgrade this to three attacks total. Thirsting Blade is not a selectable option.",
+    "rulesStatus": "selected-for-playtest"
+  },
+  "pacts/chain": {
+    "id": "pact.warlock.chain",
+    "name": "Pact of the Chain",
+    "kind": "pact",
+    "parentClass": "class.warlock",
+    "availableAtWarlockLevel": 1,
+    "invocationCost": 0,
+    "description": "Know Find Familiar without spending an ordinary known-spell selection. Cast it as a Magic action without a slot while retaining components, or as a ritual. Use host statblocks for Imp, Pseudodragon, Quasit, Skeleton, Sphinx of Wonder, Sprite, Venomous Snake, or ordinary forms. Familiar shares initiative but takes its own turn. Forgo one of your attacks during your Attack action to command one familiar Attack action in that shared round.",
+    "deepenedAtLevel5": "The familiar's one commanded Attack action contains two attacks, not two Attack actions. Investment of the Chain Master may instead use the Warlock's Bonus Action to command this same action; the routes never stack.",
+    "rulesStatus": "selected-for-playtest"
+  },
+  "pacts/tome": {
+    "id": "pact.warlock.tome",
+    "name": "Pact of the Tome",
+    "kind": "pact",
+    "parentClass": "class.warlock",
+    "availableAtWarlockLevel": 1,
+    "invocationCost": 0,
+    "description": "Conjure a Book of Shadows at the end of a Short or Long Rest. While carrying it, gain three extra cantrips from any class list and two level-1 Ritual spells, with the book as a focus. For this alpha, starter Ritual spells are ritual-only unless separately known; replacement does not recharge limited uses. Book of Ancient Secrets separately supports additional rituals.",
+    "deepenedAtLevel5": "Cast each of Animate Dead, Haste, and Call Lightning once separately without a slot per Long Rest; ordinary casting requirements and concentration apply. The book does not refresh the three uses when replaced.",
+    "rulesStatus": "selected-for-playtest"
+  },
+  "pacts/talisman": {
+    "id": "pact.warlock.talisman",
+    "name": "Pact of the Talisman",
+    "kind": "pact",
+    "parentClass": "class.warlock",
+    "availableAtWarlockLevel": 1,
+    "invocationCost": 0,
+    "description": "One active wearable or transferable talisman. Untrained Guidance adds 1d4 to an unproficient skill ability check without spending charges. Fortunate Correction spends one charge after a failed ability check to add 1d4. They cannot both enhance one check, and neither applies to attacks or saving throws. Charges equal Warlock proficiency bonus and recover on Long Rest; replacing a lost talisman takes a one-hour ceremony and does not restore charges.",
+    "deepenedAtLevel5": "Shared Ward: while the wearer is within 60 feet and takes damage, spend the Warlock's Reaction and one existing Talisman charge to reduce that damage event by 2d6 plus Charisma modifier, bounded between zero and the damage taken. The dedicated Talisman elective Invocations were omitted from this alpha.",
+    "rulesStatus": "selected-for-playtest"
+  },
+  "patrons/fiend": {
+    "id": "patron.warlock.fiend",
+    "name": "The Fiend",
+    "kind": "patron",
+    "parentClass": "class.warlock",
+    "availableAtWarlockLevel": 1,
+    "description": "The selected alpha Patron. Fiend is the supernatural power source from level 1 and may be paired with any active Pact. The 5.x Fiend level-10 selected-type resistance and automatic Hellfire Shield are retired, not duplicated.",
+    "features": [
+      {
+        "level": 1,
+        "name": "Dark One's Blessing",
+        "description": "When you reduce a hostile creature to 0 HP, or another creature reduces an enemy within 10 feet of you to 0 HP, gain temporary HP equal to max(1, Charisma modifier + Warlock level). Temporary HP do not stack."
+      },
+      {
+        "level": 6,
+        "name": "Dark One's Own Luck",
+        "description": "Add 1d10 after an ability check or saving throw is rolled but before resolution, at most once per roll. Uses per Long Rest: max(1, Charisma modifier). No Reaction required."
+      },
+      {
+        "level": 8,
+        "name": "Infernal Retaliation",
+        "description": "Use your Reaction at a time you choose without an external trigger, consuming the one shared use per Long Rest. Select one 20-round mode: Fiendish Resilience heals 1/2/5 HP per round at levels 8/13/18, or Fiendish Flamewreath deals 1d6/2d6/5d6 Fire after each qualifying melee hit within 5 feet. Ongoing effect needs no further Reactions. Resilience does not heal at 0 HP and stabilizes once if 0 HP is reached after activation. Alpha timing: healing starts at next turn start; Flamewreath resolves after each hit."
+      },
+      {
+        "level": 13,
+        "name": "Infernal Retaliation Improvement",
+        "description": "Increase Resilience healing to 2 HP per round or Flamewreath Fire damage to 2d6 per qualifying hit; no additional use."
+      },
+      {
+        "level": 14,
+        "name": "Hurl Through Hell",
+        "description": "Once per turn on a qualifying attack-roll hit, expend its use to force a Charisma save against the Warlock spell DC. Failure sends the target to the Lower Planes, Incapacitated and unavailable for targeting; if not a Fiend, it immediately takes 8d10 Psychic damage. It returns at end of your next turn. Success still spends the use. Recharge on Long Rest or by expending a Pact slot, with provisional no-action recharge and max one stored use."
+      },
+      {
+        "level": 18,
+        "name": "Infernal Retaliation Improvement",
+        "description": "Increase Resilience to 5 HP per round or Flamewreath to 5d6 Fire per qualifying hit; no additional use."
+      }
+    ],
+    "spellAccess": {
+      "defaultMode": "automatic-known-no-ordinary-selection-cost",
+      "firstGrantLevel": 3,
+      "grants": [
+        {
+          "level": 3,
+          "spells": [
+            "Burning Hands",
+            "Command",
+            "Scorching Ray",
+            "Suggestion",
+            "Blindness/Deafness"
+          ]
+        },
+        {
+          "level": 5,
+          "spells": [
+            "Fireball",
+            "Stinking Cloud"
+          ]
+        },
+        {
+          "level": 7,
+          "spells": [
+            "Fire Shield",
+            "Wall of Fire"
+          ]
+        },
+        {
+          "level": 9,
+          "spells": [
+            "Geas",
+            "Insect Plague",
+            "Flame Strike",
+            "Hallow"
+          ]
+        }
+      ],
+      "alternateTestMode": "expanded-choice-from-same-13-spell-list-not-simultaneous",
+      "additionalSlotsGranted": 0
+    },
+    "rulesStatus": "selected-for-playtest"
+  },
+  "invocations/devouring-blade": {
+    "id": "invocation.devouring-blade",
+    "name": "Devouring Blade",
+    "kind": "invocation",
+    "parentClass": "class.warlock",
+    "minimumWarlockLevel": 12,
+    "requiredPact": "pact.warlock.blade",
+    "repeatable": false,
+    "cost": 1,
+    "description": "When attacking with your Pact weapon, make three attacks total instead of the intrinsic level-5 two, never three additional attacks.",
+    "selectionStatus": "included-in-alpha-0.3.1",
+    "rulesStatus": "selected-for-playtest"
+  },
+  "classes/base/warlock/warlock.json": {
+    "id": "class.warlock",
+    "name": "Warlock",
+    "kind": "class",
+    "definition": {
+      "classType": "base",
+      "band": 1,
+      "levelRange": [
+        1,
+        20
+      ],
+      "alphaVersion": "0.3.1",
+      "rulesStatus": "selected-for-playtest; subject-to-change",
+      "playtestMode": "replaces-host-5e-or-5.5e-warlock",
+      "sourcePackage": "Dorks_and_Dice_Warlock_Alpha_Playtest_Packet.pdf (2026-10-25)",
+      "description": "A Patron supplies Warlock power, a Pact is the type or manifestation of its agreement, and Invocations are additional terms attached to that Pact. This selected modular design is under active testing alongside coherent native classes; it is not a source edition candidate or a finalized architecture decision.",
+      "hitDie": {
+        "number": 1,
+        "faces": 8
+      },
+      "spellcastingAbility": "charisma",
+      "savingThrowProficiencies": [
+        "wisdom",
+        "charisma"
+      ],
+      "armorProficiencies": [
+        "light"
+      ],
+      "weaponProficiencies": [
+        "simple"
+      ],
+      "skillChoices": {
+        "count": 2,
+        "from": [
+          "arcana",
+          "deception",
+          "history",
+          "intimidation",
+          "investigation",
+          "nature",
+          "religion"
+        ]
+      },
+      "progression": [
+        {
+          "level": 1,
+          "proficiencyBonus": 2,
+          "featureGrants": [
+            "class-feature.warlock.pact-magic",
+            "class-feature.warlock.eldritch-blast",
+            "class-feature.warlock.patron-choice",
+            "class-feature.warlock.pact-choice",
+            "class-feature.warlock.eldritch-invocations"
+          ],
+          "invocationsElectiveTotal": 1,
+          "ordinaryCantripsKnown": 2,
+          "ordinarySpellsKnown": 2,
+          "pactSlots": 1,
+          "pactSlotLevel": 1,
+          "damageReduction": 0,
+          "energyResistance": 0
+        },
+        {
+          "level": 2,
+          "proficiencyBonus": 2,
+          "featureGrants": [
+            "class-feature.warlock.magical-cunning"
+          ],
+          "invocationsElectiveTotal": 2,
+          "ordinaryCantripsKnown": 2,
+          "ordinarySpellsKnown": 3,
+          "pactSlots": 2,
+          "pactSlotLevel": 1,
+          "damageReduction": 0,
+          "energyResistance": 0
+        },
+        {
+          "level": 3,
+          "proficiencyBonus": 2,
+          "featureGrants": [
+            "class-feature.warlock.damage-reduction"
+          ],
+          "invocationsElectiveTotal": 2,
+          "ordinaryCantripsKnown": 2,
+          "ordinarySpellsKnown": 4,
+          "pactSlots": 2,
+          "pactSlotLevel": 2,
+          "damageReduction": 1,
+          "energyResistance": 0
+        },
+        {
+          "level": 4,
+          "proficiencyBonus": 2,
+          "featureGrants": [
+            "class-feature.warlock.ability-score-improvement",
+            "class-feature.warlock.deceive-item"
+          ],
+          "invocationsElectiveTotal": 3,
+          "ordinaryCantripsKnown": 3,
+          "ordinarySpellsKnown": 5,
+          "pactSlots": 2,
+          "pactSlotLevel": 2,
+          "damageReduction": 1,
+          "energyResistance": 0
+        },
+        {
+          "level": 5,
+          "proficiencyBonus": 3,
+          "featureGrants": [
+            "class-feature.warlock.deepened-pact"
+          ],
+          "invocationsElectiveTotal": 4,
+          "ordinaryCantripsKnown": 3,
+          "ordinarySpellsKnown": 6,
+          "pactSlots": 2,
+          "pactSlotLevel": 3,
+          "damageReduction": 1,
+          "energyResistance": 0
+        },
+        {
+          "level": 6,
+          "proficiencyBonus": 3,
+          "featureGrants": [],
+          "invocationsElectiveTotal": 4,
+          "ordinaryCantripsKnown": 3,
+          "ordinarySpellsKnown": 7,
+          "pactSlots": 2,
+          "pactSlotLevel": 3,
+          "damageReduction": 1,
+          "energyResistance": 0
+        },
+        {
+          "level": 7,
+          "proficiencyBonus": 3,
+          "featureGrants": [],
+          "invocationsElectiveTotal": 5,
+          "ordinaryCantripsKnown": 3,
+          "ordinarySpellsKnown": 8,
+          "pactSlots": 2,
+          "pactSlotLevel": 4,
+          "damageReduction": 2,
+          "energyResistance": 0
+        },
+        {
+          "level": 8,
+          "proficiencyBonus": 3,
+          "featureGrants": [
+            "class-feature.warlock.ability-score-improvement"
+          ],
+          "invocationsElectiveTotal": 5,
+          "ordinaryCantripsKnown": 3,
+          "ordinarySpellsKnown": 9,
+          "pactSlots": 2,
+          "pactSlotLevel": 4,
+          "damageReduction": 2,
+          "energyResistance": 0
+        },
+        {
+          "level": 9,
+          "proficiencyBonus": 4,
+          "featureGrants": [
+            "class-feature.warlock.contact-patron"
+          ],
+          "invocationsElectiveTotal": 6,
+          "ordinaryCantripsKnown": 3,
+          "ordinarySpellsKnown": 10,
+          "pactSlots": 2,
+          "pactSlotLevel": 5,
+          "damageReduction": 2,
+          "energyResistance": 0
+        },
+        {
+          "level": 10,
+          "proficiencyBonus": 4,
+          "featureGrants": [
+            "class-feature.warlock.energy-resistance"
+          ],
+          "invocationsElectiveTotal": 6,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 10,
+          "pactSlots": 2,
+          "pactSlotLevel": 5,
+          "damageReduction": 2,
+          "energyResistance": 5
+        },
+        {
+          "level": 11,
+          "proficiencyBonus": 4,
+          "featureGrants": [
+            "class-feature.warlock.mystic-arcanum-6"
+          ],
+          "invocationsElectiveTotal": 7,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 11,
+          "pactSlots": 3,
+          "pactSlotLevel": 5,
+          "damageReduction": 3,
+          "energyResistance": 5
+        },
+        {
+          "level": 12,
+          "proficiencyBonus": 4,
+          "featureGrants": [
+            "class-feature.warlock.imbue-item",
+            "class-feature.warlock.ability-score-improvement"
+          ],
+          "invocationsElectiveTotal": 7,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 11,
+          "pactSlots": 3,
+          "pactSlotLevel": 5,
+          "damageReduction": 3,
+          "energyResistance": 5
+        },
+        {
+          "level": 13,
+          "proficiencyBonus": 5,
+          "featureGrants": [
+            "class-feature.warlock.mystic-arcanum-7"
+          ],
+          "invocationsElectiveTotal": 8,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 12,
+          "pactSlots": 3,
+          "pactSlotLevel": 5,
+          "damageReduction": 3,
+          "energyResistance": 5
+        },
+        {
+          "level": 14,
+          "proficiencyBonus": 5,
+          "featureGrants": [],
+          "invocationsElectiveTotal": 8,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 12,
+          "pactSlots": 3,
+          "pactSlotLevel": 5,
+          "damageReduction": 3,
+          "energyResistance": 5
+        },
+        {
+          "level": 15,
+          "proficiencyBonus": 5,
+          "featureGrants": [
+            "class-feature.warlock.mystic-arcanum-8"
+          ],
+          "invocationsElectiveTotal": 9,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 13,
+          "pactSlots": 3,
+          "pactSlotLevel": 5,
+          "damageReduction": 4,
+          "energyResistance": 5
+        },
+        {
+          "level": 16,
+          "proficiencyBonus": 5,
+          "featureGrants": [
+            "class-feature.warlock.ability-score-improvement"
+          ],
+          "invocationsElectiveTotal": 10,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 13,
+          "pactSlots": 3,
+          "pactSlotLevel": 5,
+          "damageReduction": 4,
+          "energyResistance": 5
+        },
+        {
+          "level": 17,
+          "proficiencyBonus": 6,
+          "featureGrants": [
+            "class-feature.warlock.mystic-arcanum-9"
+          ],
+          "invocationsElectiveTotal": 10,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 14,
+          "pactSlots": 4,
+          "pactSlotLevel": 5,
+          "damageReduction": 4,
+          "energyResistance": 5
+        },
+        {
+          "level": 18,
+          "proficiencyBonus": 6,
+          "featureGrants": [],
+          "invocationsElectiveTotal": 11,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 14,
+          "pactSlots": 4,
+          "pactSlotLevel": 5,
+          "damageReduction": 4,
+          "energyResistance": 5
+        },
+        {
+          "level": 19,
+          "proficiencyBonus": 6,
+          "featureGrants": [
+            "class-feature.warlock.ability-score-improvement"
+          ],
+          "invocationsElectiveTotal": 11,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 15,
+          "pactSlots": 4,
+          "pactSlotLevel": 5,
+          "damageReduction": 5,
+          "energyResistance": 5
+        },
+        {
+          "level": 20,
+          "proficiencyBonus": 6,
+          "featureGrants": [
+            "class-feature.warlock.eldritch-master"
+          ],
+          "invocationsElectiveTotal": 12,
+          "ordinaryCantripsKnown": 4,
+          "ordinarySpellsKnown": 15,
+          "pactSlots": 4,
+          "pactSlotLevel": 5,
+          "damageReduction": 5,
+          "energyResistance": 10
+        }
+      ],
+      "selectionRules": {
+        "patron": {
+          "requiredAtWarlockLevel": 1,
+          "identityMayBeInheritedOrUnknown": true,
+          "playtestPatronId": "patron.warlock.fiend"
+        },
+        "pact": {
+          "requiredAtWarlockLevel": 1,
+          "firstChoiceFree": true,
+          "extraPacts": "out-of-scope"
+        },
+        "invocations": {
+          "firstChoiceAtWarlockLevel": 1,
+          "everyChoiceAttachedToOneActualPact": true,
+          "patronAcceptanceRequired": true,
+          "severance": "suspend-without-refund",
+          "replacement": "one-on-warlock-level-up"
+        }
+      },
+      "baseFeatureIds": [
+        "class-feature.warlock.pact-magic",
+        "class-feature.warlock.eldritch-blast",
+        "class-feature.warlock.patron-choice",
+        "class-feature.warlock.pact-choice",
+        "class-feature.warlock.eldritch-invocations",
+        "class-feature.warlock.magical-cunning",
+        "class-feature.warlock.damage-reduction",
+        "class-feature.warlock.ability-score-improvement",
+        "class-feature.warlock.deceive-item",
+        "class-feature.warlock.deepened-pact",
+        "class-feature.warlock.contact-patron",
+        "class-feature.warlock.energy-resistance",
+        "class-feature.warlock.mystic-arcanum-6",
+        "class-feature.warlock.imbue-item",
+        "class-feature.warlock.mystic-arcanum-7",
+        "class-feature.warlock.mystic-arcanum-8",
+        "class-feature.warlock.mystic-arcanum-9",
+        "class-feature.warlock.eldritch-master"
+      ],
+      "separateGrants": {
+        "automaticEldritchBlast": true,
+        "extraKnownCantripCost": 0,
+        "pactMagicSlotsRecover": "short-or-long-rest",
+        "mysticArcanumSeparate": true
+      },
+      "limitations": [
+        "The host 5e/5.5e rules supply spell details, equipment, feats, creatures and ordinary combat mechanics for this standalone alpha.",
+        "Companion control, crafting checks, and some shared effects remain subject to host-game adjudication.",
+        "Star Chain / Seeker remains disabled; Talisman's three elective Invocations and four other omissions are not available in Alpha 0.3.1.",
+        "Infernal Retaliation tick timing and Hurl Through Hell slot recharge action cost are provisional.",
+        "Alternative Invocation progressions are reference comparisons, not simultaneous grants.",
+        "No Band 2 or automatic Epic Boon at level 19."
+      ]
+    }
+  },
+  "features/classes/warlock/features.json": {
+    "classFeatures": [
+      {
+        "id": "class-feature.warlock.pact-magic",
+        "name": "Pact Magic",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 1,
+        "definition": {
+          "description": "Charisma is the spellcasting ability. Use the progression table for known spells, cantrips, Pact slots and slot level. All Pact slots share one level, recover on Short or Long Rest, and cast eligible known Warlock spells without daily preparation. When gaining a class level, replace up to one ordinary cantrip and one ordinary leveled spell. Patron, Pact and Mystic Arcanum grants do not consume ordinary known-spell selections.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.eldritch-blast",
+        "name": "Eldritch Blast",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 1,
+        "definition": {
+          "description": "Automatically know Eldritch Blast in addition to ordinary cantrips. Use the host game's Warlock cantrip; the beam count is 1 at level 1, 2 at 5, 3 at 11, and 4 at 17, resolved separately. It qualifies for Invocations but does not gain historical 3.5e blast dice.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.patron-choice",
+        "name": "Otherworldly Patron",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 1,
+        "definition": {
+          "description": "Choose the ongoing source of supernatural power at level 1; the selected alpha Patron is Fiend. A Patron may be inherited, involuntary, concealed or unknown by name, without direct contact or a literal contract. Do not gain a second Patron at level 3.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.pact-choice",
+        "name": "Pact Boon",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 1,
+        "definition": {
+          "description": "Choose one free Pact at level 1 from Blade, Chain, Tome, and Talisman. It represents the manifestation or terms of a deal. The first Pact does not consume an Invocation selection. Additional Pacts are out of scope.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.eldritch-invocations",
+        "name": "Eldritch Invocations",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 1,
+        "definition": {
+          "description": "Gain one elective at level 1, increasing to 12 at level 20 under the selected hybrid curve. Each Invocation costs one elective, attaches to one actual Pact and requires acceptance by that Pact's Patron. Meet all prerequisites. On Warlock level-up you may replace one option with an eligible alternative. Severance suspends attached Invocations without automatic refund; restoration or transfer requires revalidation.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.magical-cunning",
+        "name": "Magical Cunning",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 2,
+        "definition": {
+          "description": "Spend one minute in an esoteric rite to recover expended Pact Magic slots up to half the slot maximum, rounded up; one at levels 2–10, two at levels 11–19. The rite is available once per Long Rest and does not replenish other resources. Eldritch Master upgrades the same rite.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.damage-reduction",
+        "name": "Damage Reduction",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 3,
+        "definition": {
+          "description": "Reduce Bludgeoning, Piercing and Slashing damage from weapon or natural attacks by 1 at level 3; by 2 at 7, 3 at 11, 4 at 15, 5 at 19. Cold iron bypasses this mitigation. Reduce each qualifying damage component once, before ordinary half-damage Resistance. Do not reduce separately typed elemental or other damage riders.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.ability-score-improvement",
+        "name": "Ability Score Improvement",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 4,
+        "definition": {
+          "description": "At Warlock levels 4, 8, 12, 16, and 19, increase one ability score by 2 or two by 1, with the ordinary host-game increase ceiling for this alpha; an eligible feat may be chosen under the table's rules. The level-19 grant is ordinary, not an automatic Epic Boon.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.deceive-item",
+        "name": "Deceive Item",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 4,
+        "definition": {
+          "description": "For eligible magic-item-use competency checks, treat the d20 as 10 even under threat or distraction, then apply modifiers. Use Charisma and proficiency where trained. It does not grant automatic success or apply to unrelated attacks, saving throws or skills; omit testing if the host has no such competency check.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.deepened-pact",
+        "name": "Deepened Pact",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 5,
+        "definition": {
+          "description": "At level 5 gain the intrinsic improvement of the chosen Pact without an Invocation charge: Blade makes two Pact-weapon attacks; Chain's one commanded familiar Attack action makes two attacks; Tome obtains three independent slot-free spell uses; Talisman obtains Shared Ward.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.contact-patron",
+        "name": "Contact Patron",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 9,
+        "definition": {
+          "description": "Know Contact Other Plane in addition to ordinary known spells. Once per Long Rest cast it without a slot to contact your Patron, automatically succeeding on its saving throw. Normal spell restrictions still apply.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.energy-resistance",
+        "name": "Energy Resistance",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 10,
+        "definition": {
+          "description": "Choose two damage types from Acid, Cold, Fire, Lightning and Thunder. Reduce each selected damage type by 5 per instance at level 10, increasing to 10 at level 20. This is flat damage mitigation before ordinary Resistance, not damage-halving Resistance. It is distinct from the retired Fiend level-10 feature.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.mystic-arcanum-6",
+        "name": "Mystic Arcanum (6th)",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 11,
+        "definition": {
+          "description": "Choose one 6th-level Warlock spell and cast it once without a slot per Long Rest. It is separate from Pact Magic and other Arcanum levels. You may replace one Arcanum spell when gaining a Warlock level, with another of the same spell level.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.imbue-item",
+        "name": "Imbue Item",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 12,
+        "definition": {
+          "description": "When qualified to create a magic item, substitute a magic-item-use check for a missing prerequisite spell: DC 15 + spell level for arcane or DC 25 + spell level for divine. Other requirements and costs remain. A failure does not complete the item or consume its creation payment; do not retry until next Warlock level. Skip if host has no crafting/check procedure.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.mystic-arcanum-7",
+        "name": "Mystic Arcanum (7th)",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 13,
+        "definition": {
+          "description": "Choose one separate 7th-level Warlock spell with one slot-free use per Long Rest. It is neither a Pact slot nor an upgrade of the 6th-level Arcanum.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.mystic-arcanum-8",
+        "name": "Mystic Arcanum (8th)",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 15,
+        "definition": {
+          "description": "Choose one separate 8th-level Warlock spell with one slot-free use per Long Rest. It does not consume ordinary spells known or Pact slots.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.mystic-arcanum-9",
+        "name": "Mystic Arcanum (9th)",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 17,
+        "definition": {
+          "description": "Choose one separate 9th-level Warlock spell with one slot-free use per Long Rest. It does not consume ordinary spells known or Pact slots.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      },
+      {
+        "id": "class-feature.warlock.eldritch-master",
+        "name": "Eldritch Master",
+        "kind": "classFeature",
+        "parentClass": "class.warlock",
+        "classLevel": 20,
+        "definition": {
+          "description": "Magical Cunning now restores all expended Pact Magic slots. This improves the same one-minute rite with its existing once-per-Long-Rest limit, without creating another recovery resource.",
+          "alpha": "0.3.1",
+          "rulesStatus": "selected-for-playtest"
+        }
+      }
+    ]
+  }
+}

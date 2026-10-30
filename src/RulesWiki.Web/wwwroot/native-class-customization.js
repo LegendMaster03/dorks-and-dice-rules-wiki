@@ -1,3 +1,4 @@
+import { renderClassOptionContent } from "./native-class-option-detail.js";
 // Class customization reference surfaces. Every linked system, option, and
 // preset resolves by native rule identity; file placement is not a UI contract.
 // No selections or preset composition are inferred from display metadata.
@@ -155,7 +156,7 @@ function unwrapRule(result, id) {
     const definition = source.definition && typeof source.definition === "object"
         ? { ...source, ...source.definition } : { ...source };
     delete definition.definition;
-    return { name: rule.name || source.name || displayOptionId(id), definition };
+    return { name: rule.name || source.name || displayOptionId(id), kind: rule.kind || source.kind, definition };
 }
 
 /**
@@ -216,57 +217,19 @@ export async function discoverOwnedOptions(category, classId, {
 }
 
 function appendRuleLink(container, id, { node, hrefForRule }) {
-    container.append(node("a", { text: "Open full rule", attributes: { href: hrefForRule(id) } }));
-}
-
-function optionPlayRules(node, renderValue, definition) {
-    const primary = [];
-    const handled = new Set();
-    if (Array.isArray(definition.features) && definition.features.every(feature =>
-        feature && typeof feature.name === "string" && Number.isInteger(feature.level))) {
-        handled.add("features");
-        primary.push(node("section", { className: "native-class-option-rules" },
-            node("h6", { text: definition.kind === "patron" ? "Patron features" : "Option features" }),
-            ...definition.features.map(feature => {
-                const body = node("section", { className: "native-class-option-feature" },
-                    node("h6", { text: `Level ${feature.level} · ${feature.name}` }));
-                if (typeof feature.description === "string") body.append(node("p", { text: feature.description }));
-                const additional = Object.fromEntries(Object.entries(feature).filter(([key]) =>
-                    !["level", "name", "description"].includes(key)));
-                if (Object.keys(additional).length) body.append(renderValue(additional));
-                return body;
-            })));
-    }
-    const access = definition.spellAccess;
-    if (access && Array.isArray(access.grants) && access.grants.every(grant =>
-        Number.isInteger(grant?.level) && Array.isArray(grant.spells))) {
-        handled.add("spellAccess");
-        const schedule = node("section", { className: "native-class-option-rules" },
-            node("h6", { text: "Spell grants" }));
-        if (access.defaultMode === "automatic-known-no-ordinary-selection-cost") {
-            schedule.append(node("p", { text: "These spells are automatically known and do not use ordinary spells-known selections." }));
-        }
-        const table = node("table", { className: "native-class-option-spells" },
-            node("thead", {}, node("tr", {}, node("th", { text: "Class level", attributes: { scope: "col" } }),
-                node("th", { text: "Spells", attributes: { scope: "col" } }))));
-        table.append(node("tbody", {}, ...access.grants.map(grant => node("tr", {},
-            node("th", { text: grant.level, attributes: { scope: "row" } }),
-            node("td", { text: grant.spells.join(", ") })))));
-        schedule.append(table);
-        const extra = Object.fromEntries(Object.entries(access).filter(([key]) =>
-            key !== "grants" && !(key === "defaultMode"
-                && access.defaultMode === "automatic-known-no-ordinary-selection-cost")));
-        const grantsWithOtherFields = access.grants.filter(grant =>
-            Object.keys(grant).some(key => !["level", "spells"].includes(key)));
-        if (grantsWithOtherFields.length) extra.completeGrantRecords = grantsWithOtherFields;
-        if (Object.keys(extra).length) schedule.append(node("details", { className: "native-class-technical-details" },
-            node("summary", { text: "Other spell-access rules and playtest modes" }), renderValue(extra)));
-        primary.push(schedule);
-    }
-    return { primary, handled };
+    container.append(node("a", { className: "native-class-rule-link", text: "View full reference", attributes: { href: hrefForRule(id) } }));
 }
 
 function renderOption(option, dependencies) {
+    if (dependencies.compactOverview) {
+        const { node, hrefForRule } = dependencies;
+        return node("li", { className: "native-class-customization-option",
+            attributes: { "data-option-id": option.id } },
+            node("article", { className: "native-class-option-overview" }, node("h4", { text: option.name || displayOptionId(option.id) }),
+            ...(option.description ? [node("p", { text: option.description })] : []),
+            node("a", { className: "native-class-rule-link", text: `View ${option.name || displayOptionId(option.id)}`,
+                attributes: { href: hrefForRule(option.id) } })));
+    }
     const { node, renderValue, getRule } = dependencies;
     const { id } = option;
     const name = option.name || displayOptionId(id);
@@ -290,19 +253,10 @@ function renderOption(option, dependencies) {
                 if (title) title.textContent = loaded.name;
                 else displayName.textContent = loaded.name;
                 row.setAttribute("data-option-title", loaded.name);
-                detail.replaceChildren(node("h5", { text: loaded.name }));
-                if (typeof loaded.definition.description === "string") {
-                    detail.append(node("p", { text: loaded.definition.description }));
-                }
-                const { primary, handled } = optionPlayRules(node, renderValue, loaded.definition);
-                detail.append(...primary);
-                const other = Object.fromEntries(Object.entries(loaded.definition).filter(([key]) =>
-                    !["id", "name", "kind", "description", "parentClass", "definition"].includes(key)
-                    && !handled.has(key)));
-                if (Object.keys(other).length) detail.append(node("details", {
-                    className: "native-class-technical-details" },
-                    node("summary", { text: "Additional prerequisites and source details" }), renderValue(other)));
-                appendRuleLink(detail, id, dependencies);
+                detail.replaceChildren(node("a", { className: "native-class-rule-link",
+                    text: `View ${loaded.name} full reference`, attributes: { href: dependencies.hrefForRule(id) } }),
+                    renderClassOptionContent({ id, name: loaded.name, kind: loaded.kind,
+                        definition: loaded.definition }, { ...dependencies, embedded: true }));
             }).catch(() => {
                 requested = false;
                 detail.replaceChildren(node("p", { text:
@@ -323,12 +277,16 @@ function renderOption(option, dependencies) {
 // character build; Core remains responsible for option eligibility.
 function renderOptionList(options, systemName, dependencies) {
     const { node, maximumClassLevel } = dependencies;
+    const smallSystem = dependencies.compactOverview || dependencies.category === "pact"
+        || systemName.toLowerCase() === "pact";
+    if (smallSystem) return [node("ul", { className: "native-class-customization-options" },
+        ...options.map(option => renderOption(option, dependencies)))];
     const result = node("p", { className: "native-class-help", attributes: { role: "status", "aria-live": "polite" } });
     const search = node("input", { attributes: { type: "search",
         "aria-label": `Filter ${systemName} options by name`, placeholder: `Search ${systemName.toLowerCase()}` } });
     const controls = node("div", { className: "native-class-option-filters" },
         node("label", { className: "native-class-filter-field" },
-            node("span", { text: "Find an option" }), search));
+            node("span", { text: "Search by name" }), search));
     const levels = options.map(option => option.minimumLevel)
         .filter(level => Number.isInteger(level) && level >= 1);
     let levelFilter = null;
@@ -337,12 +295,12 @@ function renderOptionList(options, systemName, dependencies) {
             ...(Number.isInteger(maximumClassLevel) && maximumClassLevel > 0 ? [maximumClassLevel] : []),
             ...levels);
         levelFilter = node("select", { attributes: { "aria-label": `Show ${systemName} options by documented class level` } },
-            node("option", { text: "Every level", attributes: { value: "" } }),
+            node("option", { text: "All levels", attributes: { value: "" } }),
             ...Array.from({ length: lastLevel }, (_, index) => node("option", {
                 text: `Level ${index + 1}`, attributes: { value: index + 1 }
             })));
         controls.append(node("label", { className: "native-class-filter-field" },
-            node("span", { text: "Documented minimum level" }), levelFilter));
+            node("span", { text: "Available by class level" }), levelFilter));
     }
     const pactIds = [...new Set(options.map(option => option.requiredPact)
         .filter(id => typeof id === "string" && NATIVE_ID.test(id)))].sort();
@@ -400,7 +358,7 @@ function renderOptionList(options, systemName, dependencies) {
     pactFilter?.addEventListener("change", applyFilter);
     applyFilter();
     const guidance = (levelFilter || pactFilter) ? node("p", { className: "native-class-help", text:
-        "Filters show documented prerequisites only; other requirements may also apply. This is not a character eligibility check." }) : null;
+        "Shows options whose listed minimum level is at or below the selected class level. Other prerequisites still apply; this is not a character eligibility check." }) : null;
     return [controls, guidance, result, list, showButton].filter(Boolean);
 }
 
@@ -420,7 +378,7 @@ function renderSystem(system, dependencies) {
     const show = (name, options, properties) => {
         body.replaceChildren();
         summaryName.textContent = name;
-        summaryCount.textContent = options.length ? `${options.length} referenced options` : "Rules and requirements";
+        summaryCount.textContent = options.length ? `${options.length} ${options.length === 1 ? "option" : "options"}` : "Rules and requirements";
         if (properties && Object.keys(properties).length) {
             body.append(node("div", { className: "native-class-system-properties" },
                 ...displayRequirements(node, renderValue, properties)));
@@ -440,7 +398,9 @@ function renderSystem(system, dependencies) {
                     node("span", { text: id === "unspecified" ? "No specific Pact listed" : `Requires ${displayOptionId(id)}` }),
                     node("strong", { text: String(count) }))))));
         }
-        if (options.length) body.append(...renderOptionList(options, name, dependencies));
+        if (options.length) body.append(...renderOptionList(options, name, { ...dependencies,
+            category: system.category,
+            compactOverview: system.category === "patron" || name.toLowerCase() === "patron" }));
         if (system.id) appendRuleLink(body, system.id, dependencies);
     };
     if (!system.id && system.category && !system.options.length

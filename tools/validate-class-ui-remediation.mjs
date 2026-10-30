@@ -166,17 +166,11 @@ const patron = renderNativeClass(rule("PatronExample", { customizationSystems: [
             grants: [{ level: 3, spells: ["Burning Hands", "Command"] }],
             alternateTestMode: "expanded-choice-from-same-list" }, rulesStatus: "playtest"
     } } }) });
-const patronDetails = nodes(patron, x => x.className === "native-class-customization-option-detail")[0];
-patronDetails.open = true;
-patronDetails.dispatch("toggle");
-await flush();
-const primary = nodes(patron, x => x.className === "native-class-option-rules");
-assert.equal(primary.length, 2);
-assert.match(primary[0].textContent, /Level 1 · Dark One's Blessing/);
-assert.match(primary[0].textContent, /Gain temporary hit points/);
-assert.match(primary[1].textContent, /Burning Hands, Command/);
-assert.match(primary[1].textContent, /automatically known/);
-assert.equal(nodes(patron, x => x.className === "native-class-option-spells").length, 1);
+assert.equal(nodes(patron, x => x.className === "native-class-customization-option-detail").length, 0,
+    "Patron overviews must not expand into a second complete class page");
+assert.equal(nodes(patron, x => x.tagName === "INPUT" || x.tagName === "SELECT").length, 0,
+    "Patron overviews do not need catalog filters");
+assert.equal(nodes(patron, x => x.tagName === "A" && x.attrs.href === ruleHref("patron.example.fiend")).length, 1);
 
 console.log("Class UI remediation: fragment routing, repeated grants, canonical labels, skill choices, Wizard and Patron presentations OK");
 

@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node tools/test-native-reference-api.mjs && node tools/test-restored-wiki-browser.mjs && node tools/validate-native-monster-renderer.mjs && node tools/validate-native-class-renderer.mjs && node tools/validate-class-ui-remediation.mjs"
+    "test": "node tools/test-native-reference-api.mjs && node tools/test-restored-wiki-browser.mjs && node tools/validate-native-monster-renderer.mjs && node tools/validate-native-class-renderer.mjs && node tools/validate-class-ui-remediation.mjs && node tools/test-class-reading-experience.mjs"
   },
   "devDependencies": {
     "jsdom": "30.1.3"
