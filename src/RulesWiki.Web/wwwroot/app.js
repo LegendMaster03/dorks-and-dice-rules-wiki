@@ -10,7 +10,7 @@ import { alertNode, clear, describeError, element } from "./ui.js";
 const root = document.getElementById("tool-root");
 if (!root) throw new Error("Rules Wiki could not find the Dorks & Dice tool root.");
 window.dorksAndDiceToolHost?.setContentLayout?.("full-bleed");
-for (const filename of ["rules-core.css", "rules-core-detail.css", "rules-wiki-shell.css", "condition-detail.css"]) {
+for (const filename of ["rules-core.css", "rules-core-detail.css", "rules-wiki-shell.css", "condition-detail.css", "native-monster-detail.css"]) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = new URL(`./${filename}`, import.meta.url).href;

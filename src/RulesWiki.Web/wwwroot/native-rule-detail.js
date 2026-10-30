@@ -1,4 +1,5 @@
 import { renderConditionDefinition } from "./condition-detail.js";
+import { renderNativeMonster } from "./native-monster-detail.js";
 import { browserHref } from "./rules-browser-routing.js";
 import { element, definitionList, badge } from "./ui.js";
 const label = name => String(name).replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -24,9 +25,14 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
         element("span", { className: "rules-core-version-tab is-active", text: "Dorks & Dice" }),
         element("span", { className: "rules-core-version-tabs-context" }, badge(label(rule.kind), "secondary")));
     const body = element("div", { className: "rules-core-library-detail-body" });
-    const article = element("article", { className: "rules-core-effective-rule card card-body mb-3" },
-        element("h2", { className: "h3", text: rule.name }));
-    if (typeof rule.definition.description === "string") article.append(element("p", { text: rule.definition.description }));
+    const article = element("article", { className: "rules-core-effective-rule card card-body mb-3" });
+    if (rule.kind === "monster") {
+        article.classList.add("rules-wiki-monster-article");
+        article.append(renderNativeMonster(rule, renderNativeValue));
+    } else {
+        article.append(element("h2", { className: "h3", text: rule.name }));
+        if (typeof rule.definition.description === "string") article.append(element("p", { text: rule.definition.description }));
+    }
     if (rule.kind === "condition" || rule.kind === "leveled-condition") {
         article.classList.add("rules-wiki-condition-article");
         article.append(renderConditionDefinition(rule.definition, {
@@ -49,7 +55,7 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
                 }, route);
             }
         }));
-    } else {
+    } else if (rule.kind !== "monster") {
         for (const [key, value] of Object.entries(rule.definition)) {
             if (["id", "name", "kind", "description"].includes(key) || key.startsWith("_")) continue;
             article.append(element("section", { className: "mb-3" },
