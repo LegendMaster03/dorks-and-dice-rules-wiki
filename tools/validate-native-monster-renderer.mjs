@@ -67,6 +67,45 @@ roll.events.click();
 assert.match(cls(wolf, "rw-stat-roll-result")[0].textContent, /1d20\+4: \d+/);
 assert.equal(cls(wolf, "rw-stat-section").some(node => node.textContent.startsWith("Lair Actions")), false);
 
+// Mirror the actual native/bestiary/baboon.json envelope returned by Core.
+// Previous tests passed flat definitions, missing the deployed UI failure where
+// the nested creature data was printed as one giant "Definition" extra.
+const baboonRecord = {
+    id: "monster.baboon", name: "Baboon", kind: "monster",
+    definition: {
+        size: ["S"], type: "beast", alignment: ["U"], ac: [12],
+        hp: { average: 3, formula: "1d6" }, speed: { walk: 30, climb: 30 },
+        str: 8, dex: 14, con: 11, int: 4, wis: 12, cha: 6,
+        passive: 11, cr: "0",
+        trait: [{ name: "Pack Tactics", entries: [
+            "The baboon has {@variantrule Advantage|SRD52} on an attack roll."
+        ] }],
+        action: [{ name: "Bite", entries: [
+            "{@atkr m} {@hit 1}, reach 5 ft. {@h}1 ({@damage 1d4 - 1}) Piercing damage."
+        ] }],
+        familiar: true,
+        lore: [{ name: "Baboon", _copy: { name: "Animals", source: "SRD52",
+            _mod: { images: { mode: "prependArr", items: [
+                { type: "image", href: { type: "internal", path: "bestiary/XMM/Baboon.webp" }, width: 884, height: 1000 }
+            ] } } } }]
+    },
+    statBlockFoundationId: "rule.monster-statblock-foundation"
+};
+const baboon = show(baboonRecord);
+assert.match(baboon.textContent, /Small · Beast · Unaligned/);
+assert.match(baboon.textContent, /CR 0/);
+assert.match(baboon.textContent, /Armor Class12/);
+assert.match(baboon.textContent, /Hit Points3 \(1d6\)/);
+assert.match(baboon.textContent, /30 ft., Climb 30 ft./);
+assert.equal(cls(baboon, "rw-stat-ability").length, 6);
+assert.match(baboon.textContent, /STR8 \(-1\)Save -1/);
+assert.match(baboon.textContent, /Pack Tactics/);
+assert.match(baboon.textContent, /Bite/);
+assert.ok(cls(baboon, "rw-stat-roll").length >= 2);
+assert.equal(cls(baboon, "rw-stat-source").length, 1, "Lore must stay in collapsed supplementary content.");
+assert.doesNotMatch(baboon.textContent, /Additional MechanicsDefinition/);
+assert.match(baboon.textContent, /Stat Block Foundation Id/);
+
 const lich = show({ name: "Lich", size: ["M"], type: { type: "undead", tags: ["wizard"] },
     alignment: ["N", "E"], ac: [20], hp: { average: 315, formula: "42d8 + 126" },
     speed: { walk: 30 }, str: 11, dex: 16, con: 16, int: 21, wis: 14, cha: 16,
@@ -118,4 +157,17 @@ assert.equal(cls(integrated, "rules-wiki-monster-article").length, 1);
 assert.equal(cls(integrated, "rw-stat-ability").length, 6);
 assert.match(integrated.textContent, /Bite attack/);
 assert.doesNotMatch(integrated.textContent, /Undefined/);
+// Exercise the same path used by the active Wiki detail panel, not only the
+// standalone renderer. The API returns the complete entity as rule.definition.
+const integratedBaboon = new FakeNode("main");
+renderNativeDetail(integratedBaboon, {
+    rulesetId: "first-party-001", fingerprint: "test",
+    rule: { id: baboonRecord.id, name: baboonRecord.name, kind: "monster", definition: baboonRecord }
+}, () => {});
+assert.equal(cls(integratedBaboon, "rw-statblock").length, 1);
+assert.equal(cls(integratedBaboon, "rw-stat-tile").length, 3);
+assert.equal(cls(integratedBaboon, "rw-stat-ability").length, 6);
+assert.equal(cls(integratedBaboon, "rw-stat-entry").length, 2);
+assert.doesNotMatch(integratedBaboon.textContent, /Additional MechanicsDefinition/);
+
 console.log("Native monster statblock renderer checks passed.");
