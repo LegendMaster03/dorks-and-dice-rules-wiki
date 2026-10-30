@@ -101,6 +101,16 @@ assert.equal(root.querySelector('.native-class-table tr[data-class-level="6"] a.
 assert.match(root.querySelector('[id="native-class-features-level-6"]').textContent, /Dark One's Own Luck/);
 assert.match(root.textContent, /Cantrip totals exclude automatic Eldritch Blast and Pact grants/);
 
+// Compact section navigation uses the same fragment routing and keeps the class mounted.
+const sectionSelect = root.querySelector(".wiki-mobile-section-select");
+sectionSelect.value = "native-class-progression";
+sectionSelect.dispatchEvent(new Event("change", { bubbles: true }));
+assert.equal(document.querySelector(".native-class-reference"), root);
+assert.equal(root.querySelector('.native-class-navigation a[aria-current="location"]')?.textContent, "Advancement");
+const readerKey = new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true });
+root.dispatchEvent(readerKey);
+assert.equal(readerKey.defaultPrevented, false, "Reader scrolling must not be captured by result navigation");
+
 // Returning from an independent rule remounts the class in the hosted shell.
 // Restore deferred catalogs and their filters, not just the URL fragment.
 const invocationSystem = systems.find(system => system.querySelector("summary strong").textContent === "Invocations");
@@ -127,6 +137,14 @@ pactRequirement.dispatchEvent(new Event("change", { bubbles: true }));
 availableLevel.value = "";
 availableLevel.dispatchEvent(new Event("change", { bubbles: true }));
 const invocationSearch = invocationSystem.querySelector("input");
+invocationSearch.value = "NoSuchInvocation";
+invocationSearch.dispatchEvent(new Event("input", { bubbles: true }));
+assert.equal(shownInvocations().length, 0);
+assert.match(invocationSystem.querySelector(".wiki-option-empty").textContent, /No Invocations match/);
+[...invocationSystem.querySelectorAll("button")].find(button => button.textContent === "Clear filters").click();
+assert.equal(invocationSearch.value, "");
+assert.equal(invocationSystem.querySelector(".wiki-option-empty").hidden, true);
+assert.equal(shownInvocations().length, Math.min(12, records.filter(record => record.kind === "invocation").length));
 invocationSearch.value = "Devouring";
 invocationSearch.dispatchEvent(new Event("input", { bubbles: true }));
 const pane = root.closest(".rules-core-library-detail");
@@ -207,6 +225,14 @@ window.sessionStorage.removeItem("rulesWikiClassReturn");
 
 // Direct routes use the same presentation as embedded options, including nesting.
 const { renderNativeDetail } = await import("../src/RulesWiki.Web/wwwroot/native-rule-detail.js");
+window.sessionStorage.setItem("rulesWikiClassReturn", JSON.stringify(stored));
+const contextDetail = document.createElement("div");
+const contextRecord = records.find(record => record.kind === "patron");
+renderNativeDetail(contextDetail, { rulesetId: "first-party-001", fingerprint,
+    rule: { ...contextRecord, definition: contextRecord } }, () => {});
+assert.equal(contextDetail.querySelector(".wiki-context-back")?.textContent, "Back to Warlock");
+assert.ok(contextDetail.querySelector(".wiki-context-back").getAttribute("href").includes("/rules/class.warlock"));
+window.sessionStorage.removeItem("rulesWikiClassReturn");
 for (const record of records.filter(record => ["patron", "pact", "invocation"].includes(record.kind))) {
     const container = document.createElement("div");
     renderNativeDetail(container, { rulesetId: "first-party-001", fingerprint,

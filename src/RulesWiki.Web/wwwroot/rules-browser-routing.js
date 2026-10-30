@@ -8,6 +8,7 @@ export function parseToolRoute(toolRoute) {
     if (!toolRoute || toolRoute === "/") return {};
     const path = String(toolRoute).split(/[?#]/, 1)[0];
     const segments = path.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
+    if (segments.length === 1 && segments[0] === "all") return { entityType: "" };
     if (segments[0] === "rulesets" && segments[1] === "first-party-001") {
         if (segments.length === 2) return {};
         if (segments.length === 4 && segments[2] === "rules") return { conceptKey: decodeURIComponent(segments[3]) };
@@ -145,7 +146,7 @@ function updateToolRoute(app, toolRelativePath, scopeValue, replace) {
 }
 
 export function catalogRouteForEntity(entityType) {
-    if (!entityType) return "/";
+    if (!entityType) return "/all";
     const configuration = getEntityBrowserConfig(entityType);
     if (configuration.routeFamily) return `/${configuration.routeFamily}`;
     return `/types/${encodeURIComponent(entityType)}`;

@@ -323,6 +323,8 @@ function renderOptionList(options, systemName, dependencies) {
         text: `Show all ${options.length} options`, className: "native-class-show-all",
         attributes: { type: "button", "aria-expanded": "false" }
     }) : null;
+    const empty = node("p", { className: "wiki-option-empty", text: "No Invocations match these filters." });
+    const reset = node("button", { text: "Clear filters", attributes: { type: "button" } });
     const applyFilter = () => {
         const query = String(search.value ?? "").trim().toLowerCase();
         const level = levelFilter?.value ? Number(levelFilter.value) : null;
@@ -344,7 +346,9 @@ function renderOptionList(options, systemName, dependencies) {
             item.hidden = !matching[index] || (!filtersActive && !showAll && visible >= initialLimit);
             if (!item.hidden) visible++;
         }
-        result.textContent = `${visible} shown · ${total} matching · ${options.length} total`;
+        result.textContent = `${visible} of ${options.length} ${systemName} shown${filtersActive ? ` · ${total} matching` : ""}`;
+        empty.hidden = total !== 0;
+        reset.hidden = !filtersActive;
         if (showButton) showButton.hidden = filtersActive;
     };
     if (showButton) showButton.addEventListener("click", () => {
@@ -353,13 +357,27 @@ function renderOptionList(options, systemName, dependencies) {
         showButton.setAttribute("aria-expanded", String(showAll));
         applyFilter();
     });
+    reset.addEventListener("click", () => {
+        search.value = "";
+        if (levelFilter) levelFilter.value = "";
+        if (pactFilter) pactFilter.value = "";
+        applyFilter(); search.focus?.();
+    });
     search.addEventListener("input", applyFilter);
     levelFilter?.addEventListener("change", applyFilter);
     pactFilter?.addEventListener("change", applyFilter);
     applyFilter();
     const guidance = (levelFilter || pactFilter) ? node("p", { className: "native-class-help", text:
         "Shows options whose listed minimum level is at or below the selected class level. Other prerequisites still apply; this is not a character eligibility check." }) : null;
-    return [controls, guidance, result, list, showButton].filter(Boolean);
+    const help = guidance ? node("details", { className: "native-class-filter-help" },
+        node("summary", { text: "About these filters" }), guidance) : null;
+    const actions = node("div", { className: "wiki-option-actions" }, result, reset);
+    for (const [title, open] of [["Expand shown", true], ["Collapse shown", false]]) actions.append(node("button", {
+        text: title, attributes: { type: "button" }, onClick: () => {
+            for (const row of list.children) if (!row.hidden) row.querySelector("details").open = open;
+        }
+    }));
+    return [controls, actions, empty, list, showButton, help].filter(Boolean);
 }
 
 function renderSystem(system, dependencies) {
@@ -380,23 +398,10 @@ function renderSystem(system, dependencies) {
         summaryName.textContent = name;
         summaryCount.textContent = options.length ? `${options.length} ${options.length === 1 ? "option" : "options"}` : "Rules and requirements";
         if (properties && Object.keys(properties).length) {
-            body.append(node("div", { className: "native-class-system-properties" },
-                ...displayRequirements(node, renderValue, properties)));
-        }
-        if (options.length && system.category === "invocation") {
-            const dedicated = new Map();
-            for (const option of options) {
-                const key = typeof option.requiredPact === "string" ? option.requiredPact : "unspecified";
-                dedicated.set(key, (dedicated.get(key) ?? 0) + 1);
-            }
-            const groups = [...dedicated].sort(([a], [b]) => a.localeCompare(b));
-            body.append(node("div", { className: "native-class-prerequisite-overview" },
-                node("strong", { text: "Pact relationships" }),
-                node("p", { className: "native-class-help", text:
-                    "The options below list documented Pact prerequisites. Each selected Invocation still attaches to a Pact under the class rules." }),
-                node("ul", {}, ...groups.map(([id, count]) => node("li", {},
-                    node("span", { text: id === "unspecified" ? "No specific Pact listed" : `Requires ${displayOptionId(id)}` }),
-                    node("strong", { text: String(count) }))))));
+            const rules = node("details", { className: "native-class-selection-rules" },
+                node("summary", { text: `${name} rules` }),
+                ...displayRequirements(node, renderValue, properties));
+            body.append(rules);
         }
         if (options.length) body.append(...renderOptionList(options, name, { ...dependencies,
             category: system.category,

@@ -6,6 +6,7 @@ import { installWikiReferenceApi } from "./rules-reference-api.js";
 import { installWikiReferenceBrowserEnhancements, installWikiReferenceNavigation } from "./rules-reference-browser-enhancements.js";
 import { installRulesCoreUx } from "./ux-shell.js";
 import { alertNode, clear, describeError, element } from "./ui.js";
+import { installWikiExperience } from "./wiki-experience.js";
 
 const root = document.getElementById("tool-root");
 if (!root) throw new Error("Rules Wiki could not find the Dorks & Dice tool root.");
@@ -31,6 +32,8 @@ try {
     installWikiReferenceBrowserEnhancements(app);
     installRulesCoreUx(app);
     installWikiReferenceNavigation(app);
+    installWikiExperience(app);
+    await app.prepareWikiExperience();
     await app.render();
 } catch (error) {
     console.error("Rules Wiki failed to initialize.", error);

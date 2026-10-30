@@ -76,9 +76,9 @@ export function renderIndexHeader(
     entityType,
     sort = null,
     onSort = null,
-    { canSort = false } = {})
+    { canSort = false, hideSource = false } = {})
 {
-    const columns = getBrowserColumns(entityType);
+    const columns = getBrowserColumns(entityType).filter(column => !hideSource || column.key !== "source");
     const normalizedSort = normalizeBrowserSort(entityType, sort);
     container.replaceChildren();
     container.style.gridTemplateColumns = columns.map(value => value.width).join(" ");
@@ -137,7 +137,7 @@ export function renderIndexHeader(
     }
 }
 
-export function renderRuleRows(container, rules, entityType, onSelect, { append = false } = {}) {
+export function renderRuleRows(container, rules, entityType, onSelect, { append = false, hideSource = false } = {}) {
     if (!append) container.replaceChildren();
     if (!rules.length) {
         if (!append) {
@@ -150,7 +150,7 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
     }
 
     const configuration = getEntityBrowserConfig(entityType);
-    const columns = configuration.columns;
+    const columns = configuration.columns.filter(column => !hideSource || column.key !== "source");
     const template = columns.map(value => value.width).join(" ");
     for (const rule of rules) {
         const row = element("button", {

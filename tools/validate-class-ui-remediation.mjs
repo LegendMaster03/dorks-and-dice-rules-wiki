@@ -31,6 +31,7 @@ class FakeNode {
     replaceChildren(...children) { this._text = ""; this.childNodes = []; this.append(...children); }
     setAttribute(key, value) { this.attrs[key] = String(value); }
     getAttribute(key) { return this.attrs[key] ?? null; }
+    removeAttribute(key) { delete this.attrs[key]; }
     addEventListener(name, handler) {
         if (!this.listeners.has(name)) this.listeners.set(name, []);
         this.listeners.get(name).push(handler);
@@ -168,7 +169,7 @@ const patron = renderNativeClass(rule("PatronExample", { customizationSystems: [
     } } }) });
 assert.equal(nodes(patron, x => x.className === "native-class-customization-option-detail").length, 0,
     "Patron overviews must not expand into a second complete class page");
-assert.equal(nodes(patron, x => x.tagName === "INPUT" || x.tagName === "SELECT").length, 0,
+assert.equal(nodes(patron, x => x.tagName === "INPUT" || (x.tagName === "SELECT" && x.className !== "wiki-mobile-section-select")).length, 0,
     "Patron overviews do not need catalog filters");
 assert.equal(nodes(patron, x => x.tagName === "A" && x.attrs.href === ruleHref("patron.example.fiend")).length, 1);
 

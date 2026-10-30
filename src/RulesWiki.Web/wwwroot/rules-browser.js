@@ -126,12 +126,12 @@ export function installResolvedRulesBrowser(app) {
                 && Boolean(event.target.closest(".rules-core-library-row"));
             if (isEditableTarget(event.target) && !targetIsResultRow) return;
 
-            if (key === "j" || key === "arrowdown") {
+            if (targetIsResultRow && (key === "j" || key === "arrowdown")) {
                 event.preventDefault();
                 app.browserKeyboard.selectRelative?.(1);
                 return;
             }
-            if (key === "k" || key === "arrowup") {
+            if (targetIsResultRow && (key === "k" || key === "arrowup")) {
                 event.preventDefault();
                 app.browserKeyboard.selectRelative?.(-1);
                 return;
@@ -452,7 +452,8 @@ async function renderRulesBrowser(app, container) {
             list,
             currentDisplayRules(),
             app.browserFilters.entityType,
-            selectRule);
+            selectRule, { hideSource: app.nativeReferenceOnly });
+        app.decorateBrowserRows?.(list);
         rebuildRowMap();
         if (focusSelection) {
             rowByConceptKey.get(app.browserSelectedConceptKey)?.focus?.({ preventScroll: true });
@@ -471,7 +472,7 @@ async function renderRulesBrowser(app, container) {
                 refreshIndexHeader();
                 refreshListState();
             },
-            { canSort: canSortCurrentDataset() });
+            { canSort: canSortCurrentDataset(), hideSource: app.nativeReferenceOnly });
     };
 
     const renderActiveFilterSummary = () => {
@@ -779,7 +780,8 @@ async function renderRulesBrowser(app, container) {
                     added,
                     app.browserFilters.entityType,
                     selectRule,
-                    { append: true });
+                    { append: true, hideSource: app.nativeReferenceOnly });
+                app.decorateBrowserRows?.(list);
                 rebuildRowMap();
             }
             return added;

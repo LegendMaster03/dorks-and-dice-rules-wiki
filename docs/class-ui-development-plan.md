@@ -172,3 +172,14 @@ Mounted-application coverage uses the restored native records and verifies recur
 ## Advancement navigation simplification
 
 Remove the redundant per-level Focus selector and its extra jump link. Advancement feature links still reveal the feature and containing level group, highlight the row, preserve unrelated disclosures, and support Back navigation. No band selector is shown while only the first band is implemented.
+
+## Reference UX pass
+
+- The tool root is a full-width home page with search, published subject categories, device-local recent rules, snapshot update information, and a removable playtest information section. Direct rule links bypass home. All-content browsing uses `/all`.
+- The ribbon groups published content into Characters, Magic, Equipment, Rules, and Creatures. It omits unavailable categories and unsupported management workspaces. Compact screens use Browse sections.
+- The desktop divider supports pointer capture, arrow keys, Home/End bounds, double-click reset, and device-local width persistence. Compact layouts retain separate index and reader views.
+- Class return links preserve the saved query, disclosures, filters, fragment, and reading position for the same native snapshot. Feature cards link back to advancement. The class section navigation stays available while reading; tables scroll horizontally but flow vertically with the reader.
+- Invocation procedures are disclosed separately from the controls. Filter results have a clear empty state and reset; readers can expand or collapse shown entries. Class features have section-wide disclosure controls.
+- Result navigation shortcuts are scoped to result rows. Empty Source columns are omitted from native results. Visible class-feature rows acquire owner/level subtitles from authoritative records, with bounded concurrent reads.
+- Update checks run when returning to the page and offer an explicit refresh or dismissal. An open rule is never automatically replaced. The current Core contract supplies no per-rule changelog or publication date; the home page identifies snapshot changes and the device's first observation, without inventing a release history.
+- Native class `playtestNotes` is an optional array of prose rendered in a labeled, removable aside. It is excluded from the ordinary rule-data rendering. Rule content remains unchanged in this UI pass.
