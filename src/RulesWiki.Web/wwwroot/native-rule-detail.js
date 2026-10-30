@@ -1,5 +1,6 @@
-import { renderConditionDefinition } from "./condition-detail.js";
+import { renderNativeClass } from "./native-class-detail.js";
 import { renderNativeMonster } from "./native-monster-detail.js";
+import { renderConditionDefinition } from "./condition-detail.js";
 import { browserHref } from "./rules-browser-routing.js";
 import { element, definitionList, badge } from "./ui.js";
 const label = name => String(name).replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -17,21 +18,54 @@ export function renderNativeValue(value) {
     ]));
 }
 export function renderNativeDetail(container, detail, onBack, app = null) {
-    const rule = detail.rule;
-    if (!rule || !rule.definition) throw new Error("Native rule detail is unavailable.");
+    const payload = detail.rule;
+    if (!payload || !payload.definition) throw new Error("Native rule detail is unavailable.");
+    // Preserve the existing monster/condition detail contracts. Only the
+    // class reader needs the inner gameplay definition in a wrapped record.
+    const source = payload.definition;
+    const rule = payload.kind === "class" && source && typeof source === "object"
+        && source.id === payload.id && source.definition && typeof source.definition === "object"
+        ? { ...payload, definition: source.definition } : payload;
     const tabs = element("div", { className: "rules-core-version-tabs" },
         element("button", { type: "button", className: "btn btn-sm btn-outline-secondary rules-core-library-mobile-back", text: "← Back to list", onClick: onBack }),
         element("span", { className: "rules-core-version-tabs-label", text: "View" }),
         element("span", { className: "rules-core-version-tab is-active", text: "Dorks & Dice" }),
         element("span", { className: "rules-core-version-tabs-context" }, badge(label(rule.kind), "secondary")));
     const body = element("div", { className: "rules-core-library-detail-body" });
-    const article = element("article", { className: "rules-core-effective-rule card card-body mb-3" });
+    const article = element("article", { className: "rules-core-effective-rule card card-body mb-3" },
+        element("h2", { className: "h3", text: rule.name }));
     if (rule.kind === "monster") {
+        // Preserve the existing native monster renderer on Wiki main.
+        // Monster content remains owned by its specialized stat-block view.
         article.classList.add("rules-wiki-monster-article");
-        article.append(renderNativeMonster(rule, renderNativeValue));
-    } else {
-        article.append(element("h2", { className: "h3", text: rule.name }));
-        if (typeof rule.definition.description === "string") article.append(element("p", { text: rule.definition.description }));
+        article.replaceChildren(renderNativeMonster(payload, renderNativeValue));
+    } else if (rule.kind === "class") {
+        // The native class document owns the progression. Individual feature
+        // definitions remain separate native rules, fetched only on expansion.
+        const hrefForRule = id => {
+            const path = `/rules/${encodeURIComponent(id)}`;
+            if (!app) return path;
+            return browserHref({
+                ...app,
+                browserFilters: { ...app.browserFilters, query: "", sourceCode: "",
+                    overridesOnly: false, fieldFilters: {} },
+                browserSort: { key: null, direction: "asc" }
+            }, path);
+        };
+        article.classList.add("rules-wiki-native-class-article");
+        article.replaceChildren(renderNativeClass(rule, {
+            renderValue: renderNativeValue,
+            hrefForRule,
+            getRule: app?.api?.getNativeRule
+                ? id => app.api.getNativeRule(detail.rulesetId, id)
+                : null,
+            searchRules: app?.api?.searchNativeRules
+                ? filters => app.api.searchNativeRules(detail.rulesetId, filters)
+                : null,
+            catalogFingerprint: detail.fingerprint
+        }));
+    } else if (typeof rule.definition.description === "string") {
+        article.append(element("p", { text: rule.definition.description }));
     }
     if (rule.kind === "condition" || rule.kind === "leveled-condition") {
         article.classList.add("rules-wiki-condition-article");
@@ -55,7 +89,7 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
                 }, route);
             }
         }));
-    } else if (rule.kind !== "monster") {
+    } else if (rule.kind !== "class" && rule.kind !== "monster") {
         for (const [key, value] of Object.entries(rule.definition)) {
             if (["id", "name", "kind", "description"].includes(key) || key.startsWith("_")) continue;
             article.append(element("section", { className: "mb-3" },

@@ -1,0 +1,528 @@
+/* Native class reference: scoped to this renderer; no changes to the host shell. */
+.native-class-reference {
+    min-width: 0;
+    container-type: inline-size;
+    color: var(--bs-body-color);
+}
+.native-class-header {
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+.native-class-header h2 {
+    margin: .1rem 0 .5rem;
+    font-size: clamp(1.65rem, 3cqi, 2.35rem);
+    line-height: 1.15;
+}
+.native-class-header p {
+    max-width: 80ch;
+    margin: 0;
+    color: var(--bs-secondary-color);
+    line-height: 1.55;
+}
+.native-class-eyebrow {
+    font-size: .7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--bs-secondary-color);
+}
+.native-class-section {
+    min-width: 0;
+    margin: 1rem 0 1.25rem;
+    scroll-margin-top: 1rem;
+}
+.native-class-section > h3 {
+    margin: 0 0 .7rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+.native-class-traits {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .65rem;
+    margin: 0;
+}
+.native-class-trait {
+    min-width: 0;
+    padding: .65rem .75rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .45rem;
+    background: var(--bs-tertiary-bg);
+}
+.native-class-trait dt {
+    margin: 0 0 .15rem;
+    color: var(--bs-secondary-color);
+    font-weight: 600;
+    font-size: .7rem;
+    letter-spacing: .02em;
+}
+.native-class-trait dd {
+    margin: 0;
+    font-size: .85rem;
+    font-weight: 550;
+    overflow-wrap: anywhere;
+}
+.native-class-trait dd dl { font-weight: normal; }
+.native-class-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    margin: 1rem 0;
+    padding: .55rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    background: var(--bs-body-bg);
+}
+.native-class-navigation button {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .35rem;
+    padding: .35rem .6rem;
+    background: var(--bs-tertiary-bg);
+    color: var(--bs-body-color);
+    font-size: .78rem;
+}
+.native-class-navigation button:hover,
+.native-class-navigation button:focus-visible {
+    border-color: var(--bs-primary);
+    outline-offset: 2px;
+}
+.native-class-help {
+    margin: .25rem 0 .6rem;
+    font-size: .78rem;
+    color: var(--bs-secondary-color);
+    line-height: 1.5;
+}
+.native-class-controls { margin: .5rem 0; }
+.native-class-level-select {
+    max-width: 15rem;
+    padding: .35rem .6rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .35rem;
+    color: var(--bs-body-color);
+    background: var(--bs-body-bg);
+    font-size: .8rem;
+}
+.native-class-table-scroll {
+    max-width: 100%;
+    max-height: min(68vh, 42rem);
+    overflow: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .45rem;
+    scrollbar-gutter: stable;
+}
+.native-class-table {
+    width: max-content;
+    min-width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: .79rem;
+}
+.native-class-table th,
+.native-class-table td {
+    padding: .5rem .6rem;
+    border-bottom: 1px solid var(--bs-border-color);
+    vertical-align: top;
+    white-space: nowrap;
+    text-align: left;
+}
+.native-class-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--bs-tertiary-bg);
+    font-weight: 700;
+}
+.native-class-table th:first-child,
+.native-class-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--bs-body-bg);
+}
+.native-class-table thead th:first-child {
+    z-index: 4;
+    background: var(--bs-tertiary-bg);
+}
+.native-class-table tbody tr.is-selected,
+.native-class-table tbody tr.is-selected th:first-child {
+    background: color-mix(in srgb, var(--bs-primary) 12%, var(--bs-body-bg));
+}
+.native-class-table tbody tr:hover {
+    background: var(--bs-tertiary-bg);
+}
+.native-class-table-features {
+    min-width: 13rem;
+    max-width: 28rem;
+    white-space: normal !important;
+}
+.native-class-feature-short {
+    display: inline-block;
+    margin-right: .35rem;
+    margin-bottom: .1rem;
+    white-space: normal;
+}
+.native-class-feature-short:not(:last-child)::after { content: ","; }
+.native-class-disclosure {
+    margin-top: .85rem;
+    padding: .7rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .4rem;
+}
+.native-class-disclosure > summary,
+.native-class-level-data > summary {
+    cursor: pointer;
+    font-size: .84rem;
+    font-weight: 650;
+}
+.native-class-level-data { margin: .5rem .15rem; }
+.native-class-level-data > dl,
+.native-class-level-data > ul { margin: .6rem 0; }
+.native-class-feature-levels { display: grid; gap: .75rem; }
+.native-class-feature-level {
+    display: grid;
+    grid-template-columns: minmax(5rem, 7rem) minmax(0, 1fr);
+    gap: .75rem;
+    padding-top: .8rem;
+    border-top: 1px solid var(--bs-border-color);
+}
+.native-class-feature-level.is-selected { border-top-color: var(--bs-primary); }
+.native-class-feature-level > h4 {
+    margin: .3rem 0 0;
+    font-size: .88rem;
+    font-weight: 700;
+}
+.native-class-feature-list { display: grid; gap: .5rem; min-width: 0; }
+.native-class-feature {
+    min-width: 0;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .4rem;
+    padding: .5rem .7rem;
+}
+.native-class-feature > summary { cursor: pointer; font-size: .85rem; font-weight: 650; }
+.native-class-feature-content { margin-top: .55rem; font-size: .8rem; overflow-wrap: anywhere; }
+.native-class-feature-content dl { margin-bottom: .55rem; }
+.native-class-option-family {
+    border-top: 1px solid var(--bs-border-color);
+    padding: .7rem 0;
+    font-size: .82rem;
+}
+.native-class-option-family h4,
+.native-class-disclosure h4 { font-size: .88rem; font-weight: 700; margin: .25rem 0 .45rem; }
+.native-class-reference a:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+@container (max-width: 650px) {
+    .native-class-traits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .native-class-navigation { position: static; }
+    .native-class-feature-level { grid-template-columns: 1fr; gap: .25rem; }
+}
+@container (max-width: 380px) {
+    .native-class-traits { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .native-class-navigation { scroll-behavior: auto; }
+}
+.native-class-level-improvements {
+    padding: .55rem .7rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .4rem;
+    font-size: .8rem;
+}
+.native-class-level-improvements strong { display: block; margin-bottom: .35rem; }
+
+/* Class-specific customization systems share a reference presentation without
+   defining or validating the underlying game choices. */
+.native-class-status {
+    margin: .45rem 0 0;
+    font-size: .82rem;
+    color: var(--bs-secondary-color);
+}
+.native-class-customization-system {
+    margin: .65rem 0;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    overflow: clip;
+}
+.native-class-customization-system > summary {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: .5rem;
+    padding: .7rem .8rem;
+    font-size: .92rem;
+    font-weight: 650;
+    background: var(--bs-tertiary-bg);
+    cursor: pointer;
+    list-style-position: inside;
+}
+.native-class-system-count {
+    font-size: .74rem;
+    color: var(--bs-secondary-color);
+    font-weight: 450;
+}
+.native-class-customization-system-body {
+    padding: .8rem;
+    display: grid;
+    gap: .65rem;
+    min-width: 0;
+}
+.native-class-system-properties {
+    font-size: .82rem;
+    overflow-wrap: anywhere;
+}
+.native-class-customization-system input[type="search"] {
+    display: block;
+    width: 100%;
+    max-width: 26rem;
+    min-height: 2.3rem;
+    padding: .4rem .55rem;
+    color: var(--bs-body-color);
+    background: var(--bs-body-bg);
+    border: 1px solid var(--bs-border-color);
+    border-radius: .35rem;
+}
+.native-class-customization-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    gap: .45rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+}
+.native-class-customization-option[hidden] { display: none; }
+.native-class-customization-option-detail {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .4rem;
+    min-width: 0;
+    background: var(--bs-body-bg);
+}
+.native-class-customization-option-detail > summary {
+    padding: .5rem .65rem;
+    cursor: pointer;
+    font-size: .84rem;
+}
+.native-class-customization-option-body {
+    padding: .1rem .7rem .7rem;
+    font-size: .79rem;
+    overflow-wrap: anywhere;
+}
+.native-class-customization-option-body a { display: inline-block; margin-top: .35rem; }
+.native-class-preset {
+    margin: .55rem 0;
+    padding: .65rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .4rem;
+}
+.native-class-presets { margin-top: 1rem; }
+
+/* Class reference layout revision: reading hierarchy before raw catalog detail. */
+.native-class-reference {
+    --class-divider: color-mix(in srgb, var(--bs-border-color) 72%, transparent);
+    font-size: .93rem;
+    line-height: 1.52;
+}
+.native-class-header { border: 0; padding-bottom: .3rem; }
+.native-class-header h2 { font-size: clamp(1.9rem, 4cqi, 2.7rem); margin: .2rem 0 .5rem; letter-spacing: -.025em; }
+.native-class-header p { max-width: 86ch; font-size: .9rem; }
+.native-class-status {
+    display: inline-flex; align-items: center;
+    padding: .22rem .55rem; margin-top: .65rem !important;
+    border: 1px solid var(--bs-border-color); border-radius: 99px;
+    font-size: .74rem !important; color: var(--bs-body-color) !important;
+}
+.native-class-section { margin: 1.45rem 0 1.65rem; }
+.native-class-section > h3 { font-size: 1.3rem; letter-spacing: -.01em; margin-bottom: .5rem; }
+#native-class-traits { margin: 1rem 0 .5rem; }
+#native-class-traits > h3 { font-size: .86rem; color: var(--bs-secondary-color); }
+.native-class-traits {
+    display: grid; grid-template-columns: repeat(3, minmax(0,1fr));
+    gap: .2rem 1.3rem; margin: 0; padding: .7rem .9rem;
+    border: 1px solid var(--class-divider); border-radius: .55rem;
+}
+.native-class-trait { background: transparent; border: 0; border-radius: 0; padding: .25rem 0; }
+.native-class-trait dt { font-size: .7rem; text-transform: uppercase; letter-spacing: .055em; }
+.native-class-trait dd { margin: .15rem 0 0; font-size: .84rem; font-weight: 550; line-height: 1.4; }
+.native-class-navigation {
+    position: relative; top: auto; display: flex; flex-wrap: wrap; gap: .1rem;
+    padding: .2rem 0; margin: 1rem 0 .5rem;
+    border: 0; border-bottom: 1px solid var(--class-divider); border-radius: 0;
+    background: transparent; z-index: auto;
+}
+.native-class-navigation a {
+    display: inline-flex; padding: .6rem .75rem; margin: 0 .25rem .25rem 0;
+    border-radius: .3rem; color: var(--bs-body-color);
+    font-size: .85rem; font-weight: 600; text-decoration: none;
+}
+.native-class-navigation a:hover, .native-class-navigation a:focus-visible {
+    background: var(--bs-tertiary-bg); color: var(--bs-primary);
+}
+.native-class-help { font-size: .82rem; line-height: 1.45; margin: 0 0 .65rem; }
+.native-class-customization { padding: 1rem 0 .15rem; }
+.native-class-customization > h3 { font-size: 1.45rem; }
+.native-class-customization-system {
+    margin: .5rem 0; border: 1px solid var(--bs-border-color);
+    border-radius: .6rem; overflow: hidden;
+}
+.native-class-customization-system > summary {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .9rem 1.05rem; gap: .8rem; background: var(--bs-tertiary-bg);
+    list-style: none; font-weight: 550;
+}
+.native-class-customization-system > summary::-webkit-details-marker { display: none; }
+.native-class-customization-system > summary::after { content: '+'; margin-left: auto; font-size: 1.25rem; opacity: .65; }
+.native-class-customization-system[open] > summary::after { content: '−'; }
+.native-class-customization-system[open] > summary { border-bottom: 1px solid var(--bs-border-color); }
+.native-class-system-heading { display: grid; min-width: 0; gap: .18rem; flex: 1; }
+.native-class-system-heading strong { font-size: 1.03rem; font-weight: 750; }
+.native-class-system-description { font-size: .81rem; line-height: 1.38; color: var(--bs-secondary-color); font-weight: 450; }
+.native-class-system-count { font-size: .74rem; white-space: nowrap; }
+.native-class-customization-system-body { padding: 1rem 1.1rem; gap: .75rem; }
+.native-class-system-notes { margin: 0; padding-left: 1.2rem; font-size: .84rem; line-height: 1.6; }
+.native-class-technical-details { font-size: .79rem; padding: .35rem .55rem; border: 1px solid var(--class-divider); border-radius: .35rem; }
+.native-class-technical-details summary { cursor: pointer; font-weight: 600; }
+.native-class-customization-system input[type="search"] { width: min(100%, 35rem); max-width: unset; }
+.native-class-customization-options { grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr)); gap: .5rem; }
+.native-class-customization-option-detail { height: 100%; }
+.native-class-customization-option-detail > summary { padding: .7rem .75rem; display: grid; gap: .25rem; font-size: .87rem; }
+.native-class-customization-option-detail > summary strong { font-weight: 650; }
+.native-class-option-meta { font-size: .72rem; color: var(--bs-secondary-color); }
+.native-class-customization-option-body { padding: .2rem .75rem .8rem; font-size: .82rem; }
+.native-class-show-all {
+    justify-self: start; padding: .46rem .85rem; border-radius: .4rem;
+    color: var(--bs-body-color); background: var(--bs-tertiary-bg);
+    border: 1px solid var(--bs-border-color); cursor: pointer;
+}
+.native-class-show-all:hover { border-color: var(--bs-primary); }
+.native-class-controls { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: .65rem; margin: .85rem 0; }
+.native-class-control-label { display: grid; gap: .2rem; font-size: .74rem; font-weight: 650; color: var(--bs-secondary-color); }
+.native-class-level-select { min-width: 9.5rem; max-width: 15rem; padding: .46rem .6rem; font-size: .84rem; }
+.native-class-columns-toggle { display: inline-flex; gap: .4rem; align-items: center; cursor: pointer; font-size: .84rem; }
+.native-class-columns-toggle input { accent-color: var(--bs-primary); }
+.native-class-extra-column { display: none; }
+.native-class-table-scroll.is-expanded .native-class-extra-column { display: table-cell; }
+.native-class-table-scroll.is-expanded thead .native-class-extra-column { display: table-cell; }
+.native-class-table-scroll { max-height: 35rem; overflow: auto; scrollbar-gutter: auto; }
+.native-class-table { width: 100%; min-width: 35rem; font-size: .82rem; }
+.native-class-table th, .native-class-table td { padding: .54rem .7rem; }
+.native-class-table-features { width: 58%; min-width: 15rem; max-width: 40rem; }
+.native-class-table tbody tr:nth-child(2n) { background: color-mix(in srgb, var(--bs-tertiary-bg) 35%, transparent); }
+.native-class-table tbody tr.is-selected td { background: color-mix(in srgb, var(--bs-primary) 14%, var(--bs-body-bg)); }
+.native-class-feature-short { line-height: 1.5; font-weight: 550; }
+.native-class-rules-note { margin: 1rem 0; border-left: 3px solid var(--bs-primary); padding: .45rem 1rem; background: color-mix(in srgb, var(--bs-tertiary-bg) 40%, transparent); }
+.native-class-rules-note h3 { font-size: .95rem; margin: 0 0 .5rem; }
+.native-class-rules-note p { font-size: .82rem; margin: .3rem 0; }
+.native-class-feature-levels { display: grid; gap: .5rem; }
+.native-class-feature-level {
+    display: block; border: 1px solid var(--bs-border-color);
+    border-radius: .5rem; padding: 0; overflow: hidden;
+}
+.native-class-feature-level > summary {
+    display: flex; align-items: baseline; gap: .85rem;
+    padding: .75rem .9rem; cursor: pointer; background: var(--bs-tertiary-bg);
+}
+.native-class-feature-level > summary strong { min-width: 4.5rem; font-size: .86rem; }
+.native-class-feature-level[open] > summary { border-bottom: 1px solid var(--bs-border-color); }
+.native-class-level-feature-preview { color: var(--bs-secondary-color); font-size: .78rem; font-weight: 450; }
+.native-class-feature-level .native-class-feature-list { padding: .75rem .85rem; display: grid; gap: .5rem; }
+.native-class-feature { background: transparent; padding: .5rem .7rem; }
+.native-class-feature > summary { font-size: .84rem; }
+.native-class-disclosure { padding: .65rem .8rem; }
+.native-class-customization-option[hidden], .native-class-show-all[hidden] { display: none; }
+@container (max-width: 710px) {
+    .native-class-traits { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .native-class-navigation { position: relative; }
+    .native-class-system-count { display: none; }
+}
+@container (max-width: 420px) {
+    .native-class-traits { grid-template-columns: 1fr; }
+    .native-class-system-description { font-size: .76rem; }
+    .native-class-feature-level > summary { display: grid; gap: .25rem; }
+    .native-class-table { min-width: 32rem; }
+}
+
+/* The option browser follows published prerequisites; filters are not a build validator. */
+.native-class-option-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: .6rem .9rem;
+}
+.native-class-filter-field {
+    display: grid;
+    min-width: min(100%, 11.5rem);
+    flex: 1 1 11.5rem;
+    gap: .25rem;
+    color: var(--bs-secondary-color);
+    font-size: .74rem;
+    font-weight: 650;
+}
+.native-class-filter-field:first-child { flex: 2 1 16rem; }
+.native-class-filter-field select,
+.native-class-filter-field input[type="search"] {
+    width: 100%;
+    min-height: 2.4rem;
+    margin: 0;
+    padding: .38rem .55rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .4rem;
+    color: var(--bs-body-color);
+    background: var(--bs-body-bg);
+    font: inherit;
+    font-size: .84rem;
+}
+.native-class-prerequisite-overview {
+    border: 1px solid var(--class-divider);
+    background: color-mix(in srgb, var(--bs-tertiary-bg) 40%, transparent);
+    border-radius: .45rem;
+    padding: .7rem .85rem;
+}
+.native-class-prerequisite-overview > strong { display: block; font-size: .84rem; margin-bottom: .2rem; }
+.native-class-prerequisite-overview ul {
+    margin: 0; padding: 0; list-style: none;
+    display: flex; flex-wrap: wrap; gap: .35rem .5rem;
+}
+.native-class-prerequisite-overview li {
+    display: inline-flex; gap: .5rem; align-items: center;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .35rem;
+    padding: .3rem .48rem;
+    background: var(--bs-body-bg);
+    font-size: .75rem;
+}
+.native-class-prerequisite-overview li strong { font-variant-numeric: tabular-nums; }
+.native-class-preset-empty { margin: .6rem 0; max-width: 72ch; }
+.native-class-preset-selections { margin: .55rem 0; }
+.native-class-preset-selections > div { display: grid; gap: .2rem; padding: .4rem 0; }
+.native-class-preset-selections dt { color: var(--bs-secondary-color); font-size: .73rem; font-weight: 650; }
+.native-class-preset-selections dd { margin: 0; min-width: 0; }
+@container (max-width: 520px) {
+    .native-class-option-filters { display: grid; grid-template-columns: minmax(0, 1fr); }
+    .native-class-filter-field { min-width: 0; }
+}
+
+/* Deliberate progression-to-feature navigation in the hosted detail pane. */
+.native-class-feature-jump {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.4rem;
+    padding: .38rem .65rem;
+    font-size: .82rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .35rem;
+    text-decoration: none;
+}
+.native-class-feature-jump[hidden] { display: none; }
+.native-class-feature-jump:hover, .native-class-feature-jump:focus-visible {
+    border-color: var(--bs-primary);
+}
+.native-class-feature-level { scroll-margin-top: 1rem; }
+@container (max-width: 520px) {
+    /* The compact table can scroll on demand without imposing a fixed
+       desktop-sized minimum width on a narrow Wiki detail pane. */
+    .native-class-table { width: 100%; min-width: 0; }
+    .native-class-table-features { min-width: 12rem; }
+}
