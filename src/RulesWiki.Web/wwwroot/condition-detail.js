@@ -20,6 +20,47 @@ const TERMS = {
     "all": "all", "magic": "magic", "special-sense": "special senses"
 };
 
+// Every recognized effect must either display each property in its readable
+// summary or expose it as a separate qualifier. New native fields may not be
+// silently discarded just because their effect type is already recognized.
+const RENDERED_EFFECT_FIELDS = {
+    "speed": ["operation", "factor", "value", "canIncrease"],
+    "speech": ["availability"], "awareness": ["availability"],
+    "sense": ["sense", "availability"],
+    "saving-throw": ["ability", "result"],
+    "check": ["appliesTo", "requiresSense", "result"],
+    "roll-mode": ["mode", "ability", "appliesTo", "subject"],
+    "roll-modifier": ["operation", "value", "appliesTo", "skills"],
+    "defense-adjustment": ["operation", "contributions", "oncePerComponent", "defense", "value", "ability", "modifier", "supersedes", "appliesTo"],
+    "target-defense-adjustment": ["target", "operation", "contributions", "oncePerComponent"],
+    "action-restriction": ["cannotTake", "prohibited", "exceptions", "doesNotAutomaticallyEndConcentration"],
+    "reaction-restriction": ["prohibited", "doesNotProhibitOtherReactions"],
+    "movement-restriction": ["restriction", "prohibited", "allowed", "exceptions", "relativeTo"],
+    "concentration": ["operation"],
+    "critical-hit": ["result", "subject", "countsAsNatural20"],
+    "immunity": ["damageType", "condition", "category"],
+    "damage-resistance": ["damageTypes"],
+    "effective-ability-score": ["operation", "ability", "value", "minimum", "affectsDerivedStatistics"],
+    "transformation": ["into", "typicalMaterial", "includes"],
+    "weight": ["operation", "factor"], "maximum-hit-points": ["operation", "factor"],
+    "aging": ["operation"], "death": [],
+    "existing-affliction": ["afflictions", "operation", "resumeWhenConditionEnds"],
+    "targeting-restriction": ["subject", "protectedTarget", "prohibited"],
+    "targeting-protection": ["appliesTo"],
+    "visibility": ["availability", "canBeSeenWith", "includesWornOrCarriedEquipment"],
+    "obscuration": ["degree", "purpose"],
+    "location-clue": ["detectableBy"],
+    "turn-activity-limit": ["allowed", "prohibited", "maxMoveEquivalentActivitiesPerTurn"],
+    "compelled-movement": ["direction", "speed", "route", "priority", "cannotWillinglyApproachFearSource"],
+    "saving-throw-opportunity": ["against", "resultOnSuccess"],
+    "spellcasting-disruption": ["requiresCheck", "dc", "onFailure"],
+    "spellcasting-restriction": ["prohibitedComponents", "materialComponents", "focus", "concentrationCheck"]
+};
+const COMMON_EFFECT_FIELDS = new Set([
+    "type", "when", "unless", "nonStackingGroup", "appliesOnceToComposedCheck",
+    "integrationStatus", "runtimeMapping", "nativeActionMapping", "actionCosts"
+]);
+
 const EVENT_LABELS = {
     "drop-held-objects": "Drops held objects",
     "recently-swam": "Recently swam",
@@ -78,7 +119,8 @@ function qualifier(data, prefix = "When") {
             case "sourceKind": pieces.push(`the source is a ${list(value).replace(/, /g, " or ").toLowerCase()}`); break;
             case "sourceDealsAnyDamageType": pieces.push(`it deals ${list(value).toLowerCase().replace(/, /g, " or ")} damage`); break;
             case "sourceDealsDamageType": pieces.push(`it deals ${term(value).toLowerCase()} damage`); break;
-            case "purpose": pieces.push(`the purpose is ${term(value).toLowerCase()}`); break;
+            case "purpose": pieces.push(value === "resist-extreme-cold"
+                ? "resisting extreme cold" : `the purpose is ${term(value).toLowerCase()}`); break;
             case "escapeRouteAvailable": pieces.push(value ? "an escape route is available" : "no escape route is available"); break;
             case "pinningCreatureElectsToSilence": pieces.push(value ? "the pinner chooses to silence the creature" : "the pinner does not silence the creature"); break;
             case "hasWetFur": pieces.push(value ? "the creature has wet fur" : "the creature does not have wet fur"); break;
@@ -121,6 +163,7 @@ function effectText(effect) {
             break;
         case "roll-modifier":
             title = "Roll modifiers";
+            if (effect.operation !== "add") return { title, unknown: true };
             value = `${signed(effect.value)} to ${term(effect.appliesTo).toLowerCase()}${effect.skills ? ` (${list(effect.skills)})` : ""}.`;
             break;
         case "defense-adjustment": case "target-defense-adjustment":
@@ -151,6 +194,9 @@ function effectText(effect) {
             break;
         case "critical-hit":
             title = "Critical hits";
+            if (effect.result !== "automatic-critical-hit"
+                || effect.subject !== "attacks-against-affected-creature"
+                || effect.when?.attackHits !== true) return { title, unknown: true };
             value = `Attacks against the creature that hit${effect.when?.attackerWithinFeet ? ` from within ${effect.when.attackerWithinFeet} feet` : ""} are automatic critical hits.${effect.countsAsNatural20 === false ? " They do not count as natural 20s." : ""}`;
             break;
         case "immunity":
@@ -161,6 +207,7 @@ function effectText(effect) {
             title = "Resistances"; value = `Resistance to ${list(effect.damageTypes)} damage.`; break;
         case "effective-ability-score":
             title = "Ability scores";
+            if (effect.operation !== "add") return { title, unknown: true };
             value = `${signed(effect.value)} to effective ${term(effect.ability)}${effect.minimum !== undefined ? ` (minimum ${effect.minimum})` : ""}.${effect.affectsDerivedStatistics ? " Affects derived statistics." : ""}`;
             break;
         case "transformation":
@@ -169,17 +216,22 @@ function effectText(effect) {
             break;
         case "weight": case "maximum-hit-points":
             title = type === "weight" ? "Weight" : "Maximum Hit Points";
-            value = effect.operation === "multiply" ? `Multiplied by ${effect.factor}.` : propertyValue(effect);
+            value = effect.operation === "multiply" && Number.isFinite(effect.factor)
+                ? `${title} becomes ${percentage(effect.factor)} of normal.`
+                : propertyValue(effect);
             break;
         case "aging": title = "Aging"; value = effect.operation === "suspend" ? "Aging is suspended." : `${term(effect.operation)}.`; break;
         case "death": title = "Death"; value = "The creature dies."; break;
         case "existing-affliction":
             title = "Existing afflictions";
-            value = `${list(effect.afflictions)}: ${term(effect.operation).toLowerCase()}.${effect.resumeWhenConditionEnds ? " Resume when this condition ends." : ""}`;
+            value = effect.operation === "suspend-not-neutralize"
+                ? `Existing ${list(effect.afflictions).toLowerCase()} effects are suspended rather than removed.${effect.resumeWhenConditionEnds ? " They resume when this condition ends." : ""}`
+                : `${list(effect.afflictions)}: ${term(effect.operation).toLowerCase()}.${effect.resumeWhenConditionEnds ? " Resume when this condition ends." : ""}`;
             break;
         case "targeting-restriction":
             title = "Targeting";
-            value = `Can not target ${term(effect.protectedTarget).toLowerCase()} with ${list(effect.prohibited).toLowerCase()}.`;
+            if (effect.subject !== "affected-creature") return { title, unknown: true };
+            value = `The affected creature can not target ${term(effect.protectedTarget).toLowerCase()} with ${list(effect.prohibited).toLowerCase()}.`;
             break;
         case "targeting-protection":
             title = "Targeting";
@@ -219,7 +271,11 @@ function effectText(effect) {
     const parts = [];
     // Surface conditions and reconciliation metadata rather than silently
     // treating a conditional effect as an unconditional rule.
-    if (type !== "critical-hit" && effect.when) parts.push(qualifier(effect.when));
+    if (type === "critical-hit" && effect.when) {
+        const additional = Object.fromEntries(Object.entries(effect.when)
+            .filter(([key]) => !["attackerWithinFeet", "attackHits"].includes(key)));
+        if (Object.keys(additional).length) parts.push(qualifier(additional));
+    } else if (effect.when) parts.push(qualifier(effect.when));
     if (effect.unless) parts.push(qualifier(effect.unless, "Unless"));
     if (effect.nonStackingGroup) parts.push(`Stacking group: ${term(effect.nonStackingGroup)}`);
     if (effect.appliesOnceToComposedCheck) parts.push("Applies once to a composed check");
@@ -227,6 +283,12 @@ function effectText(effect) {
     if (effect.runtimeMapping) parts.push(`Runtime mapping: ${term(effect.runtimeMapping)}`);
     if (effect.nativeActionMapping) parts.push(`Native action mapping: ${term(effect.nativeActionMapping)}`);
     if (effect.actionCosts) parts.push(`Action costs: ${term(effect.actionCosts)}`);
+    const rendered = new Set(RENDERED_EFFECT_FIELDS[type] ?? []);
+    for (const [key, item] of Object.entries(effect)) {
+        if (!COMMON_EFFECT_FIELDS.has(key) && !rendered.has(key)) {
+            parts.push(`${HUMAN(key)}: ${propertyValue(item)}`);
+        }
+    }
     return { title, value, notes: parts };
 }
 
@@ -250,10 +312,14 @@ function effectsSection(title, effects, renderRaw) {
     for (let i = 0; i < effects.length; i++) {
         const item = effects[i];
         // Adjacent unconditional automatic failures can share a single line.
-        if (item.type === "saving-throw" && item.result === "automatic-failure"
+        if (item && typeof item === "object" && !Array.isArray(item)
+            && item.type === "saving-throw" && item.result === "automatic-failure"
             && Object.keys(item).every(key => ["type", "ability", "result"].includes(key))) {
             const saves = [item.ability];
-            while (i + 1 < effects.length && effects[i + 1].type === "saving-throw"
+            while (i + 1 < effects.length && effects[i + 1]
+                && typeof effects[i + 1] === "object"
+                && !Array.isArray(effects[i + 1])
+                && effects[i + 1].type === "saving-throw"
                 && effects[i + 1].result === "automatic-failure"
                 && Object.keys(effects[i + 1]).every(key => ["type", "ability", "result"].includes(key))) {
                 saves.push(effects[++i].ability);

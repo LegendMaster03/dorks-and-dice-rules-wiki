@@ -31,9 +31,23 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
         article.classList.add("rules-wiki-condition-article");
         article.append(renderConditionDefinition(rule.definition, {
             renderRaw: renderNativeValue,
-            hrefForCondition: id => app
-                ? browserHref(app, `/rules/${encodeURIComponent(id)}`)
-                : `/rules/${encodeURIComponent(id)}`
+            hrefForCondition: id => {
+                const route = `/rules/${encodeURIComponent(id)}`;
+                if (!app) return route;
+                // Related-condition navigation is a new lookup, not another
+                // match within the previous search/filter results.
+                return browserHref({
+                    ...app,
+                    browserFilters: {
+                        ...app.browserFilters,
+                        query: "",
+                        sourceCode: "",
+                        overridesOnly: false,
+                        fieldFilters: {}
+                    },
+                    browserSort: { key: null, direction: "asc" }
+                }, route);
+            }
         }));
     } else {
         for (const [key, value] of Object.entries(rule.definition)) {

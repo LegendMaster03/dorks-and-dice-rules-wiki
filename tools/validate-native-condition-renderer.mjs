@@ -75,15 +75,61 @@ assert.equal(nodes(stunned, node => node.tagName === "DETAILS").length, 1);
 assert.equal(nodes(stunned, node => node.tagName === "DETAILS")[0].attrs.open, undefined);
 
 const wet = show(make("condition.wet", "condition", {
-    effects: [{ type: "roll-mode", appliesTo: "saving-throw", mode: "disadvantage", when: {
-        sourceKind: ["spell", "effect"], sourceDealsAnyDamageType: ["cold", "lightning"]
-    }}],
+    effects: [
+        { type: "roll-mode", appliesTo: "saving-throw", mode: "disadvantage", when: {
+            sourceKind: ["spell", "effect"], sourceDealsAnyDamageType: ["cold", "lightning"]
+        } },
+        { type: "roll-mode", appliesTo: "saving-throw", mode: "disadvantage",
+            when: { purpose: "resist-extreme-cold" } }
+    ],
     endsWhen: [{ event: "takes-damage", damageType: "fire", minimumDamageTaken: 5, sameDamageInstance: true },
         { event: "removes-wet-clothing-or-armor", unless: { hasWetFur: true } }]
 }));
 assert.match(wet.textContent, /it deals cold or lightning damage/);
+assert.match(wet.textContent, /When resisting extreme cold/);
 assert.match(wet.textContent, /at least 5 damage; in one instance/);
 assert.match(wet.textContent, /Unless the creature has wet fur/);
+
+// Navigating from a filtered Stunned result must not leave the list filtered
+// to Stunned while the related Incapacitated detail is displayed.
+window.location.search = "?q=Stunned&sort=name&dir=desc&source=legacy&f.ability=strength";
+const filteredApp = {
+    ...app,
+    browserFilters: {
+        ...app.browserFilters,
+        query: "Stunned",
+        sourceCode: "legacy",
+        fieldFilters: { ability: "strength" }
+    },
+    browserSort: { key: "name", direction: "desc" }
+};
+const filteredStunned = show(make("condition.stunned", "condition", {
+    appliesConditions: ["condition.incapacitated"]
+}), filteredApp);
+const filteredHref = nodes(filteredStunned, node => node.tagName === "A")[0].attrs.href;
+assert.equal(filteredHref, "/tools/rules-wiki/rules/condition.incapacitated");
+window.location.search = "";
+
+// Formatting an existing effect type must not conceal newly introduced fields.
+const extended = show(make("condition.extended", "condition", {
+    effects: [
+        { type: "roll-mode", appliesTo: "attack-roll", mode: "disadvantage", futureRestriction: "range-limited" },
+        { type: "action-restriction", prohibited: ["physical-action"], scope: "physical-actions" },
+        { type: "critical-hit", result: "automatic-critical-hit",
+            subject: "attacks-against-affected-creature",
+            when: { attackHits: true, attackerWithinFeet: 5, specialTrigger: "ritual-complete" } },
+        { type: "critical-hit", result: "unfamiliar-critical-result", subject: "other-subject", when: { attackHits: true } },
+        { type: "roll-modifier", operation: "multiply", appliesTo: "attack-roll", value: 2 },
+        null
+    ]
+}));
+assert.match(extended.textContent, /Future Restriction: Range limited/);
+assert.match(extended.textContent, /Scope: Physical actions/);
+assert.match(extended.textContent, /When Special Trigger: Ritual complete/);
+assert.match(extended.textContent, /unfamiliar-critical-result/);
+assert.match(extended.textContent, /multiply/);
+assert.doesNotMatch(extended.textContent, /undefined|NaN/);
+assert.equal(nodes(extended, node => node.className.includes("rules-wiki-condition-effect-row")).length, 6);
 
 const exhaustion = show(make("condition.exhaustion", "leveled-condition", {
     levelRules: { stacking: "Effects are cumulative.", gain: "Increase by the stated amount." },
@@ -95,7 +141,7 @@ const exhaustion = show(make("condition.exhaustion", "leveled-condition", {
     recovery: { general: "Effects reduce levels.", longRest: { levelsRemoved: 1, requirements: ["food-consumed", "drink-consumed"] } }
 }));
 assert.match(exhaustion.textContent, /Effects are cumulative/);
-assert.match(exhaustion.textContent, /Maximum Hit PointsMultiplied by 0.5/);
+assert.match(exhaustion.textContent, /Maximum Hit PointsMaximum Hit Points becomes 50% of normal/);
 assert.match(exhaustion.textContent, /The creature dies/);
 assert.match(exhaustion.textContent, /Long rest: remove 1 exhaustion level/);
 assert.equal(nodes(exhaustion, node => node.tagName === "TR").length, 4);
@@ -120,7 +166,7 @@ const petrified = show(make("condition.petrified", "condition", {
 assert.match(petrified.textContent, /Awareness is not inherently removed/);
 assert.match(petrified.textContent, /Resistance to all damage/);
 assert.match(petrified.textContent, /Poison damage immunity/);
-assert.match(petrified.textContent, /Resume when this condition ends/);
+assert.match(petrified.textContent, /They resume when this condition ends/);
 
 const pinned = show(make("condition.pinned", "condition", {
     appliesConditions: ["condition.grappled"],
