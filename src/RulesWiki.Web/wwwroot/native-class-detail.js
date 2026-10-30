@@ -275,8 +275,13 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
                 if (featureDefinition && typeof featureDefinition === "object") {
                     const other = Object.fromEntries(Object.entries(featureDefinition)
                         .filter(([key]) => key !== "description"));
-                    if (Object.keys(other).length) content.append(node("details", { className: "native-class-technical-details" },
-                        node("summary", { text: "Additional feature data" }), renderValue(other)));
+                    const metadataKeys = new Set(["id", "name", "kind", "parentClass", "classLevel",
+                        "alpha", "alphaVersion", "rulesStatus", "selectionStatus", "sourcePackage"]);
+                    const mechanics = Object.fromEntries(Object.entries(other).filter(([key]) => !metadataKeys.has(key)));
+                    const metadata = Object.fromEntries(Object.entries(other).filter(([key]) => metadataKeys.has(key)));
+                    if (Object.keys(mechanics).length) content.append(renderValue(mechanics));
+                    if (Object.keys(metadata).length) content.append(node("details", { className: "native-class-technical-details" },
+                        node("summary", { text: "Additional feature data" }), renderValue(metadata)));
                 }
                 content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
             }).catch(() => {

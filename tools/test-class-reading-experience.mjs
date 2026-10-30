@@ -110,6 +110,18 @@ const stored = JSON.parse(window.sessionStorage.getItem("rulesWikiClassReturn"))
 assert.ok(stored.details.includes("pact.warlock.blade"));
 const { renderNativeClass } = await import("../src/RulesWiki.Web/wwwroot/native-class-detail.js");
 const { renderNativeValue } = await import("../src/RulesWiki.Web/wwwroot/native-rule-detail.js");
+const rage = JSON.parse(await readFile(new URL("./fixtures/native-rage.json", import.meta.url)));
+const mechanicalClass = renderNativeClass({ id: "class.barbarian", name: "Barbarian", kind: "class",
+    definition: { progression: [{ level: 1, featureGrants: [rage.id] }] } }, {
+    renderValue: renderNativeValue, getRule: async () => ({ rule: { ...rage, definition: rage } })
+});
+document.body.append(mechanicalClass);
+mechanicalClass.querySelector(".native-class-feature > summary").click();
+await wait(() => mechanicalClass.querySelector(".native-class-feature-content dl"));
+const mechanicsTerm = [...mechanicalClass.querySelectorAll("dt")].find(term => term.textContent === "Mechanics");
+assert.ok(mechanicsTerm);
+assert.equal(mechanicsTerm.closest(".native-class-technical-details"), null,
+    "Actual feature mechanics must not be hidden with source/status metadata");
 const returned = renderNativeClass(records.find(record => record.id === "class.warlock"), {
     renderValue: renderNativeValue, catalogFingerprint: fingerprint,
     getRule: async id => {
