@@ -130,6 +130,34 @@ await wait(() => returned.querySelector('[aria-label="Filter Invocations options
 assert.equal(returned.querySelector('[aria-label="Focus class level"]').value, "9");
 assert.equal(window.sessionStorage.getItem("rulesWikiClassReturn"), null, "Return state is consumed, not a persistent character configuration");
 await wait(() => returnPane.scrollTop === 420);
+// Leave again while the deferred Invocation catalog is still loading.
+window.sessionStorage.setItem("rulesWikiClassReturn", JSON.stringify(stored));
+let finishInvocations;
+const delayedInvocationPage = new Promise(resolve => { finishInvocations = resolve; });
+const earlyReturn = renderNativeClass(records.find(record => record.id === "class.warlock"), {
+    renderValue: renderNativeValue, catalogFingerprint: fingerprint,
+    getRule: async id => {
+        const record = records.find(record => record.id === id);
+        return { fingerprint, rule: { id, name: record.name, kind: record.kind, definition: record } };
+    },
+    searchRules: async ({ category }) => {
+        if (category === "invocation") return delayedInvocationPage;
+        const found = records.filter(record => record.kind === category);
+        return { fingerprint, total: found.length, rules: found };
+    }
+});
+document.body.append(earlyReturn);
+await wait(() => earlyReturn.querySelector(".native-class-option-overview .native-class-rule-link"));
+assert.equal(earlyReturn.querySelector('[aria-label="Filter Invocations options by name"]'), null);
+const earlyLink = earlyReturn.querySelector(".native-class-option-overview .native-class-rule-link");
+earlyLink.addEventListener("click", event => event.preventDefault());
+earlyLink.click();
+const earlyState = JSON.parse(window.sessionStorage.getItem("rulesWikiClassReturn"));
+assert.equal(earlyState.controls["2:Filter Invocations options by name"].value, "Devouring");
+assert.ok(earlyState.details.includes("pact.warlock.blade"));
+const invocationRecords = records.filter(record => record.kind === "invocation");
+finishInvocations({ fingerprint, total: invocationRecords.length, rules: invocationRecords });
+await wait(() => earlyReturn.querySelector('[aria-label="Filter Invocations options by name"]')?.value === "Devouring");
 // Malformed or stale reading state must never prevent the class from rendering.
 window.sessionStorage.setItem("rulesWikiClassReturn", JSON.stringify({ ...stored, systems: {} }));
 assert.doesNotThrow(() => renderNativeClass(records.find(record => record.id === "class.warlock"), { renderValue: renderNativeValue }));
