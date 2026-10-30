@@ -254,7 +254,11 @@ function optionPlayRules(node, renderValue, definition) {
             node("td", { text: grant.spells.join(", ") })))));
         schedule.append(table);
         const extra = Object.fromEntries(Object.entries(access).filter(([key]) =>
-            !["defaultMode", "grants"].includes(key)));
+            key !== "grants" && !(key === "defaultMode"
+                && access.defaultMode === "automatic-known-no-ordinary-selection-cost")));
+        const grantsWithOtherFields = access.grants.filter(grant =>
+            Object.keys(grant).some(key => !["level", "spells"].includes(key)));
+        if (grantsWithOtherFields.length) extra.completeGrantRecords = grantsWithOtherFields;
         if (Object.keys(extra).length) schedule.append(node("details", { className: "native-class-technical-details" },
             node("summary", { text: "Other spell-access rules and playtest modes" }), renderValue(extra)));
         primary.push(schedule);
