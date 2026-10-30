@@ -63,13 +63,27 @@ export function createClassReturnState(root, { classId, fingerprint }) {
         const href = link?.getAttribute("href");
         if (!href || href.startsWith("#")) return;
         try {
+            // A user can follow another rule before deferred catalogs finish
+            // restoring. Retain the prior values for controls/options that have
+            // not been restored yet, instead of replacing them with defaults.
+            const controls = { ...(saved?.controls ?? {}) };
+            for (const control of root.querySelectorAll("input[aria-label],select[aria-label]")) {
+                if (!saved || applied.has(control)) controls[controlKey(control)] = {
+                    value: control.value, checked: control.checked
+                };
+            }
+            const details = new Set(saved?.details ?? []);
+            for (const detail of root.querySelectorAll("details[id],.native-class-customization-option-detail")) {
+                if (saved && !applied.has(detail)) continue;
+                const key = detail.id || detail.closest("[data-option-id]")?.getAttribute("data-option-id");
+                if (detail.open) details.add(key);
+                else details.delete(key);
+            }
             window.sessionStorage.setItem(storageKey, JSON.stringify({
                 version: 1, classId, fingerprint, route: window.location.pathname + window.location.search,
-                systems: systems().flatMap((panel, index) => panel.open ? [index] : []),
-                controls: Object.fromEntries([...root.querySelectorAll("input[aria-label],select[aria-label]")]
-                    .map(control => [controlKey(control), { value: control.value, checked: control.checked }])),
-                details: [...root.querySelectorAll("details[id][open],.native-class-customization-option-detail[open]")]
-                    .map(detail => detail.id || detail.closest("[data-option-id]")?.getAttribute("data-option-id")),
+                systems: systems().flatMap((panel, index) =>
+                    (saved && !applied.has(panel) ? saved.systems.includes(index) : panel.open) ? [index] : []),
+                controls, details: [...details],
                 scrollTop: root.closest(".rules-core-library-detail")?.scrollTop || 0,
                 pageScrollTop: document.scrollingElement?.scrollTop || 0
             }));
