@@ -226,7 +226,7 @@ function optionPlayRules(node, renderValue, definition) {
         feature && typeof feature.name === "string" && Number.isInteger(feature.level))) {
         handled.add("features");
         primary.push(node("section", { className: "native-class-option-rules" },
-            node("h6", { text: "Patron features" }),
+            node("h6", { text: definition.kind === "patron" ? "Patron features" : "Option features" }),
             ...definition.features.map(feature => {
                 const body = node("section", { className: "native-class-option-feature" },
                     node("h6", { text: `Level ${feature.level} · ${feature.name}` }));
@@ -247,7 +247,7 @@ function optionPlayRules(node, renderValue, definition) {
             schedule.append(node("p", { text: "These spells are automatically known and do not use ordinary spells-known selections." }));
         }
         const table = node("table", { className: "native-class-option-spells" },
-            node("thead", {}, node("tr", {}, node("th", { text: "Warlock level", attributes: { scope: "col" } }),
+            node("thead", {}, node("tr", {}, node("th", { text: "Class level", attributes: { scope: "col" } }),
                 node("th", { text: "Spells", attributes: { scope: "col" } }))));
         table.append(node("tbody", {}, ...access.grants.map(grant => node("tr", {},
             node("th", { text: grant.level, attributes: { scope: "row" } }),
