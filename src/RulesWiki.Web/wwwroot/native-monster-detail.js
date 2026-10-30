@@ -265,8 +265,20 @@ function abilityGrid(definition) {
             element("div", {}, element("span", { text: label }), element("strong", { text: signed(value) })))) : null]);
 }
 
+// Rules Core's native entity is an envelope: { id, name, kind, definition }.
+// Its private detail response can contain that entire entity in rule.definition.
+// Preserve independent envelope metadata, but read statistics from the nested
+// definition. A direct/flat definition remains supported for other consumers.
+function monsterDefinition(record) {
+    if (!record || typeof record !== "object" || Array.isArray(record)) return {};
+    const nested = record.definition;
+    if (!nested || typeof nested !== "object" || Array.isArray(nested)) return record;
+    const { definition: _definition, ...metadata } = record;
+    return { ...metadata, ...nested };
+}
+
 export function renderNativeMonster(rule, renderRaw) {
-    const d = rule.definition ?? {};
+    const d = monsterDefinition(rule.definition);
     const seen = new Set(SOURCE_FIELDS);
     const consume = keys => keys.forEach(key => seen.add(key));
     const titleParts = [displayValue(d.size, value => Array.isArray(value) ? value.map(v => SIZE[String(v).toUpperCase()] ?? pretty(v)).join("/") : SIZE[String(value).toUpperCase()] ?? pretty(value)),
