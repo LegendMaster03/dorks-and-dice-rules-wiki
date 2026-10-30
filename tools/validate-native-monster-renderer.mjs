@@ -130,6 +130,71 @@ assert.equal((lich.textContent.match(/Spellcasting/g) ?? []).length, 1, "Spellca
 assert.match(lich.textContent, /Novel Defense/);
 assert.ok(cls(lich, "rw-stat-entry").length >= 4);
 
+// Kaiju fixture uses the reference concepts already implemented in Block
+// Initiative. Values are testing data, never added to authoritative creatures.
+const kaijuReference = {
+    chaosThreshold: 150, finishingBlow: 60,
+    vulnerableAreas: [
+        { id: "head", name: "Head", maxHp: 35,
+            targetableWhen: "When exposed by the creature's Behaviour",
+            exploitationEffect: "Area-specific consequence", futureAreaRule: "Keep this detail" },
+        { id: "arm", name: "Arm", hp: 25, ac: 17, onExploited: "Additional effect" }
+    ],
+    behaviours: [
+        { name: "Escalation", trigger: "At the stated encounter trigger", entries: ["Change combat behavior"] },
+        { name: "Counterattack", when: "In response to an attack", description: "Use the listed counterattack" }
+    ],
+    rampage: "When Chaos Threshold reaches zero",
+    deathThroes: "Once all Vulnerable Areas are exploited",
+    deathRattle: "Post-defeat consequence",
+    additionalKaijuRule: { effect: "preserve unexplained mechanics" }
+};
+const kaiju = show({
+    name: "Kaiju Reference Fixture", blockType: "kaiju", size: ["G"], type: "monstrosity",
+    ac: [22], hp: { average: 999, formula: "99d10" }, speed: { walk: 40 },
+    str: 26, dex: 10, con: 24, int: 8, wis: 12, cha: 8,
+    kaiju: kaijuReference,
+    action: [{ name: "Slam", entries: ["{@atkr m} {@hit 10}, {@h}{@damage 3d10 + 8} force."] }],
+    legendary: [{ name: "Legendary Action", entries: ["Special attack."] }]
+});
+assert.equal(cls(kaiju, "rw-statblock-kaiju").length, 1);
+assert.match(kaiju.textContent, /Kaiju Combat/);
+assert.equal(cls(kaiju, "rw-stat-ability").length, 6);
+assert.equal(cls(kaiju, "rw-stat-tile").filter(node => node.textContent.includes("Hit Points")).length, 0,
+    "A Kaiju with a Chaos Threshold must not show ordinary HP as its primary pool.");
+assert.match(kaiju.textContent, /Hit Points \(source\)/);
+for (const label of ["Chaos Threshold150", "Finishing Blow60", "Vulnerable Areas", "Head", "Arm",
+    "Targetable when", "When exploited", "Behaviours", "Escalation", "Counterattack", "Rampage",
+    "Death Throes", "Death Rattle", "Legendary Actions", "Keep this detail", "preserve unexplained mechanics"]) {
+    assert.ok(kaiju.textContent.includes(label), `Kaiju must include ${label}`);
+}
+assert.equal(cls(kaiju, "rw-stat-kaiju-area").length, 2);
+assert.equal(cls(kaiju, "rw-stat-kaiju-behaviour").length, 2);
+assert.ok(cls(kaiju, "rw-stat-roll").length);
+assert.doesNotMatch(kaiju.textContent, /Additional MechanicsKaiju/,
+    "Kaiju profile belongs in its own presentation section.");
+
+// A standard boss can use only part of the Kaiju mechanics without becoming a
+// Kaiju combatant and without losing its ordinary HP or shared actions.
+const mixedBoss = show({ name: "Mixed Boss", blockType: "standard", ac: [17],
+    hp: { average: 100, formula: "10d10 + 45" }, str: 18,
+    kaiju: { vulnerableAreas: [{ name: "Weak Point", hp: 15 }],
+        rampage: "Encounter-specific rule" },
+    action: [{ name: "Strike", entries: ["Melee attack."] }]
+});
+assert.equal(cls(mixedBoss, "rw-statblock-kaiju").length, 0);
+assert.match(mixedBoss.textContent, /Hit Points100/);
+assert.match(mixedBoss.textContent, /Kaiju Mechanics/);
+assert.match(mixedBoss.textContent, /Weak Point/);
+assert.match(mixedBoss.textContent, /Strike/);
+
+const kaijuWithoutProfile = show({ name: "Kaiju Without Reference Content", blockType: "kaiju",
+    ac: [19], hp: { average: 90, formula: "10d10 + 35" } });
+assert.equal(cls(kaijuWithoutProfile, "rw-stat-kaiju").length, 0,
+    "Do not fabricate empty Kaiju data for a marked creature.");
+assert.match(kaijuWithoutProfile.textContent, /Hit Points90/,
+    "Do not suppress a source statistic unless the Kaiju pool is supplied.");
+
 const historical = show({ name: "Historical Creature", size: "L", ac: 22, touchAc: 13,
     flatFootedAc: 19, str: 18, dex: 14, fortitude: "+9", reflex: "+5", will: "+3",
     bab: "+12", grapple: "+19", dr: "5/magic", sr: "20", reach: "10 ft.",
