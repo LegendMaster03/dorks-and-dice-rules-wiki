@@ -1,0 +1,174 @@
+/* Native condition reference: scoped to the Rules Wiki detail surface. */
+.rules-wiki-condition-article > p {
+    max-width: 84ch;
+    line-height: 1.55;
+    margin-bottom: 1rem;
+}
+
+.rules-wiki-condition-detail {
+    min-width: 0;
+    container-type: inline-size;
+}
+
+.rules-wiki-condition-section {
+    margin: 1rem 0 1.25rem;
+}
+
+.rules-wiki-condition-section-title {
+    font-size: 1rem;
+    font-weight: 650;
+    line-height: 1.4;
+    margin: 0 0 .6rem;
+}
+
+.rules-wiki-condition-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+
+.rules-wiki-condition-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    border: 1px solid var(--rules-core-border);
+    border-radius: .4rem;
+    padding: .3rem .6rem;
+    background: var(--rules-core-surface-subtle);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.rules-wiki-condition-links a:hover,
+.rules-wiki-condition-links a:focus-visible {
+    text-decoration: underline;
+    outline-offset: 3px;
+}
+
+.rules-wiki-condition-effect-list {
+    border: 1px solid var(--rules-core-border);
+    border-radius: .65rem;
+    overflow: hidden;
+}
+
+.rules-wiki-condition-effect-row {
+    display: grid;
+    grid-template-columns: minmax(8rem, 28%) minmax(0, 1fr);
+    gap: .75rem;
+    padding: .65rem .8rem;
+    align-items: start;
+}
+
+.rules-wiki-condition-effect-row + .rules-wiki-condition-effect-row {
+    border-top: 1px solid var(--rules-core-border);
+}
+
+.rules-wiki-condition-effect-label {
+    font-weight: 650;
+    font-size: .89rem;
+}
+
+.rules-wiki-condition-effect-copy {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.rules-wiki-condition-qualifier {
+    margin-top: .3rem;
+    font-size: .86rem;
+    color: var(--bs-secondary-color);
+}
+
+.rules-wiki-condition-fact-list {
+    margin: 0;
+    padding-left: 1.35rem;
+}
+
+.rules-wiki-condition-fact-list > li + li {
+    margin-top: .38rem;
+}
+
+.rules-wiki-condition-fact-list a {
+    text-underline-offset: .15em;
+}
+
+.rules-wiki-condition-rule-note {
+    color: var(--bs-secondary-color);
+    margin: 0 0 .6rem;
+}
+
+.rules-wiki-condition-table-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--rules-core-border);
+    border-radius: .65rem;
+}
+
+.rules-wiki-condition-level-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.rules-wiki-condition-level-table th,
+.rules-wiki-condition-level-table td {
+    padding: .6rem .75rem;
+    border-bottom: 1px solid var(--rules-core-border);
+    text-align: left;
+    vertical-align: top;
+}
+
+.rules-wiki-condition-level-table thead th {
+    background: var(--rules-core-surface-subtle);
+}
+
+.rules-wiki-condition-level-table tbody tr:last-child > * {
+    border-bottom: none;
+}
+
+.rules-wiki-condition-level-table tbody th {
+    width: 4rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.rules-wiki-condition-level-table .rules-wiki-condition-effect-row {
+    grid-template-columns: minmax(7.5rem, 27%) minmax(0, 1fr);
+    padding: .2rem 0;
+}
+
+.rules-wiki-condition-level-table .rules-wiki-condition-effect-row + .rules-wiki-condition-effect-row {
+    margin-top: .35rem;
+    padding-top: .4rem;
+}
+
+.rules-wiki-condition-technical {
+    margin-top: 1.15rem;
+    border: 1px solid var(--rules-core-border);
+    border-radius: .55rem;
+    background: var(--rules-core-surface-subtle);
+}
+
+.rules-wiki-condition-technical > summary {
+    padding: .65rem .8rem;
+    cursor: pointer;
+    color: var(--bs-secondary-color);
+    font-size: .86rem;
+    font-weight: 600;
+}
+
+.rules-wiki-condition-technical-body {
+    padding: .25rem .8rem .8rem;
+    overflow-wrap: anywhere;
+}
+
+@container (max-width: 650px) {
+    .rules-wiki-condition-effect-row,
+    .rules-wiki-condition-level-table .rules-wiki-condition-effect-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: .2rem;
+    }
+
+    .rules-wiki-condition-level-table th,
+    .rules-wiki-condition-level-table td {
+        padding: .5rem;
+    }
+}

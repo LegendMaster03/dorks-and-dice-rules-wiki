@@ -1,3 +1,5 @@
+import { renderConditionDefinition } from "./condition-detail.js";
+import { browserHref } from "./rules-browser-routing.js";
 import { element, definitionList, badge } from "./ui.js";
 const label = name => String(name).replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]/g, " ").replace(/^./, value => value.toUpperCase());
@@ -13,7 +15,7 @@ export function renderNativeValue(value) {
         element("dd", { className: "col-sm-8" }, renderNativeValue(item))
     ]));
 }
-export function renderNativeDetail(container, detail, onBack) {
+export function renderNativeDetail(container, detail, onBack, app = null) {
     const rule = detail.rule;
     if (!rule || !rule.definition) throw new Error("Native rule detail is unavailable.");
     const tabs = element("div", { className: "rules-core-version-tabs" },
@@ -25,10 +27,34 @@ export function renderNativeDetail(container, detail, onBack) {
     const article = element("article", { className: "rules-core-effective-rule card card-body mb-3" },
         element("h2", { className: "h3", text: rule.name }));
     if (typeof rule.definition.description === "string") article.append(element("p", { text: rule.definition.description }));
-    for (const [key, value] of Object.entries(rule.definition)) {
-        if (["id", "name", "kind", "description"].includes(key) || key.startsWith("_")) continue;
-        article.append(element("section", { className: "mb-3" },
-            element("h3", { className: "h5", text: label(key) }), renderNativeValue(value)));
+    if (rule.kind === "condition" || rule.kind === "leveled-condition") {
+        article.classList.add("rules-wiki-condition-article");
+        article.append(renderConditionDefinition(rule.definition, {
+            renderRaw: renderNativeValue,
+            hrefForCondition: id => {
+                const route = `/rules/${encodeURIComponent(id)}`;
+                if (!app) return route;
+                // Related-condition navigation is a new lookup, not another
+                // match within the previous search/filter results.
+                return browserHref({
+                    ...app,
+                    browserFilters: {
+                        ...app.browserFilters,
+                        query: "",
+                        sourceCode: "",
+                        overridesOnly: false,
+                        fieldFilters: {}
+                    },
+                    browserSort: { key: null, direction: "asc" }
+                }, route);
+            }
+        }));
+    } else {
+        for (const [key, value] of Object.entries(rule.definition)) {
+            if (["id", "name", "kind", "description"].includes(key) || key.startsWith("_")) continue;
+            article.append(element("section", { className: "mb-3" },
+                element("h3", { className: "h5", text: label(key) }), renderNativeValue(value)));
+        }
     }
     body.append(article, element("section", { className: "card card-body rules-core-detail-context-card" },
         element("h3", { className: "h5", text: "Reference context" }),

@@ -37,7 +37,7 @@ export async function renderRuleDetailPane(
         if (requestSerial !== getCurrentSerial()) return;
 
         if (detail.native) {
-            renderNativeDetail(container, detail.native, onBackToList);
+            renderNativeDetail(container, detail.native, onBackToList, app);
             app.presentRenderedFragment?.(container);
             return;
         }
