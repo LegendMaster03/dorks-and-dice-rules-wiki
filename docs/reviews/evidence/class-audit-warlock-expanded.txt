@@ -1,0 +1,594 @@
+View
+Dorks & Dice
+Class
+BASE CLASS
+Warlock
+
+A Patron supplies Warlock power, a Pact is the type or manifestation of its agreement, and Invocations are additional terms attached to that Pact. This selected modular design is under active testing alongside coherent native classes; it is not a source edition candidate or a finalized architecture decision.
+
+Rules status: selected for playtest; subject to change · Alpha 0.3.1
+
+Class traits
+HIT DIE
+d8
+SPELLCASTING ABILITY
+charisma
+SAVING THROWS
+wisdom, charisma
+ARMOR TRAINING
+light
+WEAPON TRAINING
+simple
+SKILL CHOICES
+Choose 2 from Arcana, Deception, History, Intimidation, Investigation, Nature, Religion
+Class customization
+Class advancement
+Spellcasting and resource notes
+Features by level
+Class customization
+
+Explore how this class is configured. These are rule references, not a character builder.
+
+Patron
+The source of your Warlock's supernatural power. Choose a Patron at level 1.
+1 referenced options
+Available at Warlock level 1
+A Patron may be inherited or unknown to the Warlock.
+Current playtest Patron: Fiend
+Find an option
+Documented minimum level
+Every level
+Level 1
+Level 2
+Level 3
+Level 4
+Level 5
+Level 6
+Level 7
+Level 8
+Level 9
+Level 10
+Level 11
+Level 12
+Level 13
+Level 14
+Level 15
+Level 16
+Level 17
+Level 18
+Level 19
+Level 20
+
+Filters show documented prerequisites only; other requirements may also apply. This is not a character eligibility check.
+
+1 shown · 1 matching · 1 total
+
+The Fiend
+Level 1+
+The Fiend
+
+The selected alpha Patron. Fiend is the supernatural power source from level 1 and may be paired with any active Pact. The 5.x Fiend level-10 selected-type resistance and automatic Hellfire Shield are retired, not duplicated.
+
+Full requirements and mechanics
+Open full rule
+Pact
+The form your agreement takes. Choose one Pact at level 1; it shapes your abilities and compatible Invocations.
+4 referenced options
+Available at Warlock level 1
+Your first Pact does not cost an Invocation selection.
+Additional Pacts are outside this playtest.
+Find an option
+Documented minimum level
+Every level
+Level 1
+Level 2
+Level 3
+Level 4
+Level 5
+Level 6
+Level 7
+Level 8
+Level 9
+Level 10
+Level 11
+Level 12
+Level 13
+Level 14
+Level 15
+Level 16
+Level 17
+Level 18
+Level 19
+Level 20
+
+Filters show documented prerequisites only; other requirements may also apply. This is not a character eligibility check.
+
+4 shown · 4 matching · 4 total
+
+Pact of the Blade
+Level 1+
+Pact of the Blade
+
+Manifest the agreement in a weapon. Use a Bonus Action to conjure or bind an eligible melee weapon; gain proficiency, Charisma option for attacks and damage, and Warlock focus use; choose ordinary, Necrotic, Psychic, or Radiant damage per attack. Follow the host's modern bond and ending restrictions.
+
+Full requirements and mechanics
+Open full rule
+Pact of the Chain
+Level 1+
+Pact of the Chain
+
+Know Find Familiar without spending an ordinary known-spell selection. Cast it as a Magic action without a slot while retaining components, or as a ritual. Use host statblocks for Imp, Pseudodragon, Quasit, Skeleton, Sphinx of Wonder, Sprite, Venomous Snake, or ordinary forms. Familiar shares initiative but takes its own turn. Forgo one of your attacks during your Attack action to command one familiar Attack action in that shared round.
+
+Full requirements and mechanics
+Open full rule
+Pact of the Talisman
+Level 1+
+Pact of the Talisman
+
+One active wearable or transferable talisman. Untrained Guidance adds 1d4 to an unproficient skill ability check without spending charges. Fortunate Correction spends one charge after a failed ability check to add 1d4. They cannot both enhance one check, and neither applies to attacks or saving throws. Charges equal Warlock proficiency bonus and recover on Long Rest; replacing a lost talisman takes a one-hour ceremony and does not restore charges.
+
+Full requirements and mechanics
+Open full rule
+Pact of the Tome
+Level 1+
+Pact of the Tome
+
+Conjure a Book of Shadows at the end of a Short or Long Rest. While carrying it, gain three extra cantrips from any class list and two level-1 Ritual spells, with the book as a focus. For this alpha, starter Ritual spells are ritual-only unless separately known; replacement does not recharge limited uses. Book of Ancient Secrets separately supports additional rituals.
+
+Full requirements and mechanics
+Open full rule
+Invocations
+Additional terms attached to your Pact. Choose options as your Warlock advances, subject to prerequisites.
+38 referenced options
+Available at Warlock level 1
+Each Invocation attaches to a Pact you possess.
+Your Patron must accept the Invocation.
+Severed Pact Invocations are suspended without an automatic refund.
+Replace one Invocation when gaining a Warlock level.
+Pact relationships
+
+The options below list documented Pact prerequisites. Each selected Invocation still attaches to a Pact under the class rules.
+
+Requires Blade
+3
+Requires Chain
+3
+Requires Tome
+2
+No specific Pact listed
+30
+Find an option
+Documented minimum level
+Every level
+Level 1
+Level 2
+Level 3
+Level 4
+Level 5
+Level 6
+Level 7
+Level 8
+Level 9
+Level 10
+Level 11
+Level 12
+Level 13
+Level 14
+Level 15
+Level 16
+Level 17
+Level 18
+Level 19
+Level 20
+Pact prerequisite
+All Pact requirements
+No listed Pact prerequisite
+Requires Blade
+Requires Chain
+Requires Tome
+
+Filters show documented prerequisites only; other requirements may also apply. This is not a character eligibility check.
+
+38 shown · 38 matching · 38 total
+
+Agonizing Blast
+Level 2+
+Agonizing Blast
+
+Choose one damaging known Warlock cantrip; add your Charisma modifier to its damage rolls. Repeatable only for a different eligible cantrip.
+
+Full requirements and mechanics
+Open full rule
+Armor of Shadows
+Level 1+
+Armor of Shadows
+
+Cast Mage Armor on yourself without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+Ascendant Step
+Level 5+
+Ascendant Step
+
+Cast Levitate on yourself without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+Beast Speech
+Level 1+
+Beast Speech
+
+Cast Speak with Animals at will without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+Beguiling Influence
+Level 1+
+Beguiling Influence
+
+Gain proficiency in Deception and Persuasion.
+
+Full requirements and mechanics
+Open full rule
+Bewitching Whispers
+Level 7+
+Bewitching Whispers
+
+Cast Compulsion once using a Pact Magic slot, refreshing permission on a Long Rest.
+
+Full requirements and mechanics
+Open full rule
+Book of Ancient Secrets
+Level 1+
+Requires Tome
+Book of Ancient Secrets
+
+Transcribe discovered additional Ritual spells up to half Warlock level rounded up; spend two hours and 50 gp per spell level. They are cast as rituals through the active book and do not supply ordinary spells known or another starter pair.
+
+Full requirements and mechanics
+Open full rule
+Chains of Carceri
+Level 15+
+Requires Chain
+Chains of Carceri
+
+Cast Hold Monster without slot or material components, but only on a Celestial, Fiend or Elemental. You may not attempt it on that same individual again until a Long Rest, including after a failed attempt.
+
+Full requirements and mechanics
+Open full rule
+Devil's Sight
+Level 2+
+Devil's Sight
+
+See normally within 120 feet in Dim Light and Darkness, magical or nonmagical.
+
+Full requirements and mechanics
+Open full rule
+Devouring Blade
+Level 12+
+Requires Blade
+Devouring Blade
+
+When attacking with your Pact weapon, make three attacks total instead of the intrinsic level-5 two, never three additional attacks.
+
+Full requirements and mechanics
+Open full rule
+Dreadful Word
+Level 7+
+Dreadful Word
+
+Cast Confusion once using a Pact Magic slot, refreshing permission on a Long Rest.
+
+Full requirements and mechanics
+Open full rule
+Eldritch Mind
+Level 1+
+Eldritch Mind
+
+Gain Advantage on Constitution saving throws made to maintain Concentration.
+
+Full requirements and mechanics
+Open full rule
+Eldritch Sight
+Level 1+
+Eldritch Sight
+
+Cast Detect Magic at will without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+Eldritch Smite
+Level 5+
+Requires Blade
+Eldritch Smite
+
+Once per turn on a Pact-weapon hit, expend an actual Pact Magic slot for (1 + expended slot level)d8 additional Force damage, and optionally knock a Huge-or-smaller target Prone.
+
+Full requirements and mechanics
+Open full rule
+Eldritch Spear
+Level 2+
+Eldritch Spear
+
+Choose one damaging known Warlock cantrip with range at least 10 feet; increase its range by 30 feet per Warlock level. Repeat only for distinct eligible cantrips.
+
+Full requirements and mechanics
+Open full rule
+Eyes of the Rune Keeper
+Level 1+
+Eyes of the Rune Keeper
+
+You can read all writing.
+
+Full requirements and mechanics
+Open full rule
+Fiendish Vigor
+Level 2+
+Fiendish Vigor
+
+Cast False Life on yourself without a slot; use its maximum temporary-hit-point die rather than rolling.
+
+Full requirements and mechanics
+Open full rule
+Gaze of Two Minds
+Level 5+
+Gaze of Two Minds
+
+Touch a willing creature as a Bonus Action to perceive through its senses until the end of your next turn. Maintain as a Bonus Action on the same plane; when within 60 feet, cast spells as if occupying your space or the creature's space.
+
+Full requirements and mechanics
+Open full rule
+Gift of the Depths
+Level 5+
+Gift of the Depths
+
+Breathe underwater; gain Swim Speed equal to Speed. Cast Water Breathing without a slot once per Long Rest.
+
+Full requirements and mechanics
+Open full rule
+Gift of the Protectors
+Level 9+
+Requires Tome
+Gift of the Protectors
+
+Book can hold up to max(1, Charisma modifier) willing names. When a named creature would reach 0 HP without instant death, it drops to 1 HP instead; one shared rescue per Long Rest.
+
+Full requirements and mechanics
+Open full rule
+Investment of the Chain Master
+Level 5+
+Requires Chain
+Investment of the Chain Master
+
+Use your Bonus Action to command the familiar's single allowed Attack action, instead of sacrificing an attack. Grant eligible 40-foot Fly or Swim Speed, switch some damage to Necrotic/Radiant, use Warlock save DCs, and give one damage instance Resistance by Reaction. Never double the commanded action.
+
+Full requirements and mechanics
+Open full rule
+Lessons of the First Ones
+Level 2+
+Lessons of the First Ones
+
+Gain one eligible 5.5e Origin feat. Repeatable for different feats.
+
+Full requirements and mechanics
+Open full rule
+Lifedrinker
+Level 9+
+Requires Blade
+Lifedrinker
+
+Once per turn on a Pact-weapon hit, deal an extra 1d6 Necrotic, Psychic, or Radiant damage. Optionally expend and roll one Hit Die to heal that roll plus Constitution modifier (minimum 1). No cumulative older Charisma damage rider.
+
+Full requirements and mechanics
+Open full rule
+Mask of Many Faces
+Level 2+
+Mask of Many Faces
+
+Cast Disguise Self without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+Master of Myriad Forms
+Level 5+
+Master of Myriad Forms
+
+Cast Alter Self without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+Minions of Chaos
+Level 9+
+Minions of Chaos
+
+Cast Conjure Elemental once using a Pact Magic slot, refreshing permission on a Long Rest.
+
+Full requirements and mechanics
+Open full rule
+Mire the Mind
+Level 5+
+Mire the Mind
+
+Cast Slow once using a Pact Magic slot, refreshing permission on a Long Rest.
+
+Full requirements and mechanics
+Open full rule
+Misty Visions
+Level 2+
+Misty Visions
+
+Cast Silent Image without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+One with Shadows
+Level 5+
+One with Shadows
+
+While in Dim Light or Darkness, cast Invisibility on yourself without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+Otherworldly Leap
+Level 2+
+Otherworldly Leap
+
+Cast Jump on yourself without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+Repelling Blast
+Level 2+
+Repelling Blast
+
+Choose a damaging known Warlock cantrip with an attack roll. On a hit, push a Large-or-smaller target up to 10 feet straight away. Repeatable for a different eligible cantrip.
+
+Full requirements and mechanics
+Open full rule
+Sculptor of Flesh
+Level 7+
+Sculptor of Flesh
+
+Cast Polymorph once using a Pact Magic slot, refreshing permission on a Long Rest.
+
+Full requirements and mechanics
+Open full rule
+Sign of Ill Omen
+Level 5+
+Sign of Ill Omen
+
+Cast Bestow Curse once using a Pact Magic slot, refreshing permission on a Long Rest.
+
+Full requirements and mechanics
+Open full rule
+Thief of Five Fates
+Level 1+
+Thief of Five Fates
+
+Cast Bane once using a Pact Magic slot, refreshing permission on a Long Rest.
+
+Full requirements and mechanics
+Open full rule
+Visions of Distant Realms
+Level 9+
+Visions of Distant Realms
+
+Cast Arcane Eye without a spell slot.
+
+Full requirements and mechanics
+Open full rule
+Voice of the Chain Master
+Level 1+
+Requires Chain
+Voice of the Chain Master
+
+While your familiar is on the same plane, communicate telepathically, perceive through its senses and speak in your voice through it; the normal Find Familiar sensory action applies.
+
+Full requirements and mechanics
+Open full rule
+Whispers of the Grave
+Level 7+
+Witch Sight
+Level 15+
+Witch Sight
+
+Gain Truesight to a range of 30 feet.
+
+Full requirements and mechanics
+Open full rule
+Show fewer options
+
+No traditional subclass presets are defined in this class record yet. Individual customization options are not automatically complete presets.
+
+Class advancement
+
+Choose a level to inspect its features. Additional progression statistics remain available below.
+
+Focus level
+All levels
+Level 1
+Level 2
+Level 3
+Level 4
+Level 5
+Level 6
+Level 7
+Level 8
+Level 9
+Level 10
+Level 11
+Level 12
+Level 13
+Level 14
+Level 15
+Level 16
+Level 17
+Level 18
+Level 19
+Level 20
+Show all columns
+LEVEL	FEATURES	PROF.	PACT SLOTS	SLOT LEVEL
+1	Pact MagicEldritch BlastPatron ChoicePact ChoiceEldritch Invocations	2	1	1
+2	Magical Cunning	2	2	1
+3	Damage Reduction	2	2	2
+4	Ability Score ImprovementDeceive Item	2	2	2
+5	Deepened Pact	3	2	3
+6	—	3	2	3
+7	—	3	2	4
+8	—	3	2	4
+9	Contact Patron	4	2	5
+10	Energy Resistance	4	2	5
+11	Mystic Arcanum 6	4	3	5
+12	Imbue Item	4	3	5
+13	Mystic Arcanum 7	5	3	5
+14	—	5	3	5
+15	Mystic Arcanum 8	5	3	5
+16	—	5	3	5
+17	Mystic Arcanum 9	6	4	5
+18	—	6	4	5
+19	—	6	4	5
+20	Eldritch Master	6	4	5
+Complete advancement data
+Spellcasting and resource notes
+
+Eldritch Blast is granted separately from ordinary cantrips.
+
+Mystic Arcanum is separate from Pact Magic slots.
+
+Pact Magic slots recover on a Short or Long Rest.
+
+Features by level
+Level 1
+Pact Magic · Eldritch Blast · Patron Choice · Pact Choice · Eldritch Invocations
+Pact Magic
+Eldritch Blast
+Patron Choice
+Pact Choice
+Eldritch Invocations
+Level 2
+Magical Cunning
+Level 3
+Damage Reduction
+Level 4
+Ability Score Improvement · Deceive Item
+Level 5
+Deepened Pact
+Level 9
+Contact Patron
+Level 10
+Energy Resistance
+Level 11
+Mystic Arcanum 6
+Level 12
+Imbue Item
+Level 13
+Mystic Arcanum 7
+Level 15
+Mystic Arcanum 8
+Level 17
+Mystic Arcanum 9
+Level 20
+Eldritch Master
+Additional class rules and data
+Source and reference metadata
