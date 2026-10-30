@@ -4,6 +4,8 @@ import { renderNativeMonster } from "./native-monster-detail.js";
 import { renderConditionDefinition } from "./condition-detail.js";
 import { browserHref } from "./rules-browser-routing.js";
 import { element, definitionList, badge } from "./ui.js";
+import { classReturnLink } from "./native-class-view-state.js";
+import { rememberRule } from "./wiki-experience.js";
 const label = name => String(name).replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]/g, " ").replace(/^./, value => value.toUpperCase());
 
@@ -24,6 +26,8 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
     // Preserve the existing monster/condition detail contracts. Only the
     // class reader needs the inner gameplay definition in a wrapped record.
     const source = payload.definition;
+    if (app) rememberRule(payload);
+    const backToClass = classReturnLink(source.parentClass ?? source.definition?.parentClass, detail.fingerprint);
     const rule = payload.kind === "class" && source && typeof source === "object"
         && source.id === payload.id && source.definition && typeof source.definition === "object"
         ? { ...payload, definition: source.definition } : payload;
@@ -33,6 +37,8 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
         element("span", { className: "rules-core-version-tab is-active", text: "Dorks & Dice" }),
         element("span", { className: "rules-core-version-tabs-context" }, badge(label(rule.kind), "secondary")));
     const body = element("div", { className: "rules-core-library-detail-body" });
+    if (backToClass) tabs.prepend(element("a", { className: "wiki-context-back", text: backToClass.label,
+        attributes: { href: backToClass.href } }));
     const article = element("article", { className: "rules-core-effective-rule card card-body mb-3" },
         element("h2", { className: "h3", text: rule.name }));
     const classOption = ["patron", "pact", "invocation"].includes(rule.kind);
@@ -111,4 +117,8 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
         element("h3", { className: "h5", text: "Reference context" }),
         definitionList([["Ruleset", detail.rulesetId], ["Native identity", rule.id], ["Category", rule.kind], ["Snapshot", detail.fingerprint]])));
     container.replaceChildren(tabs, body);
+    if (backToClass) for (const link of container.querySelectorAll("a[href]")) {
+        if (link.getAttribute("href")?.split("?")[0] === backToClass.href.split("?")[0].split("#")[0])
+            link.setAttribute("href", backToClass.href);
+    }
 }

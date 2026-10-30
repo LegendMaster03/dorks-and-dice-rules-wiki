@@ -81,6 +81,8 @@ export function createClassReturnState(root, { classId, fingerprint }) {
             }
             window.sessionStorage.setItem(storageKey, JSON.stringify({
                 version: 1, classId, fingerprint, route: window.location.pathname + window.location.search,
+                className: root.querySelector("h2")?.textContent,
+                fragment: window.location.hash.startsWith("#native-class-") ? window.location.hash : "",
                 systems: systems().flatMap((panel, index) =>
                     (saved && !applied.has(panel) ? saved.systems.includes(index) : panel.open) ? [index] : []),
                 controls, details: [...details],
@@ -90,4 +92,16 @@ export function createClassReturnState(root, { classId, fingerprint }) {
         } catch { /* Browsing remains usable without persistent reading state. */ }
     }, true);
     return { restore, restored: Boolean(saved) };
+}
+
+export function classReturnLink(classId, fingerprint) {
+    try {
+        const saved = JSON.parse(window.sessionStorage.getItem("rulesWikiClassReturn"));
+        if (saved?.version !== 1 || saved.classId !== classId || saved.fingerprint !== fingerprint
+            || typeof saved.route !== "string") return null;
+        const url = new URL(saved.route, window.location.origin);
+        if (url.origin !== window.location.origin || !url.pathname.endsWith(`/rules/${encodeURIComponent(classId)}`)) return null;
+        const fragment = typeof saved.fragment === "string" && /^#native-class-[\w.%~-]+$/.test(saved.fragment) ? saved.fragment : "";
+        return { href: url.pathname + url.search + fragment, label: `Back to ${saved.className || "class"}` };
+    } catch { return null; }
 }

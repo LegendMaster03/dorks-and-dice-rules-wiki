@@ -43,7 +43,7 @@ const SPECIAL_FIELDS = new Set([
     "description", "progression", "inlineFeatures", "classType", "levelRange", "band",
     "subclasses", "prestigeClasses", "startingEquipment", "pillarSystem",
     "alphaVersion", "rulesStatus", "playtestMode", "sourcePackage", "separateGrants",
-    "customizationSystems", "customizationSystemIds", "subclassPresets", "subclassPresetIds", "selectionRules", "referenceNotes"
+    "customizationSystems", "customizationSystemIds", "subclassPresets", "subclassPresetIds", "selectionRules", "referenceNotes", "playtestNotes"
 ]);
 
 function node(tag, { text, className, attributes, onClick, onChange } = {}, ...children) {
@@ -303,13 +303,20 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
     if (!inlineFeature) {
         content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
     }
-    card.append(content);
+    card.append(content, node("a", { className: "native-class-table-return", text: "Back to advancement", attributes: { href: "#native-class-progression" } }));
     return card;
 }
 
 function renderFeatures(rows, inline, renderValue, hrefForRule, getRule, firstLevel, registerLabel) {
     const sectionNode = section("native-class-features", "Features by level");
     const groups = node("div", { className: "native-class-feature-levels" });
+    const actions = node("div", { className: "wiki-disclosure-actions" });
+    for (const [title, open] of [["Expand all features", true], ["Collapse all features", false]]) actions.append(node("button", {
+        text: title, attributes: { type: "button" }, onClick: () => {
+            for (const disclosure of groups.querySelectorAll(".native-class-feature-level,.native-class-feature")) disclosure.open = open;
+        }
+    }));
+    sectionNode.append(actions);
     const used = new Set();
     const grouped = new Map();
     const featureCards = new Map();
@@ -497,14 +504,28 @@ export function renderNativeClass(rule, {
             ...(definition.separateGrants.pactMagicSlotsRecover === "short-or-long-rest" ? [node("p", { text:
                 "Pact Magic slots recover on a Short or Long Rest." })] : [])) : null;
     const navigation = node("nav", { className: "native-class-navigation", attributes: { "aria-label": "Class sections" } });
+    navigation.append(node("strong", { className: "wiki-class-nav-name", text: rule.name }));
+    const mobileSections = node("select", { className: "wiki-mobile-section-select", attributes: { "aria-label": "Class section" } });
+    const sectionLinks = [];
     const contents = [customization, progression.sectionNode, grants, features.sectionNode].filter(Boolean);
     for (const item of contents) {
-        const heading = item.querySelector?.("h3")?.textContent || item.children[0]?.textContent;
-        navigation.append(node("a", { text: heading, attributes: { href: `#${item.getAttribute("id") || "native-class-customization"}` } }));
+        const fullHeading = item.querySelector?.("h3")?.textContent || item.children[0]?.textContent;
+        const heading = ({ "Class customization": "Options", "Class advancement": "Advancement", "Spellcasting and resource notes": "Resources", "Features by level": "Features" })[fullHeading] || fullHeading;
+        const link = node("a", { text: heading, attributes: { href: `#${item.getAttribute("id") || "native-class-customization"}` } });
+        sectionLinks.push(link);
+        navigation.append(link);
+        mobileSections.append(node("option", { text: heading, attributes: { value: item.getAttribute("id") || "native-class-customization" } }));
     }
+    mobileSections.addEventListener("change", () => {
+        sectionLinks.find(link => link.getAttribute("href") === `#${mobileSections.value}`)?.click();
+    });
+    navigation.append(mobileSections);
     const notes = Array.isArray(definition.referenceNotes) ? definition.referenceNotes.filter(note => typeof note === "string") : [];
     root.append(navigation, ...(notes.length ? [node("aside", { className: "native-class-rules-note" },
         ...notes.flatMap(note => ruleParagraphs(note, node)))] : []), ...contents);
+    const playtestNotes = Array.isArray(definition.playtestNotes) ? definition.playtestNotes.filter(note => typeof note === "string") : [];
+    if (playtestNotes.length) root.append(node("aside", { className: "wiki-playtest-notes" },
+        node("h3", { text: "Playtest notes" }), ...playtestNotes.flatMap(note => ruleParagraphs(note, node))));
     // Hosted shell navigation may intercept ordinary # links and rebuild the
     // entire detail pane. Handle in-class fragments locally, before bubbling,
     // preserving expanded disclosures and filtered options. Full-rule links
@@ -522,6 +543,12 @@ export function renderNativeClass(rule, {
     const revealFragment = id => {
         const target = localTargets.get(id);
         if (!target) return false;
+        const sectionId = id.startsWith("native-class-feature") ? "native-class-features" : id;
+        for (const link of sectionLinks) {
+            if (link.getAttribute("href") === `#${sectionId}`) link.setAttribute("aria-current", "location");
+            else link.removeAttribute("aria-current");
+        }
+        if ([...mobileSections.children].some(option => option.getAttribute("value") === sectionId)) mobileSections.value = sectionId;
         const level = features.featureLevels.get(id) ??
             (target.className?.includes("native-class-feature-level") ? Number(target.getAttribute("data-class-level")) : undefined);
         if (level !== undefined) {

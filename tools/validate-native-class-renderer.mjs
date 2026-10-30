@@ -119,7 +119,7 @@ assert.match(clericView.textContent, /Complete advancement data/);
 const inlineDetail = nodes(clericView, el => el.tagName === "DETAILS" && el.className === "native-class-feature")[0];
 assert.match(inlineDetail.textContent, /Historical procedure/);
 assert.equal(nodes(clericView, el => el.tagName === "A" && el.attrs.href === "#native-class-feature-cleric.historical-turn-undead").length, 1);
-assert.equal(nodes(inlineDetail, el => el.tagName === "A").length, 0,
+assert.equal(nodes(inlineDetail, el => el.tagName === "A" && !el.attrs.href?.startsWith("#")).length, 0,
     "Inline features must not link to nonexistent native record IDs");
 
 // The renderer does not assume a universal three-pillar class structure.
@@ -240,7 +240,7 @@ invocationSearch.dispatch("input");
 const invocationsOptions = nodes(warlockView, el => el.className === "native-class-customization-option"
     && el.attrs["data-option-id"]?.startsWith("invocation."));
 assert.equal(invocationsOptions.filter(el => !el.hidden).length, 1);
-assert.match(warlockView.textContent, /1 shown · 1 matching · 2 total/);
+assert.match(warlockView.textContent, /1 of 2 Invocations shown · 1 matching/);
 
 const presetView = renderNativeClass(rule("Template", {
     progression: [], subclassPresets: [{ id: "preset.example", name: "Familiar traditional subclass",
@@ -268,7 +268,7 @@ wrappedDetail.dispatch("toggle");
 await new Promise(resolve => setImmediate(resolve));
 assert.match(wrappedDetail.textContent, /Nested feature text/);
 assert.match(wrappedDetail.textContent, /Still visible/);
-assert.equal(nodes(wrappedDetail, el => el.tagName === "A").length, 1);
+assert.equal(nodes(wrappedDetail, el => el.tagName === "A" && !el.attrs.href?.startsWith("#")).length, 1);
 console.log("Private native API envelope regression: full class, option and feature records OK");
 
 // Independent systems: class supplies identities only; definitions are fetched
@@ -584,7 +584,7 @@ const eligible = renderNativeClass(rule("Eligible", { customizationSystems: [{ n
         { id: "option.eligible.chain", name: "Chain Technique" }
     ] }] }), { renderValue });
 // Filters only appear when native prerequisites are actually documented.
-assert.equal(nodes(eligible, el => el.tagName === "SELECT").length, 0);
+assert.equal(nodes(eligible, el => el.tagName === "SELECT" && el.className !== "wiki-mobile-section-select").length, 0);
 const filteredOptions = [
     { id: "invocation.example.general", name: "General", minimumLevel: 1, requiredPact: null },
     { id: "invocation.example.blade", name: "Blade Mastery", minimumLevel: 5, requiredPact: "pact.warlock.blade" },
@@ -597,10 +597,6 @@ const filterExample = renderNativeClass(rule("FilterExample", {
 const facetControls = nodes(filterExample, el => el.className === "native-class-option-filters")[0];
 const selectors = nodes(facetControls, el => el.tagName === "SELECT");
 assert.equal(selectors.length, 2, "Native prerequisites should expose level and Pact facets");
-const overview = nodes(filterExample, el => el.className === "native-class-prerequisite-overview")[0];
-assert.ok(overview, "Invocation references should show Pact relationships without inferring legal builds");
-assert.match(overview.textContent, /Requires Blade/);
-assert.match(overview.textContent, /Requires Chain/);
 assert.match(filterExample.textContent, /not a character eligibility check/);
 const filterRows = nodes(filterExample, el => el.className === "native-class-customization-option");
 selectors[0].value = "4";
