@@ -43,20 +43,27 @@ export function installWikiExperience(app) {
         await navigate(type);
     };
     app.prepareWikiExperience = async () => {
-        app.wikiIndex = await app.api.getGlobalRulesCatalog({ limit: 100000 });
+        const readCatalog = app.api.getGlobalRulesCatalog.bind(app.api);
+        app.wikiIndex = await readCatalog({ limit: 100000 });
         app.wikiKinds = new Set(app.wikiIndex.entityTypeFacets.map(f => f.entityType));
-        // Keep one coherent snapshot while reading; refresh is explicit.
+        const searches = new Map();
+        // Preserve native search semantics, including owner and prerequisite matches.
+        // Reuse matching snapshot results while changing filters or pages.
         app.api.getGlobalRulesCatalog = async (filters = {}) => {
-            const query = String(filters.query ?? "").trim().toLocaleLowerCase();
-            const rows = app.wikiIndex.rules.filter(row => (!filters.entityType || row.entityType === filters.entityType)
-                && (!query || row.displayName.toLocaleLowerCase().includes(query)));
+            const query = String(filters.query ?? "").trim();
+            let catalog = app.wikiIndex;
+            if (query) {
+                if (!searches.has(query)) searches.set(query, readCatalog({ query, limit: 100000 }).then(result => {
+                    if (result.fingerprint !== app.wikiIndex.fingerprint)
+                        throw new Error("The published rules have changed. Refresh to search the current snapshot.");
+                    return result;
+                }).catch(error => { searches.delete(query); throw error; }));
+                catalog = await searches.get(query);
+            }
+            const rows = catalog.rules.filter(row => !filters.entityType || row.entityType === filters.entityType);
             const offset = filters.offset ?? 0;
-            return { ...app.wikiIndex, rules: rows.slice(offset, offset + (filters.limit ?? 25)), totalCount: rows.length };
+            return { ...catalog, rules: rows.slice(offset, offset + (filters.limit ?? 25)), totalCount: rows.length };
         };
-        const previous = readStored("rulesWikiSnapshot", null);
-        app.wikiSnapshotChanged = Boolean(previous?.fingerprint && previous.fingerprint !== app.wikiIndex.fingerprint);
-        app.wikiSnapshotObserved = previous?.fingerprint === app.wikiIndex.fingerprint ? previous.observedAt : new Date().toISOString();
-        save("rulesWikiSnapshot", { fingerprint: app.wikiIndex.fingerprint, observedAt: app.wikiSnapshotObserved });
         // Class summaries provide version labels without inventing a release date.
         app.wikiPlaytests = [];
         await Promise.all(app.wikiIndex.rules.filter(r => r.entityType === "class").map(async row => {
@@ -178,10 +185,6 @@ export function installWikiExperience(app) {
             section.append(list, el("button", { type: "button", text: "Clear recently viewed", onClick: () => { save("rulesWikiRecent", []); section.remove(); } }));
             home.append(section);
         }
-        home.append(el("section", { className: "wiki-content-updates" }, el("h2", { text: "Content updates" }),
-            el("p", { text: app.wikiSnapshotChanged ? "The published rules have changed since your last visit." : "You are viewing the current published snapshot." }),
-            el("p", { text: "Snapshot first seen on this device: " + new Date(app.wikiSnapshotObserved).toLocaleString() }),
-            el("p", { className: "wiki-muted", text: "A per-rule change history is not supplied by the current catalog." })));
         if (app.wikiPlaytests?.length) home.append(el("aside", { className: "wiki-playtest-notes" },
             el("h2", { text: "Playtest information" }), el("p", { text: "These published classes are in active testing. Open a class for its current rules." }),
             ...app.wikiPlaytests.map(rule => el("a", { text: `${rule.name} · Alpha ${rule.version}`,

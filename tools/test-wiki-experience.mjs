@@ -7,6 +7,7 @@ const dom = new JSDOM('<main id="tool-root"></main>', { url: "https://site.test/
 for (const name of ["window", "document", "Node", "Element", "HTMLElement", "Event", "KeyboardEvent"]) globalThis[name] = dom.window[name];
 const fingerprint = "a".repeat(64);
 let published = fingerprint;
+const searches = [];
 const root = document.getElementById("tool-root");
 const records = [
     { nativeId: "class.warlock", displayName: "Warlock", entityType: "class" },
@@ -15,7 +16,11 @@ const records = [
 const app = {
     root, hostContext: { toolBasePath: "/tools/rules-wiki" }, browserFilters: { entityType: "", query: "" },
     api: {
-        getGlobalRulesCatalog: async () => ({ rules: records, entityTypeFacets: [{ entityType: "class" }, { entityType: "condition" }], fingerprint }),
+        getGlobalRulesCatalog: async (filters = {}) => {
+            searches.push(filters.query);
+            return { rules: filters.query === "owner" ? [records[0]] : records,
+                entityTypeFacets: [{ entityType: "class" }, { entityType: "condition" }], fingerprint };
+        },
         getNativeRulesets: async () => ({ rulesets: [{ id: "first-party-001", fingerprint: published }] }),
         getNativeRule: async () => ({ rule: { definition: { alphaVersion: "0.3.1" } } })
     },
@@ -27,6 +32,11 @@ installWikiExperience(app);
 await app.prepareWikiExperience();
 await app.render();
 assert.ok(root.querySelector(".wiki-home"));
+assert.equal(root.textContent.includes("Content updates"), false);
+const ownerSearch = await app.api.getGlobalRulesCatalog({ query: "owner" });
+assert.equal(ownerSearch.rules[0].nativeId, "class.warlock", "Keep native search matches beyond display names");
+await app.api.getGlobalRulesCatalog({ query: "owner", offset: 1 });
+assert.equal(searches.filter(query => query === "owner").length, 1, "Paging reuses the same search snapshot");
 assert.equal(root.querySelector(".rules-core-library-workspace"), null);
 assert.match(root.textContent, /Warlock · Alpha 0.3.1/);
 assert.equal([...root.querySelectorAll("summary")].some(e => e.textContent === "Magic"), false);

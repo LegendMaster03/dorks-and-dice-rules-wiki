@@ -31,7 +31,6 @@
 .wiki-home-links button:hover { border-color: var(--wiki-accent); }
 .wiki-recent ul { display: flex; flex-wrap: wrap; list-style: none; padding: 0; gap: .8rem 1.3rem; }
 .wiki-recent button { background: none; color: inherit; border: 1px solid var(--wiki-border); padding: .45rem .6rem; border-radius: .3rem; }
-.wiki-content-updates p { margin: .4rem 0; }
 .wiki-muted { color: var(--bs-secondary-color, #536168); }
 .wiki-playtest-notes { border: 1px dashed #a77b37; border-left: 4px solid #a77b37; border-radius: .5rem; padding: 1rem 1.2rem; margin: 2rem 0; }
 .wiki-playtest-notes h2 { margin-top: 0; }
