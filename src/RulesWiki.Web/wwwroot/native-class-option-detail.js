@@ -5,6 +5,11 @@ const titleCase = value => String(value).replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[-_]/g, " ").replace(/\b\w/g, char => char.toUpperCase());
 const referenceName = id => titleCase(String(id).split(".").at(-1));
 
+export function ruleParagraphs(text, node, className) {
+    return String(text).split(/\n\s*\n/).filter(part => part.trim())
+        .map(part => node("p", { text: part.trim(), className }));
+}
+
 export function installClassReferenceStyles() {
     if (document.getElementById(STYLE_ID)) return;
     const link = document.createElement("link");
@@ -56,16 +61,18 @@ export function renderClassOptionContent(rule, { node, renderValue, hrefForRule,
     fact("invocationCost", "Invocation cost", definition.invocationCost);
     fact("cost", "Invocation cost", definition.cost);
     if (typeof definition.repeatable === "boolean") fact("repeatable", "Repeatable", definition.repeatable ? "Yes" : "No");
+    fact("rulesVersion", "Rule version", definition.rulesVersion);
+    fact("cantripPrerequisite", "Cantrip prerequisite", definition.cantripPrerequisite);
     if (facts.children.length) root.append(facts);
-    if (typeof definition.description === "string") root.append(node("p", {
-        className: "native-class-option-description", text: definition.description }));
+    if (typeof definition.description === "string") root.append(...ruleParagraphs(
+        definition.description, node, "native-class-option-description"));
 
     for (const [key, value] of Object.entries(definition)) {
         const improvement = /^deepenedAtLevel(\d+)$/.exec(key);
         if (!improvement || typeof value !== "string") continue;
         handled.add(key);
         root.append(node("section", { className: "native-class-option-improvement" },
-            node(sectionHeading, { text: `Level ${improvement[1]} · Deepened Pact` }), node("p", { text: value })));
+            node(sectionHeading, { text: `Level ${improvement[1]} · Deepened Pact` }), ...ruleParagraphs(value, node)));
     }
     if (Array.isArray(definition.features) && definition.features.every(feature =>
         feature && typeof feature.name === "string" && Number.isInteger(feature.level))) {
@@ -75,7 +82,7 @@ export function renderClassOptionContent(rule, { node, renderValue, hrefForRule,
             ...definition.features.map(feature => {
                 const section = node("section", { className: "native-class-option-feature" },
                     node(featureHeading, { text: `Level ${feature.level} · ${feature.name}` }));
-                if (typeof feature.description === "string") section.append(node("p", { text: feature.description }));
+                if (typeof feature.description === "string") section.append(...ruleParagraphs(feature.description, node));
                 const extra = Object.fromEntries(Object.entries(feature).filter(([key]) =>
                     !["level", "name", "description"].includes(key)));
                 if (Object.keys(extra).length) section.append(renderValue(extra));
@@ -88,7 +95,9 @@ export function renderClassOptionContent(rule, { node, renderValue, hrefForRule,
         handled.add("spellAccess");
         const schedule = node("section", { className: "native-class-option-rules" },
             node(sectionHeading, { text: "Spell grants" }));
-        if (access.defaultMode === "automatic-known-no-ordinary-selection-cost") {
+        if (typeof access.description === "string") {
+            schedule.append(...ruleParagraphs(access.description, node));
+        } else if (access.defaultMode === "automatic-known-no-ordinary-selection-cost") {
             schedule.append(node("p", { text: "These spells are automatically known and do not use ordinary spells-known selections." }));
         }
         const table = node("table", { className: "native-class-option-spells" },
@@ -98,7 +107,7 @@ export function renderClassOptionContent(rule, { node, renderValue, hrefForRule,
                 node("th", { text: grant.level, attributes: { scope: "row" } }),
                 node("td", { text: grant.spells.join(", ") })))));
         schedule.append(table);
-        const extra = Object.fromEntries(Object.entries(access).filter(([key]) => key !== "grants"
+        const extra = Object.fromEntries(Object.entries(access).filter(([key]) => !["grants", "description"].includes(key)
             && !(key === "defaultMode" && access.defaultMode === "automatic-known-no-ordinary-selection-cost")));
         const complete = access.grants.filter(grant => Object.keys(grant).some(key => !["level", "spells"].includes(key)));
         if (complete.length) extra.completeGrantRecords = complete;
