@@ -569,3 +569,13 @@
     .native-class-option-meta { margin-left: .4rem; }
     .native-class-option-facts { gap: .5rem 1rem; }
 }
+.native-class-table-features .native-class-related-feature,
+.native-class-table-features .native-class-progression-improvement {
+    display: block;
+    margin-top: .25rem;
+}
+.native-class-related-features {
+    display: grid;
+    gap: .5rem;
+    padding: .75rem;
+}

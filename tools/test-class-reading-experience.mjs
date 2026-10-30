@@ -60,7 +60,7 @@ assert.equal(pact.querySelectorAll("input, select").length, 0);
 const blade = pact.querySelector('[data-option-id="pact.warlock.blade"]');
 blade.querySelector("summary").click();
 await wait(() => blade.querySelector(".native-class-option-improvement"));
-assert.match(blade.querySelector(".native-class-option-improvement").textContent, /Level 5.*Attack twice/s);
+assert.match(blade.querySelector(".native-class-option-improvement").textContent, /Level 5.*two Pact-weapon attacks/s);
 assert.equal(blade.querySelector(".native-class-option-improvement").closest(".native-class-technical-details"), null);
 assert.equal(blade.querySelector("h5")?.textContent, "Level 5 · Deepened Pact", "Do not repeat the option title in its body");
 
@@ -91,6 +91,15 @@ for (const name of ["Invocations", "Cantrips", "Spells known", "Pact slots", "Sl
 }
 assert.deepEqual([...root.querySelectorAll(".native-class-table tbody tr")]
     .filter(row => row.textContent.includes("Ability Score Improvement")).map(row => Number(row.getAttribute("data-class-level"))), [4, 8, 12, 16, 19]);
+const levelText = level => root.querySelector(`.native-class-table tbody tr[data-class-level="${level}"]`).textContent;
+assert.match(levelText(6), /Dark One's Own Luck \(Fiend\)/);
+assert.match(levelText(7), /Fiend spell grants.*Damage Reduction increases to 2/s);
+assert.match(levelText(14), /Hurl Through Hell \(Fiend\)/);
+assert.match(levelText(20), /Energy Resistance increases to 10/);
+assert.equal(root.querySelector('.native-class-table tr[data-class-level="6"] a.native-class-related-feature').getAttribute("href"),
+    "/tools/rules-wiki/rules/patron.warlock.fiend");
+assert.match(root.querySelector('[id="native-class-features-level-6"]').textContent, /Dark One's Own Luck/);
+assert.match(root.textContent, /Cantrip totals exclude automatic Eldritch Blast and Pact grants/);
 
 // Returning from an independent rule remounts the class in the hosted shell.
 // Restore deferred catalogs and their filters, not just the URL fragment.
@@ -188,7 +197,26 @@ for (const record of records.filter(record => ["patron", "pact", "invocation"].i
         assert.equal(container.querySelectorAll(".native-class-option-feature").length, record.features.length);
         assert.equal(container.querySelectorAll(".native-class-option-spells tbody tr").length, record.spellAccess.grants.length);
     }
-    if (record.kind === "pact") assert.equal(container.querySelector(".native-class-option-improvement p").textContent, record.deepenedAtLevel5);
+    if (record.kind === "pact") assert.equal([...container.querySelectorAll(".native-class-option-improvement p")]
+        .map(paragraph => paragraph.textContent).join("\n\n"), record.deepenedAtLevel5);
+    if (record.id === "pact.warlock.talisman") {
+        const paragraphs = [...container.querySelectorAll(".native-class-option-description")].map(p => p.textContent);
+        assert.ok(paragraphs.some(text => text.startsWith("Untrained Guidance:")));
+        assert.ok(paragraphs.some(text => text.startsWith("Fortunate Correction:")));
+    }
+    if (record.id === "invocation.investment-of-the-chain-master") {
+        assert.match(container.textContent, /Necrotic, Psychic, or Radiant/);
+        assert.match(container.textContent, /preserving superior base speed/);
+    }
+    if (record.id === "invocation.agonizing-blast") {
+        assert.match(container.querySelector(".native-class-option-facts").textContent, /Cantrip prerequisite.*deals damage/s);
+    }
+    if (record.kind === "patron") {
+        const spells = container.querySelector(".native-class-option-spells").parentElement;
+        assert.match(spells.querySelector("p").textContent, /restore that choice for another eligible spell/);
+        assert.match(container.querySelectorAll(".native-class-option-feature")[2].textContent, /twentieth subsequent turn start/);
+        assert.ok(container.querySelectorAll(".native-class-option-feature")[2].querySelectorAll("p").length >= 4);
+    }
 }
 console.log("Hosted class reading: compact catalogs, Pact rules, shared direct routes, repeated grants, resource columns, real click propagation and Back history passed.");
 dom.window.close();

@@ -161,3 +161,10 @@ Treat these as design questions, not approved decisions.
 - Local regression coverage includes class levels above 20 and two-attempt recovery from temporary private API failures.
 - **Deployment boundary:** The existing `Deploy Rules Wiki` GitHub Action runs only after the `Validate Rules Wiki` workflow passes for a push to `main`. A local patch or a PR branch does not deploy to the dev Wiki. Apply this work through the normal review/merge/CI path; do not bypass the private Core tunnel or make the Wiki public.
 - Dev review checklist: verify Warlock and all other native classes; expand each Warlock system against the split native catalog; inspect narrow browser pane and mobile viewport; follow a progression feature link, return to the class, test level and Pact filters, verify a transient-error state, and confirm that no generic JSON or unsupported subclass preset is shown in place of native rules.
+# Warlock rule parity restoration
+
+The native Core descriptions now retain complete play procedures and the approved October 30 feedback. The Wiki preserves paragraph breaks in class features, Pact improvements, Patron features, and spell-access rules. Invocation version and cantrip prerequisites appear with the other requirements.
+
+Advancement rows display native `improvements` and `relatedFeatures` references alongside class grants. Related features link to their owning rule and remain distinct from base-class entitlements. This allows Patron milestones and spell grants to remain visible without duplicating grants or adding class-specific mechanics to the renderer.
+
+Mounted-application coverage uses the restored native records and verifies recurring ASIs, Patron references, resource improvements, Talisman paragraphs, complete spell access, and the approved Psychic damage option. Tester guidance remains separate from the rules; a dedicated removable guidance system is deferred.

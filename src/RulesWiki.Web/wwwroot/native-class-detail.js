@@ -1,5 +1,6 @@
 import { renderClassCustomizations, discoverOwnedOptions } from "./native-class-customization.js";
 import { createClassReturnState } from "./native-class-view-state.js";
+import { ruleParagraphs } from "./native-class-option-detail.js";
 // Native class reference. The class document and linked feature records are
 // authoritative; this renderer only presents their contents.
 const CLASS_STYLE_ID = "rules-wiki-native-class-styles";
@@ -42,7 +43,7 @@ const SPECIAL_FIELDS = new Set([
     "description", "progression", "inlineFeatures", "classType", "levelRange", "band",
     "subclasses", "prestigeClasses", "startingEquipment", "pillarSystem",
     "alphaVersion", "rulesStatus", "playtestMode", "sourcePackage", "separateGrants",
-    "customizationSystems", "customizationSystemIds", "subclassPresets", "subclassPresetIds", "selectionRules"
+    "customizationSystems", "customizationSystemIds", "subclassPresets", "subclassPresetIds", "selectionRules", "referenceNotes"
 ]);
 
 function node(tag, { text, className, attributes, onClick, onChange } = {}, ...children) {
@@ -138,7 +139,19 @@ function progressionCell(row, key) {
     return value === null || value === undefined ? "—" : valueLabel(value);
 }
 
-function renderProgression(rows, renderValue, firstLevel, registerLabel) {
+function relatedFeatures(row) {
+    return (Array.isArray(row?.relatedFeatures) ? row.relatedFeatures : []).filter(feature =>
+        typeof feature?.name === "string" && typeof feature.ruleId === "string");
+}
+
+function relatedFeatureLinks(row, hrefForRule) {
+    return relatedFeatures(row).map(feature => node("a", {
+        text: feature.name, className: "native-class-related-feature",
+        attributes: { href: hrefForRule(feature.ruleId) }
+    }));
+}
+
+function renderProgression(rows, renderValue, firstLevel, registerLabel, hrefForRule) {
     if (!rows.length) return { sectionNode: section("native-class-progression", "Class advancement",
         node("p", { text: "This class has no structured advancement table." })), select: null };
     const keys = ["level", "featureGrants", ...PREFERRED_COLUMNS,
@@ -178,7 +191,12 @@ function renderProgression(rows, renderValue, firstLevel, registerLabel) {
                     registerLabel(id, link);
                     cell.append(link);
                 }
-                if (!(row.featureGrants?.length)) cell.textContent = "—";
+                cell.append(...relatedFeatureLinks(row, hrefForRule));
+                for (const improvement of row.improvements ?? []) {
+                    if (typeof improvement === "string") cell.append(node("span", {
+                        className: "native-class-progression-improvement", text: improvement }));
+                }
+                if (!cell.children.length) cell.textContent = "—";
                 tr.append(cell);
             } else {
                 tr.append(node("td", { className: extra, text: progressionCell(row, key) }));
@@ -258,7 +276,7 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
         attributes: { id: featureAnchor(id, level, firstLevel) } }, summary);
     const content = node("div", { className: "native-class-feature-content" });
     if (inlineFeature) {
-        if (inlineFeature.description) content.append(node("p", { text: inlineFeature.description }));
+        if (inlineFeature.description) content.append(...ruleParagraphs(inlineFeature.description, node));
         if (inlineFeature.mechanics !== undefined) content.append(renderValue(inlineFeature.mechanics));
     } else if (getRule) {
         content.append(node("p", { className: "native-class-help", text: "Expand to load the authoritative feature definition." }));
@@ -271,7 +289,7 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
                 if (!rule || rule.id !== id) throw new Error("The requested feature was not returned.");
                 const featureDefinition = rule.definition?.definition ?? rule.definition;
                 content.replaceChildren();
-                if (featureDefinition?.description) content.append(node("p", { text: featureDefinition.description }));
+                if (featureDefinition?.description) content.append(...ruleParagraphs(featureDefinition.description, node));
                 if (featureDefinition && typeof featureDefinition === "object") {
                     const other = Object.fromEntries(Object.entries(featureDefinition)
                         .filter(([key]) => key !== "description"));
@@ -325,7 +343,7 @@ function renderFeatures(rows, inline, renderValue, hrefForRule, getRule, firstLe
         used.add(feature.id);
     }
     for (const row of rows) {
-        if (Array.isArray(row.improvements) && row.improvements.length && !grouped.has(row.level)) {
+        if ((row.improvements?.length || relatedFeatures(row).length) && !grouped.has(row.level)) {
             grouped.set(row.level, []);
         }
     }
@@ -338,12 +356,15 @@ function renderFeatures(rows, inline, renderValue, hrefForRule, getRule, firstLe
             list.append(card);
         }
         const row = rows.find(item => item.level === level);
+        const related = relatedFeatureLinks(row, hrefForRule);
+        if (related.length) list.append(node("div", { className: "native-class-related-features" },
+            node("strong", { text: "Related features" }), ...related));
         if (row?.improvements?.length) {
             list.append(node("div", { className: "native-class-level-improvements" },
                 node("strong", { text: "Feature improvements" }), renderValue(row.improvements)));
         }
         const preview = node("span", { className: "native-class-level-feature-preview" });
-        if (!ids.length) preview.textContent = "Feature improvements";
+        if (!ids.length) preview.textContent = relatedFeatures(row).map(feature => feature.name).join(" · ") || "Feature improvements";
         ids.forEach((id, index) => {
             if (index) preview.append(document.createTextNode(" · "));
             const name = node("span", { text: featureName(id) });
@@ -445,7 +466,7 @@ export function renderNativeClass(rule, {
         return ruleRequests.get(id);
     });
     const features = renderFeatures(rows, inline, renderValue, hrefForRule, loadRule, firstLevel, registerLabel);
-    const progression = renderProgression(rows, renderValue, firstLevel, registerLabel);
+    const progression = renderProgression(rows, renderValue, firstLevel, registerLabel, hrefForRule);
     let jump = null;
     if (progression.select) {
         const select = progression.select;
@@ -516,7 +537,9 @@ export function renderNativeClass(rule, {
         const heading = item.querySelector?.("h3")?.textContent || item.children[0]?.textContent;
         navigation.append(node("a", { text: heading, attributes: { href: `#${item.getAttribute("id") || "native-class-customization"}` } }));
     }
-    root.append(navigation, ...contents);
+    const notes = Array.isArray(definition.referenceNotes) ? definition.referenceNotes.filter(note => typeof note === "string") : [];
+    root.append(navigation, ...(notes.length ? [node("aside", { className: "native-class-rules-note" },
+        ...notes.flatMap(note => ruleParagraphs(note, node)))] : []), ...contents);
     // Hosted shell navigation may intercept ordinary # links and rebuild the
     // entire detail pane. Handle in-class fragments locally, before bubbling,
     // preserving expanded disclosures and filtered options. Full-rule links
