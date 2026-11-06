@@ -2,7 +2,7 @@
 
 ## October 30: complete class reading flows
 
-The post-deployment review found that generic option filters, equal-height card grids, and separate embedded/direct renderers prevented the class UI from working as a coherent reference. The user authorized fixes, merging, deployment review, and iteration before the next visual review.
+The post-deployment review found that generic option filters, equal-height card grids, and separate embedded/direct renderers prevented the class UI from working as a coherent reference. **Decision (2026-10-30):** The project maintainer approved corrective changes, merging, deployment review, and further iteration before the next visual review.
 
 - Patron uses a compact overview and a clearly labeled link to its complete reference. Patron and Pact catalogs have no search or level filters; Invocation search explicitly searches names and its level control shows options available by a class level.
 - Pact and Invocation disclosures occupy the full reading width. Opening one never stretches an adjacent closed option. Pact level-5 improvements and published prerequisites are primary rules, not source metadata.

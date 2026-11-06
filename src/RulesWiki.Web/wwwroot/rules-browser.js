@@ -370,6 +370,8 @@ async function renderRulesBrowser(app, container) {
     shell.append(heading, controls, workspace);
     container.append(shell);
 
+    // Index and detail requests can overlap when the scope, search, or selection
+    // changes. Generation counters discard responses from superseded requests.
     let loadSerial = 0;
     let detailSerial = 0;
     let rowByConceptKey = new Map();
@@ -384,6 +386,8 @@ async function renderRulesBrowser(app, container) {
     let loadMore = async () => [];
     let load = async () => {};
 
+    // Local filtering and sorting must not treat a partial paged response as
+    // the complete catalog. Keep the server's result model until all pages load.
     const hasCompleteDataset = () =>
         hasPublishedRuleset
         && canSortBrowserDataset(currentRules.length, totalCount);
@@ -807,6 +811,8 @@ async function renderRulesBrowser(app, container) {
         }
     };
 
+    // Capture the request generation before any await; later responses may
+    // update the browser only if no newer filter/scope request superseded them.
     load = async ({ keepSelection = false } = {}) => {
         const serial = ++loadSerial;
         app.browserPage = 0;
