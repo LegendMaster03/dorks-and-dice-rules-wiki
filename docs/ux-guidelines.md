@@ -1,6 +1,8 @@
-# Rules Core UX Guidelines
+# Rules Wiki UX guidelines
 
-Rules Core is a rules workspace, not a generic CRUD dashboard. The interface should make the distinction between source material, adjudicated rules, campaign overrides, and maintenance operations obvious without requiring users to understand the storage model first.
+> These are product-design guidelines, not a claim that every source-management or Rules Lawyer workflow is implemented in the current native Wiki reference slice. Historical resolved-reference behavior must not be mistaken for a live Rules Core API contract.
+
+Rules Wiki is a rules workspace, not a generic CRUD dashboard. The interface should make the distinction between source material, adjudicated rules, campaign overrides, and maintenance operations obvious without requiring users to understand the storage model first.
 
 ## Information architecture
 

@@ -1,6 +1,8 @@
 # Rules Wiki architecture
 
-Rules Wiki is the human-facing Dorks & Dice Tool for the rules platform. Rules Library browsing, detail and comparison views, Sources, Rules Lawyer authoring and adjudication, campaign rule authoring, source-update review, and related administration UI all live here. Rules Core remains the authoritative rules backend.
+> **Implementation scope:** This document describes the full intended first-party Wiki architecture, including source history, adjudication, and authoring. At the current native-reference implementation checkpoint, `RulesCoreUiOperationDispatcher` accepts only `getNativeRulesets`, `searchNativeRules`, and `getNativeRule` (GET-only private native reads). The additional workflows below are architectural responsibilities, **not evidence that their UI operations are already implemented**. See [the README](../README.md) for the live request path and development contract.
+
+Rules Wiki is the human-facing Dorks & Dice Tool for the rules platform. Its intended scope includes rules browsing, source history and comparison, Rules Lawyer adjudication, campaign authoring, and source administration. The present native reference slice exposes narrower read operations; additional capabilities remain subject to implementation. Rules Core remains the authoritative rules backend.
 
 ## Non-negotiable Rules Core boundary
 

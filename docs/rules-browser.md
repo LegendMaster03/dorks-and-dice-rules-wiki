@@ -1,5 +1,7 @@
 # Rules Wiki reference browser
 
+> **Historical resolved-reference browser specification:** The `/api/wiki/references`, campaign reference, and `/api/rules` contracts below describe the previous rules/reference model. They are **not active endpoints** in the current native Rules Core host. The implemented Rules Wiki dispatcher currently allows only the three named private native-read operations documented in [the README](../README.md), targeting `/api/private/rulesets`. This document remains as design history for future browsing and comparison requirements; it does not authorize recreating the retired APIs.
+
 Rules Wiki is the human-facing browser for rules and source history. Its primary browsing boundary is the Rules Core Wiki-reference API, not the resolved consumer catalog.
 
 ## API ownership
