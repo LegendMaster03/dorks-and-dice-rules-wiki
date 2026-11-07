@@ -1,5 +1,7 @@
 # Frontend render lifecycle
 
+> **Historical frontend design notes:** This document describes the earlier Rules Core-hosted UI lifecycle and its component names. The frontend was separated into Rules Wiki, and the native reference integration is narrower than the former authoring workspace. Preserve the rendering and idempotence principles where applicable, but confirm current module names and behaviors in the Rules Wiki frontend before treating an implementation detail below as active.
+
 Rules Core treats application state and application render functions as the source of truth for its DOM. Application-owned DOM must not use `MutationObserver` as its normal render lifecycle.
 
 ## Lifecycle contract
