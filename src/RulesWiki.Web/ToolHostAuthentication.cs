@@ -5,6 +5,7 @@ using System.Text.Json;
 
 namespace RulesWiki.Web;
 
+/// <summary>Protocol headers shared with the Site's Tool Host authentication flow.</summary>
 public static class ToolHostAuthenticationHeaders
 {
     public const string Ticket = "X-Dorks-Tool-Auth-Ticket";
@@ -15,6 +16,10 @@ public static class ToolHostAuthenticationHeaders
 public sealed record ToolHostUserContext(string Id, string DisplayName);
 public sealed record ToolHostCampaignContext(Guid Id, string Name, string Role);
 
+/// <summary>
+/// Identity and authorization facts asserted by the Site, not inferred from
+/// browser state. PrivateTunnelCapability is a server-side exchange credential.
+/// </summary>
 public sealed record ToolHostAuthenticationContext(
     int ContractVersion,
     string ToolSlug,
@@ -27,6 +32,7 @@ public sealed record ToolHostAuthenticationContext(
     public string? PrivateTunnelCapability { get; init; }
 }
 
+/// <summary>Validates an incoming Tool Host ticket against the Site.</summary>
 public interface IToolHostAuthenticationClient
 {
     Task<ToolHostAuthenticationContext?> RedeemAsync(
@@ -35,6 +41,10 @@ public interface IToolHostAuthenticationClient
         CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Redeems tickets only at the fixed Rules Wiki introspection endpoint and
+/// verifies the returned contract, tool identity, and required user fields.
+/// </summary>
 public sealed class DorksAndDiceToolHostAuthenticationClient(HttpClient httpClient)
     : IToolHostAuthenticationClient
 {
@@ -76,6 +86,8 @@ public sealed class DorksAndDiceToolHostAuthenticationClient(HttpClient httpClie
         if (context.User is null || string.IsNullOrWhiteSpace(context.User.Id))
             throw new InvalidDataException("Tool Host authentication context does not include a stable user ID.");
 
+        // A capability may be absent: the public shell still loads, but private
+        // Core operations will not succeed without an exchange credential.
         var privateCapability = ReadOptionalSingleHeader(response, ToolHostAuthenticationHeaders.PrivateTunnelCapability);
         return context with { PrivateTunnelCapability = privateCapability };
     }

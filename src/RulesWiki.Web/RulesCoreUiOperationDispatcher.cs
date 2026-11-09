@@ -13,6 +13,7 @@ public sealed class RulesWikiUiOperationRequest
 /// </summary>
 public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rulesCore)
 {
+    /// <summary>Translate a browser operation into one validated private Core read.</summary>
     public async Task InvokeAsync(HttpContext context, string operation, RulesWikiUiOperationRequest request)
     {
         context.Response.Headers.CacheControl = "no-store";
@@ -60,6 +61,10 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
         }
     }
 
+    /// <summary>
+    /// This mapping is the browser-facing API boundary. Adding a native endpoint
+    /// requires an explicit operation here; arbitrary paths are not accepted.
+    /// </summary>
     public static RulesCorePrivateRequest BuildRequest(string operation, JsonElement[] arguments)
     {
         ArgumentNullException.ThrowIfNull(arguments);
@@ -73,6 +78,8 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
         };
     }
 
+    // Search parameters are an allowlist, including their value types and size.
+    // Escape each component before constructing the private Core query string.
     private static RulesCorePrivateRequest Search(JsonElement[] arguments)
     {
         var rulesetId = Id(arguments, 0);

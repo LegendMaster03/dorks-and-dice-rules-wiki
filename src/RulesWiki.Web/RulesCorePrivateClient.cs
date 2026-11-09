@@ -4,6 +4,7 @@ using System.Text.Json;
 
 namespace RulesWiki.Web;
 
+/// <summary>Short-lived credential issued by the Tool Host for the private Core hop.</summary>
 public sealed record ToolPrivateTunnelTicketResponse(string TargetKey, string Ticket, string IntrospectionPath);
 public sealed record RulesCorePrivateRequest(HttpMethod Method, string PathAndQuery, JsonElement? Body = null);
 
@@ -12,6 +13,7 @@ public sealed class RulesCorePrivateTunnelException(string message, int statusCo
     public int StatusCode { get; } = statusCode;
 }
 
+/// <summary>Only the server-side dispatcher should issue native Rules Core reads.</summary>
 public interface IRulesCorePrivateClient
 {
     Task<HttpResponseMessage> SendAsync(
@@ -20,6 +22,10 @@ public interface IRulesCorePrivateClient
         CancellationToken cancellationToken = default);
 }
 
+/// <summary>
+/// Exchanges a Site-granted capability for a target-scoped ticket, then forwards
+/// an allowlisted read to the private Rules Core ingress.
+/// </summary>
 public sealed class RulesCorePrivateClient(IHttpClientFactory httpClientFactory) : IRulesCorePrivateClient
 {
     public const string ToolHostClientName = "rules-wiki-private-tunnel-control-plane";
@@ -39,6 +45,7 @@ public sealed class RulesCorePrivateClient(IHttpClientFactory httpClientFactory)
         if (string.IsNullOrWhiteSpace(authentication.PrivateTunnelCapability))
             throw new RulesCorePrivateTunnelException("Rules Wiki private authorization is unavailable.");
 
+        // The capability authorizes a ticket exchange; it is not itself sent to Core.
         var toolHostClient = httpClientFactory.CreateClient(ToolHostClientName);
         using var exchange = new HttpRequestMessage(HttpMethod.Post, TicketExchangePath);
         exchange.Headers.Authorization = new AuthenticationHeaderValue(
@@ -71,6 +78,8 @@ public sealed class RulesCorePrivateClient(IHttpClientFactory httpClientFactory)
             request.PathAndQuery.Contains('#'))
             throw new RulesCorePrivateTunnelException("The requested native operation is not permitted.", 400);
 
+        // Forward only the validated target ticket and fixed introspection route.
+        // The outbound client is configured against the private Core base address.
         var rulesCoreClient = httpClientFactory.CreateClient(RulesCoreClientName);
         using var outbound = new HttpRequestMessage(HttpMethod.Get, relative);
         outbound.Headers.TryAddWithoutValidation(ToolHostAuthenticationHeaders.Ticket, ticket.Ticket);

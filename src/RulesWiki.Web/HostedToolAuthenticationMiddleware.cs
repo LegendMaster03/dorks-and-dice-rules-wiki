@@ -2,6 +2,11 @@ using System.Security.Claims;
 
 namespace RulesWiki.Web;
 
+/// <summary>
+/// Redeems the Site Tool Host's signed request context and attaches its identity
+/// to the current request. Missing ticket headers leave public shell/health paths
+/// accessible; protected operation handlers still require this context.
+/// </summary>
 public sealed class HostedToolAuthenticationMiddleware(RequestDelegate next)
 {
     private const string ContextItemKey = "RulesWiki.ToolHostAuthenticationContext";
@@ -18,6 +23,7 @@ public sealed class HostedToolAuthenticationMiddleware(RequestDelegate next)
             return;
         }
 
+        // A partial or ambiguous credential pair must never be treated as anonymous.
         httpContext.Response.Headers.CacheControl = "no-store";
         if (!hasTicketHeader || !hasIntrospectionHeader || tickets.Count != 1 || introspectionPaths.Count != 1
             || string.IsNullOrWhiteSpace(tickets[0]) || string.IsNullOrWhiteSpace(introspectionPaths[0]))
@@ -45,6 +51,8 @@ public sealed class HostedToolAuthenticationMiddleware(RequestDelegate next)
             return;
         }
 
+        // Preserve the complete context for server-side Core authorization rather
+        // than reconstructing permissions from the projected ASP.NET claims.
         httpContext.Items[ContextItemKey] = authenticationContext;
         httpContext.User = BuildPrincipal(authenticationContext);
         await next(httpContext);
@@ -56,6 +64,7 @@ public sealed class HostedToolAuthenticationMiddleware(RequestDelegate next)
     public static void SetAuthenticationContext(HttpContext httpContext, ToolHostAuthenticationContext context) =>
         httpContext.Items[ContextItemKey] = context;
 
+    /// <summary>Expose Site identity and roles to ASP.NET without adding new grants.</summary>
     private static ClaimsPrincipal BuildPrincipal(ToolHostAuthenticationContext context)
     {
         var claims = new List<Claim>

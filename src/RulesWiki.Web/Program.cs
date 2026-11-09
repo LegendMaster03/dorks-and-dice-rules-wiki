@@ -4,6 +4,8 @@ var builder = WebApplication.CreateBuilder(args);
 var toolHostBaseUri = RequireHttpUri(builder.Configuration, "ToolHost:BaseUrl");
 var rulesCorePrivateBaseUri = RequireHttpUri(builder.Configuration, "RulesCorePrivate:BaseUrl");
 
+// Tool Host and private Core calls use distinct clients. Redirects and cookies are
+// disabled so credentials stay on their intended service boundaries.
 builder.Services.AddHttpClient<IToolHostAuthenticationClient, DorksAndDiceToolHostAuthenticationClient>(client =>
 {
     client.BaseAddress = toolHostBaseUri;
@@ -27,6 +29,8 @@ builder.Services.AddSingleton<RulesCoreUiOperationDispatcher>();
 builder.Services.AddHealthChecks();
 var app = builder.Build();
 
+// Resolve the Site-issued identity before routing protected native operations.
+// Static assets and health probes do not require a Tool Host ticket.
 app.UseMiddleware<HostedToolAuthenticationMiddleware>();
 app.UseStaticFiles();
 app.MapHealthChecks("/health");
@@ -44,6 +48,8 @@ app.MapPost("/_rules-wiki/operations/{operation}", async (
     RulesCoreUiOperationDispatcher dispatcher) =>
     await dispatcher.InvokeAsync(context, operation, request));
 
+// Keep the fallback shell independent of legacy authoring routes. The Site may
+// embed the same client bundle under its hosted tool base path.
 const string standaloneShell = """
 <!doctype html>
 <html lang="en">
