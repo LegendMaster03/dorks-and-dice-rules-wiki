@@ -152,6 +152,8 @@ function relatedFeatureLinks(row, hrefForRule) {
     }));
 }
 
+// Show each published level row as supplied; feature definitions are separate
+// records and must not be invented from names or table cells.
 function renderProgression(rows, renderValue, firstLevel, registerLabel, hrefForRule) {
     if (!rows.length) return { sectionNode: section("native-class-progression", "Class advancement",
         node("p", { text: "This class has no structured advancement table." })) };
@@ -407,6 +409,7 @@ function renderOther(definition, renderValue) {
  * Render a native class without supplying inferred rules or assuming a fixed
  * number of class customization pillars. `getRule` is called on demand only.
  */
+/** Render a native class using its own progression and linked feature records. */
 export function renderNativeClass(rule, {
     renderValue, hrefForRule = id => `/rules/${encodeURIComponent(id)}`,
     getRule = null, searchRules = null, catalogFingerprint = null

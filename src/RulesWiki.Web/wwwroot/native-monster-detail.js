@@ -423,6 +423,7 @@ function renderKaijuProfile(profile, renderRaw, kaijuLayout) {
                 element("dt", { text: pretty(key) }), element("dd", {}, renderRaw(value))]))) : null);
 }
 
+/** Base statblock is shared; explicit Kaiju block types extend its presentation. */
 export function renderNativeMonster(rule, renderRaw) {
     const d = monsterDefinition(rule.definition);
     const kaijuLayout = isKaijuStatblock(d);

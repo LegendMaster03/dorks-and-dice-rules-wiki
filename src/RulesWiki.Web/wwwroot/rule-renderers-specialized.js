@@ -1,3 +1,7 @@
+/**
+ * Category-specific layouts for structured reference documents. Display
+ * normalization is separate from the Rules Core's effective-rule resolution.
+ */
 import { codeBlock, element } from "./ui.js";
 import {
     ABILITIES,
@@ -34,6 +38,7 @@ import {
     titleCase
 } from "./rule-renderer-support.js";
 
+/** Present a resolved monster document through the shared statblock helpers. */
 export function renderMonster(document = {}, options = {}) {
     const root = element("article", { className: "rules-core-rule-renderer rules-core-monster-stat-block" });
     const consumed = new Set();
@@ -115,6 +120,7 @@ export function renderMonster(document = {}, options = {}) {
     return root;
 }
 
+/** Render structured spell fields without making a local rules determination. */
 export function renderSpell(document = {}, options = {}) {
     const level = formatSpellLevel(document?.level);
     const school = formatSpellSchool(document?.school);
@@ -305,6 +311,8 @@ export function renderGeneralRule(document = {}, options = {}) {
     });
 }
 
+// This shared frame lays out known fields and leaves remaining source content
+// available rather than silently treating it as unsupported mechanics.
 function renderStructuredRule(
     document = {},
     options = {},

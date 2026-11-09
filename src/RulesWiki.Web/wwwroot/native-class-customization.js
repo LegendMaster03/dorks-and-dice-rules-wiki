@@ -92,6 +92,8 @@ function systemFromObject(name, item) {
     };
 }
 
+// Normalize the published class's selection-system descriptions for reading;
+// do not assume a fixed patron/pact/invocation model for every class.
 function normalizedSystems(definition) {
     // The source may supply inline presentation metadata or references to
     // separately authored systems. This adapter does not require either shape.
@@ -546,6 +548,7 @@ function renderPublishedSelections(key, source, { node, renderValue }) {
     return section;
 }
 
+/** Display independently published options and presets without applying choices. */
 export function renderClassCustomizations(definition, dependencies) {
     const { node, renderValue, fallbackFields } = dependencies;
     const systems = normalizedSystems(definition);

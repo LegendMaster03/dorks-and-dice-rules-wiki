@@ -19,6 +19,7 @@ export function installClassReferenceStyles() {
     document.head.append(link);
 }
 
+/** Preserve fields from the published option record for display. */
 export function normalizeClassOption(rule) {
     const source = rule.definition && typeof rule.definition === "object" ? rule.definition : rule;
     const definition = source.definition && typeof source.definition === "object"
@@ -28,6 +29,7 @@ export function normalizeClassOption(rule) {
         kind: rule.kind || source.kind, definition };
 }
 
+/** Render embedded and standalone class options from the same native record. */
 export function renderClassOptionContent(rule, { node, renderValue, hrefForRule, embedded = false }) {
     const loaded = normalizeClassOption(rule);
     const { definition: definition, kind } = loaded;

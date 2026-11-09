@@ -1,3 +1,8 @@
+/**
+ * Versioned class-family reference workspace. The selected effective document,
+ * individual source variations, and comparison are separate reading views.
+ * Relationships and semantic comparisons are requested from Rules Core.
+ */
 import { alertNode, badge, clear, describeError, element, setButtonBusy } from "./ui.js";
 import { renderRuleContent } from "./rule-renderer-support.js";
 import { renderSemanticComparison } from "./semantic-comparison.js";
@@ -16,6 +21,7 @@ import {
 
 export { isClassFamilyReference } from "./class-family-model.js";
 
+/** Assemble tabs only while this selection remains current. */
 export async function renderClassFamilyReferenceDetail(
     app,
     container,
@@ -156,6 +162,7 @@ export async function renderClassFamilyReferenceDetail(
     app.presentRenderedFragment?.(container);
 }
 
+/** Avoid attaching late relation lookups to a superseded detail selection. */
 export async function loadClassFamilyContextIfCurrent(
     app,
     reference,
@@ -196,6 +203,8 @@ async function loadClassFamilyContext(app, reference, campaignId) {
     return context;
 }
 
+// Render the effective or inspected source document without changing which
+// variation Rules Core considers authoritative for this scope.
 function renderClassFamilyDocumentView(app, container, detail, options) {
     clear(container);
     const { reference } = detail;
@@ -567,6 +576,8 @@ function renderCategoryHistory(history) {
     return section;
 }
 
+// The local progression outline is explanatory; the Core comparison supplies
+// authoritative semantic differences and compatibility information.
 function renderClassFamilyComparison(
     container,
     app,

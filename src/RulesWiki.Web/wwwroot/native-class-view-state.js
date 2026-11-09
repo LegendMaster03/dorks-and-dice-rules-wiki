@@ -1,6 +1,7 @@
 // Session-scoped reading state only: no character choices or rule definitions.
 // Consume on return to the same class/snapshot, and restore lazy sections through
 // their explicit render hook rather than observing arbitrary DOM mutations.
+/** Restore reading position only for the same class and catalog fingerprint. */
 export function createClassReturnState(root, { classId, fingerprint }) {
     const storageKey = "rulesWikiClassReturn";
     let saved = null;
@@ -94,6 +95,7 @@ export function createClassReturnState(root, { classId, fingerprint }) {
     return { restore, restored: Boolean(saved) };
 }
 
+/** Create a return link without treating view state as a character selection. */
 export function classReturnLink(classId, fingerprint) {
     try {
         const saved = JSON.parse(window.sessionStorage.getItem("rulesWikiClassReturn"));

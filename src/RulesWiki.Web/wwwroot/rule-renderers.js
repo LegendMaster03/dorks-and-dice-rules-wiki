@@ -1,3 +1,7 @@
+/**
+ * Dispatches resolved reference documents to category-specific view renderers.
+ * New presentation types register here; rule interpretation stays in Core.
+ */
 import {
     renderCompactStatistic,
     renderEntityHeader,
@@ -35,6 +39,7 @@ const renderers = new Map([
     ["rule", renderGeneralRule]
 ]);
 
+/** Select a display renderer by effective entity type, not by source location. */
 export function renderResolvedRule(entityType, document, options = {}) {
     const configuration = getEntityBrowserConfig(entityType);
     const rendererKey = String(configuration.renderer ?? entityType ?? "").toLowerCase();

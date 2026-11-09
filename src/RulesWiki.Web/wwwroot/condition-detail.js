@@ -403,6 +403,7 @@ function renderRecovery(recovery, renderRaw) {
     return facts.length ? section("Recovery", element("ul", { className: "rules-wiki-condition-fact-list" }, facts)) : null;
 }
 
+/** Display published condition levels, links, and effects without resolving them. */
 export function renderConditionDefinition(definition, { renderRaw, hrefForCondition }) {
     const root = element("div", { className: "rules-wiki-condition-detail" });
     const add = node => { if (node) root.append(node); };

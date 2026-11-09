@@ -20,6 +20,7 @@ export function renderNativeValue(value) {
         element("dd", { className: "col-sm-8" }, renderNativeValue(item))
     ]));
 }
+/** Dispatch a native record to its dedicated read-only detail presentation. */
 export function renderNativeDetail(container, detail, onBack, app = null) {
     const payload = detail.rule;
     if (!payload || !payload.definition) throw new Error("Native rule detail is unavailable.");

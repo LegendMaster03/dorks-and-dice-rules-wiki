@@ -1,3 +1,7 @@
+/**
+ * Shared display primitives and formatting for rule documents. Input comes
+ * from Core or a source variation; these helpers do not adjudicate mechanics.
+ */
 import { codeBlock, element } from "./ui.js";
 
 export const ABILITIES = [
@@ -256,6 +260,7 @@ export function renderRulesTextSection(title, entries) {
     return section;
 }
 
+/** Keep extended mechanics visible rather than discarding unfamiliar fields. */
 export function renderAdditionalMechanics(entries) {
     const section = element("section", { className: "rules-core-monster-section rules-core-additional-mechanics" });
     section.append(element("h4", { className: "rules-core-monster-section-title", text: "Additional Mechanics" }));
@@ -310,6 +315,7 @@ export function renderRulesCoreExtensions(extension) {
     return sections;
 }
 
+/** Render structured or text rule content without interpreting its effects. */
 export function renderRuleContent(value) {
     const wrapper = element("div", { className: "rules-core-rule-content" });
     appendRuleContent(wrapper, value);
@@ -370,6 +376,7 @@ export function appendRuleContent(parent, value) {
     parent.append(list);
 }
 
+/** Display table data as published, with no inferred progression or values. */
 export function renderRuleTable(table) {
     const wrapper = element("div", { className: "table-responsive rules-core-inline-table" });
     const node = element("table", { className: "table table-sm mb-0" });
