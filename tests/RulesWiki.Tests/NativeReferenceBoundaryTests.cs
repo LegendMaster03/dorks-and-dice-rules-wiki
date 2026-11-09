@@ -1,3 +1,4 @@
+// Verifies the server-side allowlist and native reference authorization boundary.
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;

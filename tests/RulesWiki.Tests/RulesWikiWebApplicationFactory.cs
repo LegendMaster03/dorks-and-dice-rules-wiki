@@ -1,3 +1,4 @@
+// Test host configuration for isolated Wiki endpoint and middleware checks.
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 

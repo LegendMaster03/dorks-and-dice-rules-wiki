@@ -1,3 +1,4 @@
+// Checks source import notification behavior and asset contracts.
 using System.Net;
 
 namespace RulesWiki.Tests;

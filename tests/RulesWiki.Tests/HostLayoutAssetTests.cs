@@ -1,3 +1,4 @@
+// Verifies that hosted layout assets preserve the expected shell contract.
 using System.Net;
 
 namespace RulesWiki.Tests;

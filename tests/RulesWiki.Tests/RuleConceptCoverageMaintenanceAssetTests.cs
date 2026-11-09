@@ -1,3 +1,4 @@
+// Checks the presence and structure of coverage maintenance assets.
 using System.Net;
 
 namespace RulesWiki.Tests;
