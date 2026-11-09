@@ -1,3 +1,4 @@
+// Checks native reference navigation, catalog adaptation, and detail views.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

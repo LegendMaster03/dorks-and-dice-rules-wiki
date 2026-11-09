@@ -1,3 +1,4 @@
+// Checks resolved monster presentation and supported display fields.
 class FakeNode {
     constructor(tagName = "", text = "") {
         this.tagName = String(tagName).toUpperCase();

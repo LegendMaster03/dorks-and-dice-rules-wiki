@@ -1,3 +1,4 @@
+// Checks asynchronous rendering and stale-response lifecycle behavior.
 class FakeNode {}
 
 class FakeText extends FakeNode {

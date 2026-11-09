@@ -1,3 +1,4 @@
+// Checks the reference-browser shell, routing, and list/detail presentation.
 import {
     RULE_FAMILY_TABS,
     getEntityBrowserConfig,

@@ -1,3 +1,4 @@
+// Checks native class progression, linked features, and customization.
 import assert from "node:assert/strict";
 import { renderNativeClass } from "../src/RulesWiki.Web/wwwroot/native-class-detail.js";
 import { discoverOwnedOptions } from "../src/RulesWiki.Web/wwwroot/native-class-customization.js";

@@ -1,3 +1,4 @@
+// Checks condition presentation without interpreting mechanical effects.
 import assert from "node:assert/strict";
 import { renderNativeDetail } from "../src/RulesWiki.Web/wwwroot/native-rule-detail.js";
 

@@ -1,3 +1,4 @@
+// Checks reference and restricted-workspace route boundaries.
 import { installWorkspaceRouting, RULES_LAWYER_TOOL_ROUTE } from "../src/RulesWiki.Web/wwwroot/workspace-routing.js";
 import {
     catalogRouteForEntity,

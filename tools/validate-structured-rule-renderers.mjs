@@ -1,3 +1,4 @@
+// Checks category-specific rendering and preservation of additional fields.
 class FakeNode {
     constructor(tagName = "", text = "") {
         this.tagName = String(tagName).toUpperCase();

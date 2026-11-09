@@ -1,3 +1,4 @@
+// Checks native monster and Kaiju statblock presentation contracts.
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { renderNativeMonster } from "../src/RulesWiki.Web/wwwroot/native-monster-detail.js";
