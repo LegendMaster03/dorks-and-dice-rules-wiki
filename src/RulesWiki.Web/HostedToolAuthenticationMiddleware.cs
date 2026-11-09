@@ -3,7 +3,7 @@ using System.Security.Claims;
 namespace RulesWiki.Web;
 
 /// <summary>
-/// Redeems the Site Tool Host's signed request context and attaches its identity
+/// Redeems the Site Tool Host's ticket-provided identity context and attaches its identity
 /// to the current request. Missing ticket headers leave public shell/health paths
 /// accessible; protected operation handlers still require this context.
 /// </summary>

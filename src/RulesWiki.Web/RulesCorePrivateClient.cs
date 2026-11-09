@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace RulesWiki.Web;
 
-/// <summary>Short-lived credential issued by the Tool Host for the private Core hop.</summary>
+/// <summary>Target-scoped credential issued by the Tool Host for the private Core hop.</summary>
 public sealed record ToolPrivateTunnelTicketResponse(string TargetKey, string Ticket, string IntrospectionPath);
 public sealed record RulesCorePrivateRequest(HttpMethod Method, string PathAndQuery, JsonElement? Body = null);
 
