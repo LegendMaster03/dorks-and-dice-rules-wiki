@@ -1,3 +1,8 @@
+/**
+ * Move reference-browser context controls as soon as the shell is rendered,
+ * before the first asynchronous catalog read finishes.
+ */
+/** Override the view render hook without waiting for catalog completion. */
 export function installImmediateReferenceBrowserLayout(app) {
     const renderActiveView = app.renderActiveView.bind(app);
     app.renderActiveView = async container => {

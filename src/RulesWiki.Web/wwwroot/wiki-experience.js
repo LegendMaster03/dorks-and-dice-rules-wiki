@@ -1,3 +1,7 @@
+/**
+ * Wiki landing page, recently read references, and resizable index/detail
+ * workspace. Reading history is presentation state, not ruleset state.
+ */
 import { element as el, clear } from "./ui.js";
 import { currentToolRoute } from "./rules-browser-routing.js";
 
@@ -19,6 +23,7 @@ export const recentRules = () => {
     const entries = readStored("rulesWikiRecent", []);
     return Array.isArray(entries) ? entries.filter(e => e && typeof e.id === "string" && typeof e.name === "string").slice(0, 8) : [];
 };
+/** Record recently viewed native references for the Wiki landing page. */
 export function rememberRule(rule) {
     save("rulesWikiRecent", [{ id: rule.id, name: rule.name, kind: rule.kind }, ...recentRules().filter(e => e.id !== rule.id)].slice(0, 8));
 }
@@ -201,6 +206,7 @@ export function installWikiExperience(app) {
     }
 }
 
+/** Add a draggable divider for the reference browser's two panes. */
 export function installPaneDivider(workspace) {
     if (workspace.querySelector(".wiki-pane-divider")) return;
     let ratio = Number(readStored("rulesWikiPaneRatio", .32));

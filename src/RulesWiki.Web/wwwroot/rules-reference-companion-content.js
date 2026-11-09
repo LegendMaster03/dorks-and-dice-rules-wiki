@@ -1,8 +1,13 @@
+/**
+ * Attach related explanatory/source companion material to versioned references.
+ * Companion content does not amend the effective rule.
+ */
 import { element } from "./ui.js";
 import { renderNamedRuleEntry } from "./rule-renderer-support.js";
 
 const SUPPORTED_COMPANION_KINDS = new Set(["monsterfluff", "racefluff", "spellfluff"]);
 
+/** Cache companion reads by reference and scope, not by visible title. */
 export function installWikiReferenceCompanionContent(app) {
     const detailCache = new Map();
     const companionCache = new Map();

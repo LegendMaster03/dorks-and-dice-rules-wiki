@@ -1,8 +1,13 @@
+/**
+ * Routes between hosted Wiki workspaces and checks restricted authoring
+ * destinations. Navigation is not a substitute for server authorization.
+ */
 import { alertNode, clear, element } from "./ui.js";
 
 export const RULES_LAWYER_TOOL_ROUTE = "/adjudication/rules-lawyer";
 const ACCESS_DENIED_VIEW = "rules-lawyer-access-denied";
 
+/** Resolve the initial hosted tool route and install navigation handlers. */
 export function installWorkspaceRouting(app) {
     app.viewNavigation ??= {};
 

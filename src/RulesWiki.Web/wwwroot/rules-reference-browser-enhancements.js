@@ -1,3 +1,7 @@
+/**
+ * Additional presentation and navigation on top of the reference browser.
+ * This layer changes visible layout, not effective rules or native identifiers.
+ */
 import { element } from "./ui.js";
 import { normalizeBrowserFieldFilters } from "./rules-browser-filters.js";
 import { currentToolRoute, replaceToolRoute } from "./rules-browser-routing.js";
@@ -26,6 +30,7 @@ const BARE_RENDERER_TAG_LABELS = new Map([
     ["actsavefailorsuccess", "Failure or Success:"]
 ]);
 
+/** Enhance rendered reference fragments after the browser has produced them. */
 export function installWikiReferenceBrowserEnhancements(app) {
     app.api.onReferenceFacetsChanged = () => app.refreshWikiReferenceFacetControls?.();
 
@@ -293,6 +298,7 @@ function normalizeVisibleRuleText(value) {
     return result;
 }
 
+// Keep cosmetic monster presentation separate from native statblock mechanics.
 function enhanceMonsterReferencePresentation(container) {
     sanitizeMonsterGear(container);
     consumeAdditionalMonsterMechanics(container);

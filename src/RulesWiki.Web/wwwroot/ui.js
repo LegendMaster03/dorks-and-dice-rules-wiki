@@ -1,3 +1,8 @@
+/**
+ * Shared DOM construction, forms, and formatting helpers for the Wiki views.
+ * Callers remain responsible for supplying trusted content to HTML slots.
+ */
+/** Build DOM nodes from explicit attributes, text, and child elements. */
 export function element(tagName, options = {}, ...children) {
     const node = document.createElement(tagName);
 
@@ -220,6 +225,7 @@ export function definitionList(items) {
     return list;
 }
 
+/** Coordinate an action button's disabled state and temporary label. */
 export function setButtonBusy(button, busy, busyText = "Working…") {
     if (!button.dataset.idleText) {
         button.dataset.idleText = button.textContent ?? "";

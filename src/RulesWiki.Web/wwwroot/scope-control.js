@@ -1,8 +1,13 @@
+/**
+ * Reconcile available campaign scopes with the Site-issued campaign roles.
+ * The view selector does not grant access to a campaign by itself.
+ */
 import { element } from "./ui.js";
 
 const DORKS_MODE = "dorks-and-dice";
 const CAMPAIGN_DM_ROLE = "DM";
 
+/** Restrict campaign editing and selected scope to permitted DM campaigns. */
 export function installAdjudicationScopeControl(app) {
     app.dmCampaigns = app.campaigns.filter(campaign => campaign.role === CAMPAIGN_DM_ROLE);
     app.canEditCampaign = app.hostContext.siteMode === DORKS_MODE && app.dmCampaigns.length > 0;

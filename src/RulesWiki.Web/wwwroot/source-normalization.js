@@ -1,3 +1,7 @@
+/**
+ * Review normalization suggestions for imported sources. Matching candidates
+ * are evidence for Core decisions, not automatic authority to merge records.
+ */
 import {
     alertNode,
     badge,
@@ -9,6 +13,7 @@ import {
     paginationControls
 } from "./ui.js";
 
+/** Add normalization review controls to the global authoring overview. */
 export function installSourceNormalization(app) {
     const renderGlobalOverview = app.renderGlobalOverview.bind(app);
     app.renderGlobalOverview = async container => {

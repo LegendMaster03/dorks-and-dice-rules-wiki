@@ -1,3 +1,7 @@
+/**
+ * Browse accessible source material independently of published effective
+ * rules. The source library shows provenance and revisions, not adjudications.
+ */
 import {
     alertNode,
     badge,
@@ -87,6 +91,7 @@ const ENTITY_TYPES = [
     ["rule", "Other rules"]
 ];
 
+/** Install the source reader and its routes in the hosted workspace. */
 export function installSourceLibrary(app) {
     app.canBrowseSourceLibrary = app.hostContext.siteMode === DORKS_MODE;
     app.libraryFilters = { entityType: "", query: "", page: 0 };
@@ -493,6 +498,7 @@ async function renderSourceEntityRoute(app, container, entityId) {
     await renderSourceEntityDetail(app, detail, entityId);
 }
 
+// Source entity detail is inspection data; do not present it as a published rule.
 async function renderSourceEntityDetail(app, container, entityId) {
     clear(container);
     container.append(element("div", { className: "text-body-secondary", text: "Loading source entity…" }));

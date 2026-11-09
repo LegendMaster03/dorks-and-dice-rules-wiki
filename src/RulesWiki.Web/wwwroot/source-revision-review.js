@@ -1,3 +1,7 @@
+/**
+ * Review upstream source revisions separately from effective-rule publication.
+ * Accepting or rejecting a source update is an explicit workflow action.
+ */
 import {
     alertNode,
     badge,
@@ -10,6 +14,7 @@ import {
     setButtonBusy
 } from "./ui.js";
 
+/** Add source-update review to the existing authoring workspace. */
 export function installSourceRevisionReview(app) {
     const renderGlobalOverview = app.renderGlobalOverview.bind(app);
     app.renderGlobalOverview = async container => {
@@ -118,6 +123,7 @@ function renderUpdatesCard(app, container, updates) {
     return card;
 }
 
+// Display the server's prospective change summary before adoption or rejection.
 async function renderPreview(app, container, conceptId) {
     clear(container);
     const toolbar = element("div", { className: "d-flex flex-wrap gap-2 mb-3" });

@@ -1,3 +1,7 @@
+/**
+ * Source-removal workflow. The selected source and the consequences shown by
+ * Core must be reviewed before issuing a destructive action.
+ */
 import {
     actionBar,
     alertNode,
@@ -11,6 +15,7 @@ import {
 
 const DORKS_MODE = "dorks-and-dice";
 
+/** Present source removal only within the authorized source context. */
 export function installSourceRemoval(app) {
     app.canRemoveSource = app.hostContext.siteMode === DORKS_MODE && Boolean(app.session.user);
     if (!app.canRemoveSource) return;

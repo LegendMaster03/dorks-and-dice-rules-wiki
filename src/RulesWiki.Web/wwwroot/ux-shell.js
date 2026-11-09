@@ -1,3 +1,7 @@
+/**
+ * Hosted shell navigation and render lifecycle. Layout enhancement runs
+ * after view creation, while capability checks decide which links are shown.
+ */
 import { element, enhanceRenderedFragment, pageLead } from "./ui.js";
 import { RULE_FAMILY_TABS } from "./rules-browser.js";
 
@@ -114,6 +118,7 @@ const IN_PLACE_VIEW_METHODS = [
     "renderCampaignConcept"
 ];
 
+/** Install workspace presentation without changing Rules Core capabilities. */
 export function installRulesCoreUx(app) {
     installPresentationOrdering(app);
     app.renderHeader = () => renderWorkspaceHeader(app);
@@ -123,6 +128,8 @@ export function installRulesCoreUx(app) {
     installExplicitRenderLifecycle(app);
 }
 
+// Coordinate view rendering explicitly; DOM observers should not become a
+// second source of lifecycle or navigation state.
 function installExplicitRenderLifecycle(app) {
     app.uxActiveRenderDepth = 0;
 

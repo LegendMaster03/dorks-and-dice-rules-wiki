@@ -1,3 +1,7 @@
+/**
+ * Source lineage and revision comparison UI. Similar source records and
+ * decision previews are not themselves evidence of published rule equality.
+ */
 import {
     alertNode,
     badge,
@@ -23,6 +27,7 @@ const LINEAGE_KINDS = [
     "related-version"
 ];
 
+/** Expose cross-version source review and explicit resolution controls. */
 export function installSourceVersioning(app) {
     app.canReviewVersions = app.hostContext.siteMode === DORKS_MODE
         && (app.session.globalRoles ?? []).includes(RULES_LAWYER_ROLE);
