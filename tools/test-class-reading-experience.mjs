@@ -1,3 +1,5 @@
+// DOM-level integration fixture for class reading, linked features, and return
+// navigation, with simulated Core responses.
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { JSDOM } from "jsdom";

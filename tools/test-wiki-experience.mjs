@@ -1,3 +1,4 @@
+// Reading-experience regression checks for navigation and view state.
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { installWikiExperience, installPaneDivider } from "../src/RulesWiki.Web/wwwroot/wiki-experience.js";

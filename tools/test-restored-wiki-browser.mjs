@@ -1,3 +1,4 @@
+// Regression checks for restored Wiki navigation and reference views.
 import assert from 'node:assert/strict';
 import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<main id="tool-root" data-tool-context-url="/context"></main>', {

@@ -1,3 +1,5 @@
+// Static regression checks for private Core access and the restricted browser
+// operation surface; runtime authorization tests remain separate.
 import fs from "node:fs";
 import path from "node:path";
 

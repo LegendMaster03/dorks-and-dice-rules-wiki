@@ -1,3 +1,5 @@
+// Regression checks for browser configuration, complete-result filtering, and
+// URL state. These fixtures describe presentation, not rules decisions.
 import {
     getBrowserFilterDefinitions,
     getEntityBrowserConfig,

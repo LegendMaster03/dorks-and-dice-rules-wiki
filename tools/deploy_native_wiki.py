@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Deployment guard: validate the reviewed network topology and private Core
+# target before replacing the running Wiki service.
 """Guard Wiki replacement on an already verified native Core."""
 import json
 import os

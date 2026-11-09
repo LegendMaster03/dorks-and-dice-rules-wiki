@@ -1,3 +1,4 @@
+// Regression checks for class UI remediation and navigation behavior.
 import assert from "node:assert/strict";
 import { renderNativeClass } from "../src/RulesWiki.Web/wwwroot/native-class-detail.js";
 

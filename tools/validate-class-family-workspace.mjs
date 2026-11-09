@@ -1,3 +1,4 @@
+// Class-family progression, variation, and comparison presentation checks.
 import { loadClassFamilyContextIfCurrent } from "../src/RulesWiki.Web/wwwroot/class-family-workspace.js";
 import {
     classFamilyIdentityFields,
