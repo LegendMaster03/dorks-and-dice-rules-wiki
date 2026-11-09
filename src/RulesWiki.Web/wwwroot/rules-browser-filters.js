@@ -1,3 +1,7 @@
+/**
+ * Distinguishes server-side request filters from client-complete filters and
+ * normalizes filters when navigating between reference families.
+ */
 import { getBrowserFilterDefinitions } from "./rules-browser-config.js";
 
 const COLLATOR = new Intl.Collator(undefined, {
@@ -17,6 +21,7 @@ export function normalizeBrowserFieldFilters(entityType, values = {}) {
     return normalized;
 }
 
+/** Preserve only filters that are compatible with the destination family. */
 export function normalizeBrowserFieldFiltersForEntityTransition(
     sourceEntityType,
     destinationEntityType,
@@ -124,6 +129,7 @@ export function hasClientBrowserFilters(entityType, fieldFilters = {}) {
     return Object.keys(normalized).some(key => clientKeys.has(key));
 }
 
+/** Load remaining pages before evaluating a filter against the full catalog. */
 export async function loadCompleteBrowserDataset({
     hasMore,
     loadMore,
@@ -144,6 +150,7 @@ export async function loadCompleteBrowserDataset({
     return { complete: true, error: null };
 }
 
+/** Never present a partial catalog as a fully client-filtered result. */
 export function resolveBrowserFilterApplication(
     rules,
     entityType,

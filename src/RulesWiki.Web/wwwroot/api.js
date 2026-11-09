@@ -1,3 +1,7 @@
+/**
+ * Browser transport through the Site Tool Host. Named native operations keep
+ * private Core URLs out of client-controlled requests.
+ */
 export class RulesCoreHttpError extends Error {
     constructor(message, status, details = null) {
         super(message);
@@ -13,6 +17,7 @@ export async function loadToolHostContext(root) {
     return requestJson(url);
 }
 
+/** Expose only the native reads supported by the Wiki's server dispatcher. */
 export class RulesCoreApi {
     constructor(hostContext) {
         if (!hostContext?.apiBaseUrl) throw new Error("The Tool Host API base URL is missing.");
@@ -35,6 +40,7 @@ export class RulesCoreApi {
     }
 }
 
+// Centralize no-store requests and preserve status/details for error UI.
 async function requestJson(url, options = {}) {
     const headers = new Headers({ Accept: "application/json" });
     const config = { method: options.method ?? "GET", credentials: "same-origin", cache: "no-store", headers };

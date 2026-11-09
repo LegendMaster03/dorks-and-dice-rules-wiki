@@ -1,3 +1,7 @@
+/**
+ * Declarative category routing, columns, and filter modes. Each family shares
+ * the browser shell while choosing its own fields and detail presentation.
+ */
 const DEFAULT_COLUMNS = [
     column("name", "Name", "minmax(9rem, 2fr)"),
     column("entityType", "Type", "minmax(5rem, .8fr)"),
@@ -11,6 +15,7 @@ const SHARED_FILTERS = [
     filter("overridesOnly", "Campaign state", "server", { kind: "campaign-override" })
 ];
 
+// Category-specific filters marked client-complete require every result page.
 const FAMILY_CONFIGS = [
     config("", "All Content", null, DEFAULT_COLUMNS, [], { rowSummaryFields: ["edition"], renderer: "generic" }),
     config("monster", "Bestiary", "monsters", [
@@ -106,6 +111,7 @@ function config(entityType, label, routeFamily, columns, filters, options = {}) 
 function genericConfig(entityType) { return config(entityType, humanizeEntityType(entityType), null, DEFAULT_COLUMNS, [], { rowSummaryFields: ["edition"], renderer: "generic" }); }
 function column(key, label, width, align = null) { return Object.freeze({ key, label, width, align, sortable: true }); }
 function filter(key, label, mode, value) { return Object.freeze({ key, label, mode, value }); }
+// Only complete catalogs may be filtered by browser fields or relationships.
 function fieldFilter(key, label) { return filter(key, label, "client-complete", { kind: "browser-field", field: key }); }
 function relationshipFilter(key, label, relationshipKind, relatedEntityType = null) { return filter(key, label, "client-complete", { kind: "relationship", relationshipKind, relatedEntityType }); }
 function speciesColumns() { return [column("name", "Name", "minmax(9rem, 2fr)"), column("ability", "Ability", "minmax(7rem, 1.1fr)"), column("size", "Size", "minmax(4rem, .65fr)"), column("source", "Source", "minmax(4rem, .65fr)")]; }

@@ -1,3 +1,4 @@
+/** Bootstrap the native read-only Wiki inside the established hosted shell. */
 import { RulesCoreApi, loadToolHostContext } from "./api.js";
 import { RulesAuthoringApp } from "./authoring.js";
 import { installResolvedRulesBrowser } from "./rules-browser.js";
@@ -25,6 +26,8 @@ try {
     const session = await api.getOptionalSession();
     // The Site supplies identity; the native Core currently exposes no authoring
     // or campaign capabilities. Never infer those capabilities from Site roles.
+    // This shared shell predates the native reader. Site roles alone do not
+    // authorize Core authoring, so the Wiki installs no authoring grants.
     const app = new RulesAuthoringApp(root, api, hostContext, { ...session, globalRoles: [] }, []);
     app.nativeReferenceOnly = true;
     installResolvedRulesBrowser(app);

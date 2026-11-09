@@ -1,4 +1,10 @@
+/**
+ * Normalize class, subclass, and prestige-class data for presentation without
+ * introducing independent mechanical rules outside Rules Core.
+ */
 const CLASS_FAMILY_TYPES = new Set(["class", "subclass", "prestigeclass"]);
+// Advancement metadata can accompany a document without being embedded in it.
+// Associate it by document identity instead of mutating authoritative data.
 const ADVANCEMENT_FEATURES_BY_DOCUMENT = new WeakMap();
 
 export function normalizeClassFamilyType(value) {
@@ -20,6 +26,7 @@ export function isClassFamilyReference(detail) {
     return categories.some(isClassFamilyType);
 }
 
+/** Associate explicit advancement features with their source documents. */
 export function registerClassFamilyAdvancementMetadata(detail) {
     if (!detail || typeof detail !== "object") return detail;
     registerAdvancementMetadata(detail.effectiveDocument, detail.effectiveAdvancementFeatures);
@@ -118,6 +125,7 @@ export function progressionSurfaces(document = {}) {
     return deduplicateSurfaces(surfaces);
 }
 
+/** Prefer supplied advancement features over display-derived fallback groups. */
 export function featureGroups(document = {}, category = "class") {
     const kind = classFamilyKind(category) ?? "class";
     const explicit = advancementMetadata(document);

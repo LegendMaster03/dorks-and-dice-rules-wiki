@@ -1,5 +1,7 @@
 // The existing Wiki browser consumes a presentation model. Every read below uses
 // the native API; presentation keys preserve exact native IDs, not legacy IDs.
+// Adapt native Core records to the existing browser's presentation shape;
+// retain authoritative native rule IDs and ruleset fingerprints.
 const RULESET_ID = "first-party-001";
 const PAGE_SIZE = 100;
 export function installNativeReferenceApi(api) {
@@ -18,6 +20,7 @@ export function installWikiReferenceApi(api) {
         const all = [];
         let fingerprint = ruleset.fingerprint;
         let total;
+        // A catalog read must not mix pages from different Core fingerprints.
         do {
             const page = await api.searchNativeRules(RULESET_ID, {
                 ...(filters.query ? { q: filters.query } : {}), limit: PAGE_SIZE, offset: all.length
@@ -30,6 +33,7 @@ export function installWikiReferenceApi(api) {
             if (!page.rules.length && all.length < total) throw new Error("The native catalog load was incomplete.");
             all.push(...page.rules);
         } while (all.length < total);
+        // Links and detail lookup use native IDs, not legacy concept mappings.
         const rows = all.map(rule => ({
             nativeId: rule.id, conceptKey: rule.id, referenceIdentity: rule.id,
             browserLink: { toolRelativePath: `/rules/${encodeURIComponent(rule.id)}` },

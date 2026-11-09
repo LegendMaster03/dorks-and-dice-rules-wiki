@@ -1,9 +1,14 @@
+/**
+ * Maps hosted-tool paths and URL query parameters to browser state so
+ * back/forward and shared links restore the same search and selection.
+ */
 import {
     getEntityBrowserConfig,
     getEntityBrowserConfigForRoute
 } from "./rules-browser-config.js";
 import { normalizeBrowserFieldFilters } from "./rules-browser-filters.js";
 
+/** Unknown or unsupported paths intentionally yield no selection. */
 export function parseToolRoute(toolRoute) {
     if (!toolRoute || toolRoute === "/") return {};
     const path = String(toolRoute).split(/[?#]/, 1)[0];
@@ -52,6 +57,7 @@ export function parseBrowserScopeFromLocation(app) {
         : null;
 }
 
+/** Normalize URL-backed query, sorting, and field filters. */
 export function parseBrowserViewState(search = "", entityType = "") {
     const parameters = new URLSearchParams(search);
     const query = (parameters.get("q") ?? "").trim();
@@ -81,6 +87,7 @@ export function parseBrowserViewStateFromLocation(entityType = "") {
     return parseBrowserViewState(window.location.search, entityType);
 }
 
+/** Preserve active browser filters when constructing a destination URL. */
 export function browserHref(app, toolRelativePath, scopeValue = app.browserScope) {
     const base = app.hostContext.toolBasePath ?? "/tools/rules-wiki";
     const path = `${base.replace(/\/$/, "")}${toolRelativePath || "/"}`;

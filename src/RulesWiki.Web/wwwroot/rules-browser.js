@@ -1,3 +1,7 @@
+/**
+ * Owns reference-browser state transitions among URL, paged index, keyboard
+ * navigation, and the selected detail. Renderers remain separate modules.
+ */
 import {
     clear,
     describeError,
@@ -48,6 +52,7 @@ const DORKS_MODE = "dorks-and-dice";
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
 const COMPACT_BROWSER_WIDTH = 900;
 
+/** Bind the reference view and history handlers to the hosted application. */
 export function installResolvedRulesBrowser(app) {
     installReferenceBrowserStylesheet();
     app.canBrowseRules = app.hostContext.siteMode === DORKS_MODE;
@@ -156,6 +161,8 @@ export function installResolvedRulesBrowser(app) {
         await renderActiveView(container);
     };
 
+    // Restore URL-backed filters, scope, and selection on history navigation.
+    // Mounted class fragments may handle their own history entries first.
     window.addEventListener("popstate", async event => {
         if (!app.canBrowseRules) return;
 
@@ -183,6 +190,7 @@ export function installResolvedRulesBrowser(app) {
     });
 }
 
+/** Create the list/detail workspace and load the active catalog page. */
 async function renderRulesBrowser(app, container) {
     clear(container);
 
@@ -693,6 +701,7 @@ async function renderRulesBrowser(app, container) {
     };
     app.browserKeyboard.returnToList = showIndexOnCompactViewport;
 
+    // Increment the detail serial to invalidate slow responses for older rows.
     const renderSelection = async conceptKey => {
         const serial = ++detailSerial;
         app.browserSelectedConceptKey = conceptKey;
@@ -740,6 +749,7 @@ async function renderRulesBrowser(app, container) {
         renderConfiguredFilters();
     };
 
+    // Reject page responses that belong to a superseded filter generation.
     loadMore = async () => {
         if (!hasMore || isLoadingMore) return [];
         const serial = loadSerial;
@@ -800,6 +810,7 @@ async function renderRulesBrowser(app, container) {
         }
     };
 
+    // Client-only field filters require every matching server-side page.
     const loadCompleteDatasetForActiveClientFilters = async serial => {
         if (!hasClientBrowserFilters(
             app.browserFilters.entityType,

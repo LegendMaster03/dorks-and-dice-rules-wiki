@@ -1,3 +1,7 @@
+/**
+ * Index display and sorting derived from per-family column definitions.
+ * Sorting controls remain disabled until the catalog is complete.
+ */
 import { element } from "./ui.js";
 import {
     RULE_FAMILY_TABS,
@@ -39,6 +43,7 @@ export function normalizeBrowserSort(entityType, sort) {
     };
 }
 
+/** Partial pages are not globally sortable even if their rows are ordered. */
 export function canSortBrowserDataset(loadedCount, totalCount) {
     return Number.isFinite(Number(totalCount))
         && Number(totalCount) >= 0
@@ -137,6 +142,7 @@ export function renderIndexHeader(
     }
 }
 
+/** Keep row fields consistent with the active family column configuration. */
 export function renderRuleRows(container, rules, entityType, onSelect, { append = false, hideSource = false } = {}) {
     if (!append) container.replaceChildren();
     if (!rules.length) {
@@ -248,6 +254,7 @@ export function browserColumnValue(rule, key) {
         ?? "";
 }
 
+/** Distinguish page loading/retry states from complete result counts. */
 export function renderContinuousIndexFooter(
     container,
     loadedCount,

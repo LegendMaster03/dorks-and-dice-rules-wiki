@@ -1,3 +1,7 @@
+/**
+ * Coordinates selected-rule detail rendering. Native rule views use the native
+ * renderer; versioned references retain effective/variation comparison tabs.
+ */
 import {
     alertNode,
     badge,
@@ -15,6 +19,7 @@ import {
     renderClassFamilyReferenceDetail
 } from "./class-family-workspace.js";
 
+/** Ignore a completed detail fetch when a newer selection has superseded it. */
 export async function renderRuleDetailPane(
     app,
     container,
@@ -68,6 +73,7 @@ export async function renderRuleDetailPane(
     }
 }
 
+// The effective version and source variations are separate reading contexts.
 function renderGenericReferenceDetail(app, container, detail, campaignId, onBackToList) {
     const reference = detail.reference;
     const variations = detail.variations ?? [];
@@ -288,6 +294,7 @@ function renderVariation(container, reference, variation) {
     container.append(provenance);
 }
 
+// Comparisons are display requests, not local rule-resolution decisions.
 function renderComparison(container, app, reference, variations, campaignId) {
     clear(container);
     container.append(element("div", { className: "rules-core-comparison-heading" },
