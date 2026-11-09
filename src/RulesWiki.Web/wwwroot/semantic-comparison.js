@@ -1,3 +1,7 @@
+/**
+ * Presentation of semantic differences calculated by Rules Core. The browser
+ * must not infer conflicts, compatibility, or effective-rule priority.
+ */
 import { alertNode, badge, codeBlock, element, describeError, setButtonBusy } from "./ui.js";
 
 export function installSemanticComparison(app) {
@@ -54,6 +58,7 @@ export function installSemanticComparison(app) {
     };
 }
 
+/** Render structured Core comparison results without adjudicating them. */
 export function renderSemanticComparison(
     container,
     comparison,

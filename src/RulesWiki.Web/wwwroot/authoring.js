@@ -1,3 +1,7 @@
+/**
+ * Shared application shell and older authoring workflows. The active native
+ * entrypoint reuses its render hooks but grants no Core authoring privileges.
+ */
 import {
     alertNode,
     badge,
@@ -17,6 +21,7 @@ const RULES_LAWYER_ROLE = "Rules Lawyer";
 const CAMPAIGN_DM_ROLE = "DM";
 const DORKS_MODE = "dorks-and-dice";
 
+/** View container and optional authoring methods, not an authorization source. */
 export class RulesAuthoringApp {
     constructor(root, api, hostContext, session, campaigns) {
         this.root = root;
@@ -34,6 +39,7 @@ export class RulesAuthoringApp {
         this.campaignPage = 0;
     }
 
+    // Feature installers can override renderActiveView without owning the root.
     async render() {
         clear(this.root);
         this.root.classList.add("rules-core-app");

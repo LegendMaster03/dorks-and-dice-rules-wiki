@@ -1,3 +1,7 @@
+/**
+ * Concept/source association UI. Core owns source bindings and the resulting
+ * effective reference, not the names or categories shown in the form.
+ */
 import {
     alertNode,
     badge,
@@ -9,6 +13,7 @@ import {
     paginationControls
 } from "./ui.js";
 
+/** Extend the global authoring overview with source-binding controls. */
 export function installConceptSourceAuthoring(app) {
     const renderGlobalOverview = app.renderGlobalOverview.bind(app);
     app.renderGlobalOverview = async container => {

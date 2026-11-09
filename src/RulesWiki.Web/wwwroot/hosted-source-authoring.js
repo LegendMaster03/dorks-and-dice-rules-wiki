@@ -1,3 +1,7 @@
+/**
+ * Hosted-source definitions, import formats, and bundled SRD maintenance.
+ * Making a source accessible is distinct from publishing a rule.
+ */
 import {
     alertNode,
     badge,
@@ -16,6 +20,7 @@ const RESOURCE_KINDS = ["direct-json", "json-index", "github-tree", "html-index"
 const GAME_EDITIONS = ["", "1e", "2e", "3e", "3.5e", "4e", "5e", "5.5e"];
 const RELEASE_KINDS = ["", "published", "playtest", "preview", "errata", "srd", "third-party", "other"];
 
+/** Add hosted-source administration to eligible authoring views. */
 export function installHostedSourceAuthoring(app) {
     app.canManageHostedSources = app.hostContext.siteMode === DORKS_MODE
         && (app.session.globalRoles ?? []).includes(RULES_LAWYER_ROLE);

@@ -1,3 +1,7 @@
+/**
+ * Source-access administration inside the established source-management view.
+ * Access to a source is not the same as publication of its rules.
+ */
 import {
     alertNode,
     badge,
@@ -7,6 +11,7 @@ import {
     setButtonBusy
 } from "./ui.js";
 
+/** Attach access controls only to the authorized administration view. */
 export function installSourceAccessAdministration(app) {
     const renderActiveView = app.renderActiveView.bind(app);
     app.renderActiveView = async container => {

@@ -1,3 +1,7 @@
+/**
+ * Review work queue for normalization, adjudication, and source updates. Loading
+ * or refreshing the queue does not run discovery; that action is explicit.
+ */
 import {
     alertNode,
     badge,
@@ -538,6 +542,7 @@ function actionButton(label, className, action) {
     });
 }
 
+// Reload from Core after a workflow action; client state is not authoritative.
 async function mutateAndReload(app, container, workItemId, button, mutation) {
     setButtonBusy(button, true, "Saving…");
     try {

@@ -1,3 +1,7 @@
+/**
+ * Acquisition history for physical, digital, subscription, and licensed sources.
+ * These records describe provenance, not game mechanics.
+ */
 import {
     alertNode,
     badge,
@@ -15,6 +19,7 @@ const ACQUISITION_KINDS = [
     ["other", "Other"]
 ];
 
+/** Attach acquisition records to the source administration workflow. */
 export function installSourceAcquisitionAdministration(app) {
     const renderActiveView = app.renderActiveView.bind(app);
     app.renderActiveView = async container => {

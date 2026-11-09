@@ -1,3 +1,7 @@
+/**
+ * Source upload/Web import and asynchronous Core job monitoring. Completion of
+ * an import is distinct from reconciliation and rule publication.
+ */
 import {
     actionBar,
     alertNode,
@@ -304,6 +308,7 @@ async function renderExistingSources(app, container, result) {
     }
 }
 
+// Present authoritative job status and reconciliation issues from Core.
 function buildImportJobView(job, source, reconciliationIssues, app, container, result) {
     const running = job.status === "running";
     const queued = job.status === "queued";

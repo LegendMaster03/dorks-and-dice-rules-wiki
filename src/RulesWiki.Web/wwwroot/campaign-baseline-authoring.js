@@ -1,3 +1,7 @@
+/**
+ * Campaign baseline editor: preview migration impact before applying a change.
+ * Core computes the impact on rule overrides and migration decisions.
+ */
 import {
     alertNode,
     badge,
@@ -198,6 +202,7 @@ function syncButtonWithoutClearingPreview(button, candidate) {
     button.textContent = alreadySelected ? "Already selected" : "Select baseline";
 }
 
+// Truncate displayed changes without altering the Core preview result.
 function renderMigrationPreview(container, preview) {
     const card = element("div", { className: "card card-body border-primary" });
     const header = element("div", {

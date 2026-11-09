@@ -1,3 +1,7 @@
+/**
+ * Package and release administration with a separate preview-before-import
+ * step. The UI does not decide source equivalence or publish rules itself.
+ */
 import {
     alertNode,
     badge,
@@ -283,6 +287,7 @@ function renderHostedMatchCard(app, hosted, blocked, overrideAction = null) {
     return card;
 }
 
+// Show the Core preview before an explicit import is submitted.
 function renderPreviewResult(container, preview) {
     const card = element("div", { className: `card card-body ${preview.canImport ? "border-success" : "border-danger"}` });
     card.append(

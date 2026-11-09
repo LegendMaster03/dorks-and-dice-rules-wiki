@@ -1,5 +1,10 @@
+/**
+ * Editor for mechanical links and Core-supplied relation evidence.
+ * The displayed suggestions are not local rules determinations.
+ */
 import { alertNode, badge, describeError, element, setButtonBusy } from "./ui.js";
 
+/** Extend global concept details with relationship actions and evidence. */
 export function installMechanicalRelationships(app) {
     const renderConceptSummary = app.renderConceptSummary.bind(app);
     app.renderConceptSummary = (detail, scope) => {

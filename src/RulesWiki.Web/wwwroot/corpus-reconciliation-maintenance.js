@@ -1,3 +1,7 @@
+/**
+ * Owner-only controls for durable, long-running Core maintenance jobs.
+ * Polling observes server state; leaving this view does not cancel a job.
+ */
 import {
     alertNode,
     badge,
@@ -25,6 +29,7 @@ export function installCorpusReconciliationMaintenance(app) {
     };
 }
 
+// Core serializes and persists the maintenance work independently of the UI.
 async function renderCorpusReconciliationMaintenance(app, container) {
     const card = element("div", { className: "card card-body mt-3" });
     const heading = element("div", { className: "d-flex flex-wrap gap-2 align-items-center mb-2" },
