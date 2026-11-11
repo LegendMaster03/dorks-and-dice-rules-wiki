@@ -1,28 +1,44 @@
 # Dorks & Dice Rules Wiki
 
-Rules Wiki is the human-facing rules browser and authoring Tool for Dorks & Dice. It owns the Embedded Module UI that was historically hosted by Rules Core. Rules Core remains the authoritative rules service and persistence owner.
+Rules Wiki is the separately deployed, human-facing rules browser for Dorks & Dice. It owns its Embedded Module UI and presentation state; Rules Core owns native definitions, rules semantics, mechanics, and access decisions. Rules Wiki does not maintain a second rules database or rules engine.
 
-## Architecture
+## Current native reference integration
 
-Browser requests use the normal Tool Host contract. The browser talks only to `rules-wiki`; Rules Wiki redeems its Tool Host ticket, keeps the returned delegation capability server-side, and calls `rules-core` through the Site Tool-to-Tool delegation endpoint. The browser never receives the delegation capability and never calls Rules Core directly.
+The current backend implements a **read-only native reference slice**. Its browser transport accepts exactly three named operations:
 
-**Rules Wiki does not consume Rules Core's public/external API.** Every Rules Wiki -> Rules Core operation uses the private first-party Tool-to-Tool contract. Rules Core's public API exists for other Tools and independent consumers; a Rules Wiki requirement is not justification for expanding it.
+| Browser operation | Private Rules Core target |
+| --- | --- |
+| `getNativeRulesets` | `GET /api/private/rulesets` |
+| `searchNativeRules` | `GET /api/private/rulesets/{rulesetId}/rules` |
+| `getNativeRule` | `GET /api/private/rulesets/{rulesetId}/rules/{ruleId}` |
 
-Rules Wiki may expose browser-facing `/api/*` routes of its own. Those routes terminate in Rules Wiki and are backed by the internal Rules Core integration. If Rules Wiki needs additional authoritative semantics, the corresponding Rules Core change belongs to the internal API unless a separately reviewed non-Wiki consumer independently requires the capability.
+The browser submits only named requests to `POST /_rules-wiki/operations/{operation}`. A server-side allowlist constructs the Core route and checks arguments. Arbitrary paths, HTTP methods, or request bodies from the browser are not forwarded. Source administration, Rules Lawyer adjudication, and campaign authoring described in historical design documents are **not implemented by this current dispatcher**.
 
-Rules Wiki has no Rules Core database and no source-grant store. Rules Core remains authoritative for source grants, restricted-source filtering, global Rules Lawyer authority, campaign roles, persistence, provenance, publication, comparison semantics, reference identity/history, and all game-rule domain logic. Internal Tool-to-Tool access does not bypass those authorization rules.
+## Authentication and transport
 
-The intended Tool registration is an Embedded Module v2 Tool with public slug `rules-wiki` and delegation target `rules-core`.
+The Site is the Tool identity and ticket-issuance control plane. The data path is:
 
-See `docs/architecture.md` for the normative integration boundary.
+```text
+Browser -> Rules Wiki named UI operation
+        -> Rules Wiki backend
+        -> private Rules Core ingress (RulesCorePrivate:BaseUrl)
+```
+
+Rules Wiki redeems its own Tool Host ticket, obtains a server-only `rules-wiki -> rules-core` private-tunnel capability, and exchanges that capability through Site for a short-lived Core-scoped target ticket. It then sends the actual Core request directly through the pair-specific private network. **Site does not proxy Core response data.** The browser never receives the private URL, tunnel capability, or target ticket. Ordinary Tool-to-Tool delegation is not an alternative route to the private Wiki API.
+
+This service does not consume Rules Core's anonymous public `/api/rulesets` or authenticated consumer `/api/consumer/v1/rulesets` endpoints. A private transport relationship also does not bypass Rules Core's authorization checks.
+
+See [architecture](docs/architecture.md) for the private-network and authorization requirements. Earlier UX, source-library, and authoring documents describe architectural goals or historical work, not necessarily available operations in this native reference slice.
 
 ## Development
 
-Set `ToolHost:BaseUrl` (or `ToolHost__BaseUrl`) to the Dorks & Dice Site origin. Then run:
+Configure both `ToolHost:BaseUrl` (or `ToolHost__BaseUrl`) for the Dorks & Dice Site control plane and `RulesCorePrivate:BaseUrl` (or `RulesCorePrivate__BaseUrl`) for the private Rules Core origin. Then run:
 
 ```sh
 dotnet test dorks-and-dice-rules-wiki.slnx
 dotnet run --project src/RulesWiki.Web/RulesWiki.Web.csproj
 ```
 
-The repository is intentionally stateless. Production deployment additionally requires the `dorks-and-dice-rules-wiki` self-hosted runner label, an environment file at `/mnt/HDDs/www/dorks-and-dice-rules-wiki/.env`, and Site Tool registration.
+The standalone shell exposes `/` and the same `/app.js` frontend. Core-backed UI requests still require a valid Site-issued Tool ticket and a working private-tunnel configuration; standalone mode does not grant anonymous Core access.
+
+Production deployment also requires the `dorks-and-dice-rules-wiki` self-hosted runner label, its server-side environment file, and matching Site Tool/private-network registration. The application is stateless and does not own a PostgreSQL database.

@@ -66,11 +66,16 @@ public sealed class RulesCorePrivateClient(IHttpClientFactory httpClientFactory)
         {
             throw new RulesCorePrivateTunnelException("Rules Wiki received an invalid ticket response.");
         }
+        // Ticket exchange must authorize this exact Core target and introspection
+        // endpoint. Never accept an arbitrary destination returned by the control
+        // plane or broaden the pair-specific private connection.
         if (!string.Equals(ticket.TargetKey, TargetToolKey, StringComparison.Ordinal) ||
             string.IsNullOrWhiteSpace(ticket.Ticket) ||
             !string.Equals(ticket.IntrospectionPath, TargetIntrospectionPath, StringComparison.Ordinal))
             throw new RulesCorePrivateTunnelException("Rules Wiki received an invalid target credential.");
 
+        // Defense in depth: the UI dispatcher already allowlists operations, but
+        // the private client must independently refuse unexpected target requests.
         // Never send an arbitrary method or path, even if a future dispatcher changes.
         if (request.Method != HttpMethod.Get || request.Body is not null ||
             !Uri.TryCreate(request.PathAndQuery, UriKind.Relative, out var relative) ||
