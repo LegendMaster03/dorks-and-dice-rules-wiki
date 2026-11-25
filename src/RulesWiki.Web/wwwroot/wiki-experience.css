@@ -2,7 +2,7 @@
 .wiki-experience { --wiki-accent: #276b71; --wiki-border: var(--bs-border-color, #d6dcdf); }
 .wiki-experience button, .wiki-experience summary, .wiki-experience a { touch-action: manipulation; }
 .wiki-experience :focus-visible { outline: 3px solid var(--bs-primary, #1769cf); outline-offset: 3px; }
-.wiki-ribbon { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; padding: .5rem .8rem; border-bottom: 1px solid var(--wiki-border); background: var(--bs-body-bg, white); position: relative; z-index: 12; }
+.wiki-ribbon { grid-area: nav; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; padding: .5rem .8rem; border-bottom: 1px solid var(--wiki-border); background: var(--bs-body-bg, white); position: relative; z-index: 12; }
 .wiki-ribbon button, .wiki-ribbon summary { border: 0; background: transparent; color: inherit; padding: .6rem .7rem; font-weight: 600; border-radius: .35rem; cursor: pointer; }
 .wiki-ribbon button:hover, .wiki-ribbon summary:hover { background: var(--bs-tertiary-bg, #eef3f4); }
 .wiki-ribbon [aria-current] { color: var(--bs-primary, #1769cf); }
@@ -41,7 +41,7 @@
 .wiki-pane-divider::after { content: ""; width: 3px; height: 2rem; background: #8a989e; position: absolute; top: 50%; left: 3px; border-radius: 3px; }
 .wiki-pane-divider:hover, .wiki-pane-divider:focus-visible { background: var(--bs-primary-bg-subtle, #d8e9fb); }
 @container rules-wiki-browser (min-width: 901px) {
-    .wiki-experience .rules-core-library-workspace { grid-template-columns: var(--wiki-list-width, 32%) 10px minmax(0, 1fr); }
+    .wiki-experience .rules-core-library-workspace:has(> .wiki-pane-divider) { grid-template-columns: var(--wiki-list-width, 32%) 10px minmax(0, 1fr); }
 }
 .wiki-experience .rules-core-library-index, .wiki-experience .rules-core-library-detail { min-width: 0; }
 .wiki-experience .rules-core-library-row-name { white-space: normal; }
@@ -92,6 +92,14 @@
 .wiki-experience.rules-core-app:has(.rules-core-main[data-rules-view="library"]) {
     height: calc(100dvh - var(--wiki-host-offset, 0px));
     max-height: calc(100dvh - var(--wiki-host-offset, 0px));
+    grid-template-rows: auto auto minmax(0, 1fr);
+}
+/* The hosted shell hides its own header. Remove that grid area as well as
+   its element, or the flexible track is assigned to an empty navigation row. */
+.wiki-experience.rules-core-app:has(> .rules-core-topbar-hosted[hidden]) {
+    grid-template-areas: "nav" "main";
+}
+.wiki-experience.rules-core-app:has(> .rules-core-topbar-hosted[hidden]):has(.rules-core-main[data-rules-view="library"]) {
     grid-template-rows: auto minmax(0, 1fr);
 }
 .wiki-experience .rules-core-library-index,
