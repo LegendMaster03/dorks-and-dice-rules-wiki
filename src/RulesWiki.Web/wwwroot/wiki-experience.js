@@ -157,18 +157,31 @@ export function installWikiExperience(app) {
     };
     let history = readHistory().filter(entry => {
         try { referenceKey(entry.rulesetId, entry.id); return true; } catch { return false; }
-    });
+    }).slice(0, 64).map(({ rulesetId, id }) => ({ rulesetId, id }));
     const saveHistory = () => {
         try { window.sessionStorage.setItem(historyKey, JSON.stringify(history)); } catch { /* Optional tab storage. */ }
     };
-    const recentNames = new Map();
+    // Private labels belong to the current authorized reader, not a reusable
+    // cross-binding cache. Bound the cache even during long browsing sessions.
+    const recentNames = new WeakMap();
+    const namesFor = reader => {
+        if (!recentNames.has(reader)) recentNames.set(reader, new Map());
+        return recentNames.get(reader);
+    };
+    const rememberName = (reader, key, name) => {
+        if (reader !== app.rulesetReader) return;
+        const names = namesFor(reader);
+        names.delete(key);
+        names.set(key, name);
+        while (names.size > 64) names.delete(names.keys().next().value);
+    };
     app.rememberNativeReference = (context, rule) => {
         if (app.rulesContext !== context && (app.rulesContext?.rulesetId !== context.rulesetId ||
             app.rulesContext?.fingerprint !== context.fingerprint)) return;
         const key = referenceKey(context.rulesetId, rule.id);
         history = [{ rulesetId: context.rulesetId, id: rule.id }, ...history.filter(entry =>
             referenceKey(entry.rulesetId, entry.id) !== key)].slice(0, 64);
-        recentNames.set(snapshotKey(context, rule.id), rule.name);
+        if (app.rulesetReader) rememberName(app.rulesetReader, snapshotKey(context, rule.id), rule.name);
         saveHistory();
     };
     const loadRecents = async reader => {
@@ -177,8 +190,10 @@ export function installWikiExperience(app) {
         return (await Promise.all(entries.map(async entry => {
             const key = snapshotKey(context, entry.id);
             try {
-                if (!recentNames.has(key)) recentNames.set(key, (await reader.resolve(entry.id)).rule.name);
-                return { id: entry.id, name: recentNames.get(key) };
+                const names = namesFor(reader);
+                if (!names.has(key)) rememberName(reader, key, (await reader.resolve(entry.id)).rule.name);
+                if (reader !== app.rulesetReader || !names.has(key)) return null;
+                return { id: entry.id, name: names.get(key) };
             } catch { return null; }
         }))).filter(Boolean);
     };
