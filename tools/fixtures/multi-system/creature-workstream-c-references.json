@@ -1,0 +1,270 @@
+[
+  {
+    "rulesetId": "dnd-5e",
+    "sourceFile": "data/rulesets/dnd-5e/native/spells/spells-026-050.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "spell.bless",
+      "kind": "spell",
+      "name": "Bless",
+      "level": 1,
+      "school": "E",
+      "officialTextLayout": "Bless\n1st---level enchantment\nCasting Time: 1 action\nRange: 30 feet\nComponents: V, S, M (a sprinkling of holy water)\nDuration: Concentration, up to 1 minute\nYou bless up to three creatures of your choice within\nrange. Whenever a target makes an attack roll or a\nsaving throw before the spell ends, the target can\nroll a d4 and add the number rolled to the attack roll\nor saving throw.\n  At Higher Levels. When you cast this spell using a\nspell slot of 2nd level or higher, you can target one\nadditional creature for each slot level above 1st.",
+      "header": {
+        "Casting Time": "1 action",
+        "Range": "30 feet",
+        "Components": "V, S, M (a sprinkling of holy water)",
+        "Duration": "Concentration, up to 1 minute"
+      },
+      "catalogReferences": [
+        "rulebook.page-122"
+      ],
+      "source": {
+        "release": "srd-5.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+        "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+        "pages": [
+          122
+        ],
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "adaptation": "direct publisher column extraction; layout text, not executable mechanics",
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "spells/spells-srd51.json",
+          "pointer": "/spell/24"
+        },
+        "structuredStatus": "publisher-name-level-school-verified; structured body review pending"
+      },
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "feet",
+          "amount": 30
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": "a sprinkling of holy water"
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "minute",
+            "amount": 1
+          },
+          "concentration": true
+        }
+      ],
+      "entries": [
+        "You bless up to three creatures of your choice within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target can roll a {@dice d4} and add the number rolled to the attack roll or saving throw."
+      ],
+      "entriesHigherLevel": [
+        {
+          "type": "entries",
+          "name": "At Higher Levels",
+          "entries": [
+            "When you cast this spell using a spell slot of 2nd level or higher, you can target one additional creature for each slot level above 1st."
+          ]
+        }
+      ],
+      "miscTags": [
+        "SCT"
+      ],
+      "areaTags": [
+        "MT"
+      ]
+    }
+  },
+  {
+    "rulesetId": "dnd-5-5e",
+    "sourceFile": "data/rulesets/dnd-5-5e/native/spells/spells-026-050.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "spell.bless",
+      "kind": "spell",
+      "name": "Bless",
+      "level": 1,
+      "school": "E",
+      "officialTextLayout": "Bless\nLevel 1 Enchantment (Cleric, Paladin)\nCasting Time: Action\nRange: 30 feet\n\nComponents: V, S, M (a Holy Symbol worth 5+ GP)\nDuration: Concentration, up to 1 minute\nYou bless up to three creatures within range. When-\never a target makes an attack roll or a saving throw\nbefore the spell ends, the target adds 1d4 to the at-\ntack roll or save.\n  Using a Higher-Level Spell Slot. You can target\none additional creature for each spell slot level\nabove 1.",
+      "header": {
+        "Casting Time": "Action",
+        "Range": "30 feet",
+        "Components": "V, S, M (a Holy Symbol worth 5+ GP)",
+        "Duration": "Concentration, up to 1 minute"
+      },
+      "catalogReferences": [
+        "rulebook.page-113"
+      ],
+      "source": {
+        "release": "srd-5.2.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+        "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+        "pages": [
+          113
+        ],
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "adaptation": "direct publisher column extraction; layout text, not executable mechanics",
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "spells/spells-srd52.json",
+          "pointer": "/spell/26"
+        },
+        "structuredStatus": "publisher-name-level-school-verified; structured body review pending"
+      },
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "feet",
+          "amount": 30
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": {
+          "text": "a Holy Symbol worth 5+ GP",
+          "cost": 500
+        }
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "minute",
+            "amount": 1
+          },
+          "concentration": true
+        }
+      ],
+      "entries": [
+        "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds {@dice 1d4} to the attack roll or save."
+      ],
+      "entriesHigherLevel": [
+        {
+          "type": "entries",
+          "name": "Using a Higher-Level Spell Slot",
+          "entries": [
+            "You can target one additional creature for each spell slot level above 1."
+          ]
+        }
+      ],
+      "miscTags": [
+        "SCT"
+      ],
+      "areaTags": [
+        "MT"
+      ]
+    }
+  },
+  {
+    "rulesetId": "dnd-5e",
+    "sourceFile": "data/rulesets/dnd-5e/native/conditions.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "condition.frightened",
+      "kind": "condition",
+      "name": "Frightened",
+      "entries": [
+        {
+          "type": "list",
+          "items": [
+            "A frightened creature has disadvantage on ability checks and attack rolls while the source of its fear is within line of sight.",
+            "The creature can't willingly move closer to the source of its fear."
+          ]
+        }
+      ],
+      "source": {
+        "release": "srd-5.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+        "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+        "pages": [
+          358
+        ],
+        "section": "Appendix PH-A / Conditions",
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "conditionsdiseases.json",
+          "pointer": "/condition/8"
+        },
+        "adaptation": "reviewed structured entry against official PDF; original 5e.tools entry format retained"
+      },
+      "catalogReferences": [
+        "rulebook.page-358"
+      ]
+    }
+  },
+  {
+    "rulesetId": "dnd-5-5e",
+    "sourceFile": "data/rulesets/dnd-5-5e/native/conditions.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "condition.frightened",
+      "kind": "condition",
+      "name": "Frightened",
+      "entries": [
+        "While you have the Frightened condition, you experience the following effects.",
+        {
+          "type": "entries",
+          "entries": [
+            {
+              "type": "entries",
+              "name": "Ability Checks and Attacks Affected",
+              "entries": [
+                "You have {@variantrule Disadvantage|srd52} on ability checks and attack rolls while the source of fear is within line of sight."
+              ]
+            },
+            {
+              "type": "entries",
+              "name": "Can't Approach",
+              "entries": [
+                "You can't willingly move closer to the source of fear."
+              ]
+            }
+          ]
+        }
+      ],
+      "source": {
+        "release": "srd-5.2.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+        "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+        "pages": [
+          182
+        ],
+        "section": "Rules Glossary",
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "conditionsdiseases.json",
+          "pointer": "/condition/9"
+        },
+        "adaptation": "reviewed structured entry against official PDF; original 5e.tools entry format retained"
+      },
+      "catalogReferences": [
+        "rulebook.page-182"
+      ]
+    }
+  }
+]

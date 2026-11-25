@@ -32,10 +32,19 @@ function scopedReference(id, input) {
 }
 
 export function renderImportedCreature(input, shared = presentation) {
+    // B prepares references using only explicit native IDs and the pinned reader.
+    // No requests are made by fixture-only or unbound callers.
+    if (typeof shared.renderInlineContent === "function" &&
+        typeof shared.resolveSourceReferenceIds === "function" && typeof input.references?.resolve === "function") {
+        return shared.resolveSourceReferenceIds(input).then(referenceIds => renderCreature(input, shared, referenceIds));
+    }
+    return renderCreature(input, shared, new Map());
+}
+function renderCreature(input, shared, referenceIds) {
     const article = element("article", { className: "rules-wiki-monster-article" });
     // Shared generic renderer preserves unknown values as inert DOM. B owns
     // replacing the compatibility inline/entry parser; never infer IDs from tags.
-    const contentOptions = { input, inlineClass: "rw-stat-inline", renderDice: renderMonsterDice };
+    const contentOptions = { input, inlineClass: "rw-stat-inline", renderDice: renderMonsterDice, referenceIds };
     const fallback = value => shared.renderStructuredContent(value, contentOptions);
     // Once B re-exports its shared inline entry point, use one shared parser
     // for all imported structured content. This remains synchronous and detached.

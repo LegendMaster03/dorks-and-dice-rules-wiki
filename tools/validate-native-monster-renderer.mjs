@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { renderNativeMonster, renderMonsterDice } from "../src/RulesWiki.Web/wwwroot/native-monster-detail.js";
+import * as sharedPresentation from "../src/RulesWiki.Web/wwwroot/native-presentation.js";
 import { supportsImportedCreature, renderImportedCreature } from "../src/RulesWiki.Web/wwwroot/native-renderers-creature.js";
 import { renderNativeDetail } from "../src/RulesWiki.Web/wwwroot/native-rule-detail.js";
 
@@ -277,3 +278,45 @@ assert.equal(all(noReader, n => n.tagName === "A").length, 0, "No unbound catalo
 assert.equal(renderMonsterDice({tag:"damage",expression:"1d6 + summonSpellLevel"}), null);
 assert.equal(renderMonsterDice({tag:"dice",expression:"999d9999"}), null);
 assert.equal(renderMonsterDice({tag:"hit",expression:"4"}).textContent, "+4");
+
+// The real B integration cases activate when its public shared exports arrive.
+// The pinned native reader returns only exact same-catalog fixture envelopes.
+const referenceFixtures = JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/creature-workstream-c-references.json", import.meta.url)));
+assert.match(view("dnd-5-5e", "monster.tarrasque").textContent, /697/);
+const sourceMap = new Map([["{@spell bless}", "spell.bless"]]);
+const asyncInput = { ...adapterInput, references: { context, resolve() {} } };
+let prepared = false;
+const asyncSharedProbe = { ...sharedProbe,
+    async resolveSourceReferenceIds(input) { assert.equal(input, asyncInput); prepared = true; return sourceMap; },
+    renderStructuredContent(value, options) {
+        assert.equal(options.input, asyncInput);
+        assert.equal(options.referenceIds, sourceMap);
+        const node = new FakeNode("span"); node.textContent = JSON.stringify(value); return node;
+    }
+};
+await renderImportedCreature(asyncInput, asyncSharedProbe);
+assert.ok(prepared);
+if (typeof sharedPresentation.resolveSourceReferenceIds === "function" && typeof sharedPresentation.renderInlineContent === "function") {
+    for (const [rulesetId, creatureId, referenceId] of [
+        ["dnd-5e", "monster.acolyte", "spell.bless"],
+        ["dnd-5-5e", "monster.priest-acolyte", "spell.bless"],
+        ["dnd-5e", "monster.adult-red-dragon", "condition.frightened"],
+        ["dnd-5-5e", "monster.tarrasque", "condition.frightened"]
+    ]) {
+        const { record } = imported.find(x => x.rulesetId === rulesetId && x.record.id === creatureId);
+        const context = { rulesetId, fingerprint: "fixture-only", campaignId: null, campaignRevisionId: null };
+        const reader = { context, packageDescriptor: null, async resolve(id) {
+            const entry = referenceFixtures.find(x => x.rulesetId === rulesetId && x.record.id === id);
+            if (!entry) throw Error("Not supplied by this fixture reader");
+            return { rulesetId, fingerprint: context.fingerprint,
+                rule: { id, kind: entry.record.kind, name: entry.record.name, definition: entry.record } };
+        }};
+        const target = new FakeNode("main");
+        await renderNativeDetail(target, { rulesetId, fingerprint: context.fingerprint,
+            rule: { id: creatureId, name: record.name, kind: record.kind, definition: record } }, () => {}, null, { reader });
+        const links = all(target, node => node.tagName === "A" && node.attrs.href?.endsWith("/rules/" + referenceId));
+        assert.ok(links.some(node => node.textContent !== referenceId), "Expected an embedded reference, not only catalog list");
+        assert.ok(links.every(node => node.attrs.href.includes("/rulesets/" + rulesetId + "/rules/")));
+    }
+    console.log("Shared creature inline reference integration checks passed.");
+}
