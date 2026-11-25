@@ -2,6 +2,7 @@ import { scrollNativeClassTarget } from "./native-class-navigation.js";
 import { renderClassCustomizations, discoverOwnedOptions } from "./native-class-customization.js";
 import { createClassReturnState } from "./native-class-view-state.js";
 import { ruleParagraphs } from "./native-class-option-detail.js";
+import { readingKey } from "./rules-context.js";
 // Native class reference. The class document and linked feature records are
 // authoritative; this renderer only presents their contents.
 const CLASS_STYLE_ID = "rules-wiki-native-class-styles";
@@ -105,7 +106,13 @@ function section(id, heading, ...contents) {
         node("h3", { text: heading }), ...contents);
 }
 
-function renderSummary(definition) {
+function renderSummary(definition, presentation, renderValue) {
+    if (presentation) {
+        const grid = node("dl", { className: "native-class-traits" });
+        for (const field of presentation.identityFields) grid.append(node("div", { className: "native-class-trait" },
+            node("dt", { text: field.label }), node("dd", {}, renderValue(field.value))));
+        return section("native-class-traits", "Class traits", grid);
+    }
     const traits = CORE_FIELDS.filter(([, key]) => definition[key] !== undefined && definition[key] !== null);
     const summary = section("native-class-traits", "Class traits");
     const grid = node("dl", { className: "native-class-traits" });
@@ -154,7 +161,7 @@ function relatedFeatureLinks(row, hrefForRule) {
 
 // Show each published level row as supplied; feature definitions are separate
 // records and must not be invented from names or table cells.
-function renderProgression(rows, renderValue, firstLevel, registerLabel, hrefForRule) {
+function renderProgression(rows, renderValue, firstLevel, registerLabel, hrefForRule, presentation = null) {
     if (!rows.length) return { sectionNode: section("native-class-progression", "Class advancement",
         node("p", { text: "This class has no structured advancement table." })) };
     const keys = ["level", "featureGrants", ...PREFERRED_COLUMNS,
@@ -250,6 +257,26 @@ function renderProgression(rows, renderValue, firstLevel, registerLabel, hrefFor
         } }, spellTable));
         sectionNode.append(slots);
     }
+    if (presentation) {
+        // Use the existing family model for published table shapes and the same
+        // scrollable table treatment as first-party advancement. Do not fill missing statistics.
+        if (!presentation.tables.length) sectionNode.append(node("p", { className: "native-class-help",
+            text: "The source supplies no published numerical advancement table." }));
+        for (const surface of presentation.tables) {
+            const published = node("table", { className: "native-class-table" });
+            published.append(node("caption", { text: surface.title }), node("thead", {}, node("tr", {},
+                ...surface.columns.map(column => node("th", { attributes: { scope: "col" } }, renderValue(column.label))))));
+            const publishedBody = node("tbody");
+            for (const row of surface.rows) publishedBody.append(node("tr", {}, ...row.map((value, index) =>
+                node(surface.columns[index]?.key === "level" ? "th" : "td", {
+                    attributes: surface.columns[index]?.key === "level" ? { scope: "row" } : {} },
+                    value === undefined || value === null ? "—" : renderValue(value)))));
+            published.append(publishedBody);
+            sectionNode.append(node("div", { className: "native-class-table-scroll", attributes: {
+                role: "region", tabindex: "0", "aria-label": surface.title } }, published));
+        }
+        return { sectionNode, levelRows };
+    }
     const detail = node("details", { className: "native-class-disclosure" },
         node("summary", { text: "Complete advancement data" }));
     for (const row of rows) {
@@ -261,13 +288,16 @@ function renderProgression(rows, renderValue, firstLevel, registerLabel, hrefFor
     return { sectionNode, levelRows };
 }
 
-function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, renderValue, registerLabel) {
+function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, renderValue, registerLabel,
+    reference = null, lifecycle = null) {
     const inlineFeature = inline.get(id);
-    const summary = node("summary", { text: inlineFeature?.name || featureName(id) });
+    const summary = node("summary", { text: reference?.name || inlineFeature?.name || featureName(id) });
     registerLabel(id, summary);
     const card = node("details", { className: "native-class-feature",
         attributes: { id: featureAnchor(id, level, firstLevel) } }, summary);
     const content = node("div", { className: "native-class-feature-content" });
+    const current = () => !lifecycle || (lifecycle.isCurrent() && card.isConnected);
+    if (reference?.gainSubclassFeature) content.append(node("p", { text: "Subclass feature acquisition." }));
     if (inlineFeature) {
         if (inlineFeature.description) content.append(...ruleParagraphs(inlineFeature.description, node));
         if (inlineFeature.mechanics !== undefined) content.append(renderValue(inlineFeature.mechanics));
@@ -275,17 +305,20 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
         content.append(node("p", { className: "native-class-help", text: "Expand to load the authoritative feature definition." }));
         let requested = false;
         card.addEventListener("toggle", () => {
-            if (!card.open || requested) return;
+            if (!card.open || requested || !current()) return;
             requested = true;
             Promise.resolve().then(() => getRule(id)).then(result => {
+                if (!current()) return;
                 const rule = result?.rule;
-                if (!rule || rule.id !== id) throw new Error("The requested feature was not returned.");
+                if (!rule || (!reference && rule.id !== id)) throw new Error("The requested feature was not returned.");
                 const featureDefinition = rule.definition?.definition ?? rule.definition;
                 content.replaceChildren();
                 if (featureDefinition?.description) content.append(...ruleParagraphs(featureDefinition.description, node));
+                if (reference?.gainSubclassFeature) content.append(node("p", { text: "Subclass feature acquisition." }));
+                if (reference && featureDefinition?.entries !== undefined) content.append(renderValue(featureDefinition.entries));
                 if (featureDefinition && typeof featureDefinition === "object") {
                     const other = Object.fromEntries(Object.entries(featureDefinition)
-                        .filter(([key]) => key !== "description"));
+                        .filter(([key]) => key !== "description" && (!reference || key !== "entries")));
                     const metadataKeys = new Set(["id", "name", "kind", "parentClass", "classLevel",
                         "alpha", "alphaVersion", "rulesStatus", "selectionStatus", "sourcePackage"]);
                     const mechanics = Object.fromEntries(Object.entries(other).filter(([key]) => !metadataKeys.has(key)));
@@ -294,23 +327,26 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
                     if (Object.keys(metadata).length) content.append(node("details", { className: "native-class-technical-details" },
                         node("summary", { text: "Additional feature data" }), renderValue(metadata)));
                 }
-                content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
+                content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(rule.id) } }));
             }).catch(() => {
+                if (!current()) return;
                 requested = false;
-                content.replaceChildren(node("p", { text:
-                    "Feature definition unavailable. Close and reopen to retry, or open the full rule." }),
-                    node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
+                content.replaceChildren(node("p", { text: reference
+                    ? "Feature relationship unavailable. Close and reopen to retry." :
+                    "Feature definition unavailable. Close and reopen to retry, or open the full rule." }));
+                if (!reference) content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
             });
         });
     }
-    if (!inlineFeature) {
+    if (!inlineFeature && !reference) {
         content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
     }
     card.append(content, node("a", { className: "native-class-table-return", text: "Back to advancement", attributes: { href: "#native-class-progression" } }));
     return card;
 }
 
-function renderFeatures(rows, inline, renderValue, hrefForRule, getRule, firstLevel, registerLabel) {
+function renderFeatures(rows, inline, renderValue, hrefForRule, getRule, firstLevel, registerLabel,
+    presentation = null, lifecycle = null) {
     const sectionNode = section("native-class-features", "Features by level");
     const groups = node("div", { className: "native-class-feature-levels" });
     const actions = node("div", { className: "wiki-disclosure-actions" });
@@ -351,7 +387,8 @@ function renderFeatures(rows, inline, renderValue, hrefForRule, getRule, firstLe
         (typeof left === "number" ? left : Infinity) - (typeof right === "number" ? right : Infinity))) {
         const list = node("div", { className: "native-class-feature-list" });
         for (const id of ids) {
-            const card = renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, renderValue, registerLabel);
+            const card = renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, renderValue, registerLabel,
+                presentation?.features.get(id), lifecycle);
             featureCards.set(featureAnchor(id, level, firstLevel), card);
             list.append(card);
         }
@@ -412,36 +449,41 @@ function renderOther(definition, renderValue) {
 /** Render a native class using its own progression and linked feature records. */
 export function renderNativeClass(rule, {
     renderValue, hrefForRule = id => `/rules/${encodeURIComponent(id)}`,
-    getRule = null, searchRules = null, catalogFingerprint = null
+    getRule = null, searchRules = null, catalogFingerprint = null,
+    presentation = null, context = null, lifecycle = null, additionalSections = []
 } = {}) {
-    if (!rule || rule.kind !== "class" || !rule.definition) throw new Error("A native class rule is required.");
+    if (!rule || (rule.kind !== "class" && !(presentation && rule.kind === "subclass")) || !rule.definition) throw new Error("A native class rule is required.");
     if (typeof renderValue !== "function") throw new Error("A safe native-value renderer is required.");
     installStyles();
     // Rules Core's private reference API includes the complete native entity
     // object in `rule.definition`; direct fixtures may already be normalized.
     const definition = rule.definition?.definition && typeof rule.definition.definition === "object"
         ? rule.definition.definition : rule.definition;
-    const rows = Array.isArray(definition.progression) ? definition.progression
+    const rows = presentation ? presentation.rows : Array.isArray(definition.progression) ? definition.progression
         .filter(row => row && Number.isInteger(row.level))
         .sort((a, b) => a.level - b.level) : [];
     const inline = new Map((Array.isArray(definition.inlineFeatures) ? definition.inlineFeatures : [])
         .filter(feature => feature && typeof feature.id === "string")
         .map(feature => [feature.id, feature]));
     const root = node("div", { className: "native-class-reference" });
-    const returnState = createClassReturnState(root, { classId: rule.id, fingerprint: catalogFingerprint });
+    const returnState = createClassReturnState(root, { classId: rule.id, fingerprint: catalogFingerprint, context, lifecycle });
+    const classSnapshot = context ? readingKey(context, rule.id, "class") : null;
+    root.nativeClassReadingKey = classSnapshot;
+    const current = () => !lifecycle || (lifecycle.isCurrent() && root.isConnected);
     const header = node("header", { className: "native-class-header" },
-        node("span", { className: "native-class-eyebrow", text: "Base class" }),
+        node("span", { className: "native-class-eyebrow", text: presentation?.kind === "subclass" ? "Subclass" : "Base class" }),
         node("h2", { text: rule.name }));
     if (definition.description) header.append(node("p", { text: definition.description }));
     if (definition.rulesStatus) header.append(node("p", { className: "native-class-status", text:
         `Rules status: ${valueLabel(definition.rulesStatus)}${definition.alphaVersion ? ` · Alpha ${definition.alphaVersion}` : ""}` }));
-    root.append(header, renderSummary(definition));
+    root.append(header, renderSummary(definition, presentation, renderValue));
     const firstLevel = new Map();
     for (const row of rows) for (const id of row.featureGrants ?? []) {
         if (!firstLevel.has(id)) firstLevel.set(id, row.level);
     }
     const featureLabelNodes = new Map();
     const registerLabel = (id, element) => {
+        if (presentation?.features.has(id)) element.textContent = presentation.features.get(id).name;
         if (!featureLabelNodes.has(id)) featureLabelNodes.set(id, []);
         featureLabelNodes.get(id).push(element);
     };
@@ -449,6 +491,7 @@ export function renderNativeClass(rule, {
     const loadRule = getRule && (id => {
         if (!ruleRequests.has(id)) {
             const request = Promise.resolve().then(() => getRule(id)).then(response => {
+                if (!current()) throw new Error("Class reading context changed.");
                 if (catalogFingerprint && response?.fingerprint !== catalogFingerprint) {
                     throw new Error("The native ruleset changed while this class was open.");
                 }
@@ -466,8 +509,8 @@ export function renderNativeClass(rule, {
         }
         return ruleRequests.get(id);
     });
-    const features = renderFeatures(rows, inline, renderValue, hrefForRule, loadRule, firstLevel, registerLabel);
-    const progression = renderProgression(rows, renderValue, firstLevel, registerLabel, hrefForRule);
+    const features = renderFeatures(rows, inline, renderValue, hrefForRule, loadRule, firstLevel, registerLabel, presentation, lifecycle);
+    const progression = renderProgression(rows, renderValue, firstLevel, registerLabel, hrefForRule, presentation);
     // A progression link must reveal its destination before the browser follows
     // the fragment. Otherwise the anchor sits inside two closed <details> and
     // the click appears to do nothing. Keep the native anchor behavior intact.
@@ -489,7 +532,7 @@ export function renderNativeClass(rule, {
             entry.classList.toggle("is-selected", entry === group);
         }
     });
-    const customization = renderClassCustomizations(definition, {
+    const customization = presentation ? null : renderClassCustomizations(definition, {
         node, renderValue, hrefForRule, getRule: loadRule, fallbackFields: CUSTOMIZATION_FIELDS,
         onOptionsRendered: () => queueMicrotask(returnState.restore),
         maximumClassLevel: rows.length ? rows.at(-1).level :
@@ -511,7 +554,7 @@ export function renderNativeClass(rule, {
     navigation.append(node("strong", { className: "wiki-class-nav-name", text: rule.name }));
     const mobileSections = node("select", { className: "wiki-mobile-section-select", attributes: { "aria-label": "Class section" } });
     const sectionLinks = [];
-    const contents = [customization, progression.sectionNode, grants, features.sectionNode].filter(Boolean);
+    const contents = [customization, progression.sectionNode, grants, features.sectionNode, ...additionalSections].filter(Boolean);
     for (const item of contents) {
         const fullHeading = item.querySelector?.("h3")?.textContent || item.children[0]?.textContent;
         const heading = ({ "Class customization": "Options", "Class advancement": "Advancement", "Spellcasting and resource notes": "Resources", "Features by level": "Features" })[fullHeading] || fullHeading;
@@ -545,6 +588,7 @@ export function renderNativeClass(rule, {
         if (id) localTargets.set(id, group);
     }
     const revealFragment = id => {
+        if (!current()) return false;
         const target = localTargets.get(id);
         if (!target) return false;
         const sectionId = id.startsWith("native-class-feature") ? "native-class-features" : id;
@@ -584,10 +628,12 @@ export function renderNativeClass(rule, {
         // router from remounting this class. Preserve the URL for deep linking.
         if (typeof window !== "undefined" && window.history?.pushState) {
             const url = `${window.location.pathname}${window.location.search}#${fragment}`;
-            const state = { ...(window.history.state ?? {}), rulesWikiClassView: rule.id };
+            const state = { ...(window.history.state ?? {}), rulesWikiClassView: rule.id,
+                rulesWikiClassSnapshot: classSnapshot };
             // Mark the preceding entry too, so Back to the unfragmented class
             // can be handled without remounting the still-open reference.
-            if (window.history.state?.rulesWikiClassView !== rule.id)
+            if (window.history.state?.rulesWikiClassView !== rule.id ||
+                (window.history.state?.rulesWikiClassSnapshot ?? null) !== classSnapshot)
                 window.history.replaceState(state, "", window.location.href);
             if (window.location.hash !== `#${fragment}`)
                 window.history.pushState(state, "", url);
@@ -596,10 +642,12 @@ export function renderNativeClass(rule, {
     }, true);
     if (returnState.restored) queueMicrotask(returnState.restore);
     else if (typeof window !== "undefined" && window.location?.hash?.startsWith("#native-class-")) {
-        const requested = decodeURIComponent(window.location.hash.slice(1));
-        queueMicrotask(() => revealFragment(requested));
+        try {
+            const requested = decodeURIComponent(window.location.hash.slice(1));
+            queueMicrotask(() => revealFragment(requested));
+        } catch { /* Invalid fragment is not a class reference. */ }
     }
-    const other = renderOther(definition, renderValue);
+    const other = presentation ? null : renderOther(definition, renderValue);
     if (other) root.append(other);
     return root;
 }
