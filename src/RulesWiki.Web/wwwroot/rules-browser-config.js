@@ -84,7 +84,9 @@ const LEGACY_ROUTE_ENTITY_TYPES = new Map([["races", "species"], ["subraces", "s
 export const RULE_FAMILY_TABS = FAMILY_CONFIGS.map(value => [value.entityType, value.label]);
 
 export function getEntityBrowserConfig(entityType = "") {
-    const normalized = normalizeEntityType(entityType);
+    const normalized = String(entityType ?? "");
+    if (normalized === "race" || normalized === "subrace")
+        return config(normalized, normalized === "race" ? "Races" : "Subraces", null, DEFAULT_COLUMNS, [], { renderer: "generic" });
     return CONFIG_BY_ENTITY_TYPE.get(normalized) ?? genericConfig(normalized);
 }
 
@@ -115,5 +117,4 @@ function filter(key, label, mode, value) { return Object.freeze({ key, label, mo
 function fieldFilter(key, label) { return filter(key, label, "client-complete", { kind: "browser-field", field: key }); }
 function relationshipFilter(key, label, relationshipKind, relatedEntityType = null) { return filter(key, label, "client-complete", { kind: "relationship", relationshipKind, relatedEntityType }); }
 function speciesColumns() { return [column("name", "Name", "minmax(9rem, 2fr)"), column("ability", "Ability", "minmax(7rem, 1.1fr)"), column("size", "Size", "minmax(4rem, .65fr)"), column("source", "Source", "minmax(4rem, .65fr)")]; }
-function normalizeEntityType(entityType) { const value = String(entityType ?? ""); if (value === "race") return "species"; if (value === "subrace") return "subspecies"; return value; }
-function humanizeEntityType(entityType) { const value = String(entityType ?? ""); if (!value) return "All Content"; return value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, match => match.toUpperCase()); }
+function humanizeEntityType(entityType) { const value = String(entityType ?? ""); if (!value) return "All Content"; return value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/-/g, " ").replace(/^./, match => match.toUpperCase()); }

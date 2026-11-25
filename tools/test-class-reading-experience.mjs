@@ -24,12 +24,14 @@ globalThis.fetch = async (url, options = {}) => {
     else {
         const op = String(url).split("/").at(-1);
         const args = JSON.parse(options.body).arguments;
-        if (op === "getNativeRulesets") body = { rulesets: [{ id: "first-party-001", entityCount: records.length, fingerprint }] };
+        if (op === "getNativeRulesets") body = { rulesets: [{ id: "first-party-001", entityCount: records.length, fingerprint, capabilities: { read: true, write: false } }] };
         else if (op === "searchNativeRules") {
             const filters = args[1];
             const found = records.filter(record => (!filters.category || record.kind === filters.category)
                 && (!filters.q || JSON.stringify(record).toLowerCase().includes(filters.q.toLowerCase())));
             body = { rulesetId: args[0], fingerprint, total: found.length,
+                offset: filters.offset, limit: filters.limit,
+                categoryFacets: [...new Set(records.map(r => r.kind))].map(kind => ({kind, count: records.filter(r => r.kind === kind).length})),
                 rules: found.slice(filters.offset, filters.offset + filters.limit).map(({ id, name, kind }) => ({ id, name, kind })) };
         } else if (op === "getNativeRule") {
             reads.push(args[1]);
@@ -46,7 +48,7 @@ const wait = async predicate => {
         if (predicate()) return;
         await new Promise(resolve => setTimeout(resolve, 10));
     }
-    assert.fail("Class reading UI did not settle");
+    assert.fail("Class reading UI did not settle: " + document.getElementById("tool-root").textContent.slice(0, 500));
 };
 await import("../src/RulesWiki.Web/wwwroot/app.js");
 await wait(() => document.querySelector(".native-class-option-overview"));

@@ -22,12 +22,14 @@ globalThis.fetch = async (url, options={}) => {
     else {
         const op=String(url).split('/').at(-1);
         const args=JSON.parse(options.body).arguments;
-        if (op==='getNativeRulesets') body={rulesets:[{id:'first-party-001',entityCount:records.length,fingerprint}]};
+        if (op==='getNativeRulesets') body={rulesets:[{id:'first-party-001',entityCount:records.length,fingerprint,capabilities:{read:true,write:false}}]};
         else if (op==='searchNativeRules') {
             assert.equal(args[0],'first-party-001');
             const filters=args[1]; assert.ok(filters.limit<=100);
-            const found=records.filter(x=>!filters.q || x.name.toLowerCase().includes(filters.q.toLowerCase()));
-            body={rulesetId:args[0],fingerprint,total:found.length,rules:found.slice(filters.offset,filters.offset+filters.limit)};
+            const found=records.filter(x=>(!filters.category || x.kind.toLowerCase() === filters.category.toLowerCase()) && (!filters.q || x.name.toLowerCase().includes(filters.q.toLowerCase())));
+            body={rulesetId:args[0],fingerprint,total:found.length,offset:filters.offset,limit:filters.limit,
+                categoryFacets:[...new Set(records.map(r=>r.kind))].map(kind=>({kind,count:records.filter(r=>r.kind===kind).length})),
+                rules:found.slice(filters.offset,filters.offset+filters.limit)};
         } else if (op==='getNativeRule') {
             const rule=records.find(x=>x.id===args[1]); assert.ok(rule);
             body={rulesetId:args[0],fingerprint,rule:{...rule,definition:{description:'Cannot see <img src=x onerror=alert(1)>',effects:[{type:'sense',availability:'none'}]}}};
@@ -49,7 +51,7 @@ assert.ok(root.querySelector('.rules-core-library-detail'));
 assert.ok(root.querySelector('.wiki-ribbon'));
 assert.ok([...document.querySelectorAll('link')].some(x=>x.href.endsWith('/rules-wiki-shell.css')));
 assert.match(root.textContent,/Native rules/);
-assert.ok(calls.some(x=>JSON.parse(x.options.body||'{}').arguments?.[1]?.offset===100),'fetches all native pages');
+assert.ok(!calls.some(x=>JSON.parse(x.options.body||'{}').arguments?.[1]?.offset===100),'initial browsing must not fetch every native page');
 await wait(()=>root.querySelector('.rules-core-library-detail-body'));
 assert.ok(root.textContent.includes('condition.blinded'));
 assert.equal(root.querySelector('img'),null,'native description is text, not HTML');

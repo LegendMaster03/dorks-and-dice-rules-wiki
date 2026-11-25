@@ -4,6 +4,9 @@ import { JSDOM } from "jsdom";
 import { installWikiExperience, installPaneDivider } from "../src/RulesWiki.Web/wwwroot/wiki-experience.js";
 import { restoreMountedClassFragment, scrollNativeClassTarget } from "../src/RulesWiki.Web/wwwroot/native-class-navigation.js";
 import { classReturnLink } from "../src/RulesWiki.Web/wwwroot/native-class-view-state.js";
+import { readNativeCatalogPage } from "../src/RulesWiki.Web/wwwroot/rules-reference-api.js";
+import { createRulesetReader } from "../src/RulesWiki.Web/wwwroot/native-presentation.js";
+import { discoverAuthorizedRuleset } from "../src/RulesWiki.Web/wwwroot/rules-context.js";
 
 const dom = new JSDOM('<main id="tool-root"></main>', { url: "https://site.test/tools/rules-wiki/", pretendToBeVisual: true });
 for (const name of ["window", "document", "Node", "Element", "HTMLElement", "Event", "KeyboardEvent"]) globalThis[name] = dom.window[name];
@@ -24,13 +27,25 @@ const records = [
 const app = {
     root, hostContext: { toolBasePath: "/tools/rules-wiki" }, browserFilters: { entityType: "", query: "" },
     api: {
-        getGlobalRulesCatalog: async (filters = {}) => {
-            searches.push(filters.query);
-            return { rules: filters.query === "owner" ? [records[0]] : records,
-                entityTypeFacets: [{ entityType: "class" }, { entityType: "condition" }], fingerprint };
+        getGlobalRulesCatalog: (filters, reader) => readNativeCatalogPage(reader, filters),
+        getNativeRulesets: async () => ({ rulesets: [{ id: "first-party-001", fingerprint: published, capabilities: { read: true } }] }),
+        async searchNativeRules(id, filters) {
+            searches.push(filters.q);
+            const matches = records.filter(r => (!filters.category || r.entityType === filters.category)
+                && (!filters.q || (filters.q === "owner" && r.entityType === "class")));
+            return { rulesetId: id, fingerprint, total: matches.length, offset: filters.offset, limit: filters.limit,
+                categoryFacets: [{ kind: "class", count: 1 }, { kind: "condition", count: 1 }],
+                rules: matches.slice(filters.offset, filters.offset + filters.limit).map(r => ({ id: r.nativeId, name: r.displayName, kind: r.entityType })) };
         },
-        getNativeRulesets: async () => ({ rulesets: [{ id: "first-party-001", fingerprint: published }] }),
-        getNativeRule: async () => ({ rule: { definition: { alphaVersion: "0.3.1" } } })
+        getNativeRule: async (id, key) => ({ rulesetId: id, fingerprint,
+            rule: { id: key, name: records.find(r => r.nativeId === key).displayName, kind: records.find(r => r.nativeId === key).entityType,
+                definition: { alphaVersion: "0.3.1" } } }),
+        async openRulesetReader(id, onDiscovery) {
+            const response = await this.getNativeRulesets();
+            onDiscovery?.(response);
+            const { context, descriptor } = await discoverAuthorizedRuleset({ getNativeRulesets: async () => response }, id);
+            return createRulesetReader(this, context, descriptor);
+        }
     },
     navigateRuleFamily: async type => { app.lastType = type; },
     renderActiveView: async container => { container.textContent = "Existing reader"; },
@@ -41,10 +56,10 @@ await app.prepareWikiExperience();
 await app.render();
 assert.ok(root.querySelector(".wiki-home"));
 assert.equal(root.textContent.includes("Content updates"), false);
-const ownerSearch = await app.api.getGlobalRulesCatalog({ query: "owner" });
+const ownerSearch = await app.api.getGlobalRulesCatalog({ query: "owner" }, app.rulesetReader);
 assert.equal(ownerSearch.rules[0].nativeId, "class.warlock", "Keep native search matches beyond display names");
-await app.api.getGlobalRulesCatalog({ query: "owner", offset: 1 });
-assert.equal(searches.filter(query => query === "owner").length, 1, "Paging reuses the same search snapshot");
+await app.api.getGlobalRulesCatalog({ query: "owner", offset: 1 }, app.rulesetReader);
+assert.equal(searches.filter(query => query === "owner").length, 2, "Paging reads only the requested server page");
 assert.equal(root.querySelector(".rules-core-library-workspace"), null);
 assert.match(root.textContent, /Warlock · Alpha 0.3.1/);
 assert.equal([...root.querySelectorAll("summary")].some(e => e.textContent === "Magic"), false);

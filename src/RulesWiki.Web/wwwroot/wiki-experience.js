@@ -3,13 +3,17 @@
  * workspace. Reading history is presentation state, not ruleset state.
  */
 import { element as el, clear } from "./ui.js";
-import { currentToolRoute, parseToolRoute } from "./rules-browser-routing.js";
-import { renderPackageAttribution } from "./package-attribution.js";
+import { currentToolRoute, parseToolRoute, browserEntityType, parseBrowserViewStateFromLocation } from "./rules-browser-routing.js";
+import { DEFAULT_RULESET_ID, catalogRoute, ruleRoute, referenceKey, snapshotKey } from "./rules-context.js";
+import { authorizedRulesetDescriptors } from "./rules-reference-api.js";
+import { cancelNativeDetailRender } from "./rules-browser-detail.js";
+import { getEntityBrowserConfig } from "./rules-browser-config.js";
+import { renderPackageAttribution, packageDisplayName } from "./package-attribution.js";
 
 export const WIKI_GROUPS = [
     { name: "Characters", description: "Classes, choices, skills, and competencies", types: [
         ["class", "Classes"], ["subclass", "Subclasses"], ["prestigeClass", "Prestige Classes"],
-        ["species", "Species"], ["subspecies", "Subspecies"], ["race", "Races"],
+        ["species", "Species"], ["subspecies", "Subspecies"], ["race", "Races"], ["subrace", "Subraces"],
         ["background", "Backgrounds"], ["feat", "Feats"], ["skill", "Skills"], ["competency", "Competencies"],
         ["classFeature", "Class Features"], ["optionalfeature", "Class Options"], ["patron", "Patrons"], ["pact", "Pacts"], ["invocation", "Invocations"] ] },
     { name: "Magic", description: "Spells and magical procedures", types: [["spell", "Spells"]] },
@@ -37,13 +41,34 @@ export function installWikiExperience(app) {
         `${Math.max(0, app.root.getBoundingClientRect().top + window.scrollY)}px`);
     fitHost();
     const resetPageScroll = () => document.scrollingElement?.scrollTo?.({ top: 0 });
-    const go = async (path, query = "") => {
+    const routeIsHome = () => {
+        const route = parseToolRoute(currentToolRoute(app));
+        const params = new URLSearchParams(window.location.search);
+        return (currentToolRoute(app) === "/" || (route.qualified && !route.entityType && !route.conceptKey))
+            && !params.get("q") && params.get("browse") !== "1";
+    };
+    const resetSelection = (route, view = {}) => {
+        app.browserScope = "global";
+        app.browserFilters = { ...app.browserFilters, entityType: route.entityType ?? "",
+            query: view.query ?? "", fieldFilters: view.fieldFilters ?? {},
+            sourceCode: view.sourceCode ?? "", overridesOnly: false };
+        app.browserSort = { key: view.sortKey ?? null, direction: view.sortDirection ?? "asc" };
+        app.browserDeepLink = route.conceptKey ?? null;
+        app.browserSelectedConceptKey = route.conceptKey ?? null;
+        app.libraryDeepLink = null;
+        app.libraryRouteActive = false;
+    };
+    const go = async (path, query = "", selected = app.rulesContext?.rulesetId) => {
         resetPageScroll();
         const base = (app.hostContext.toolBasePath ?? "/tools/rules-wiki").replace(/\/$/, "");
-        window.history.pushState({}, "", `${base}${path}${query ? `?q=${encodeURIComponent(query)}` : ""}`);
-        app.browserFilters = { ...app.browserFilters, entityType: "", query, fieldFilters: {}, sourceCode: "", overridesOnly: false };
-        app.browserDeepLink = null;
-        app.browserSelectedConceptKey = null;
+        const qualified = selected && (selected !== DEFAULT_RULESET_ID ||
+            parseToolRoute(currentToolRoute(app)).qualified || selected !== app.rulesContext?.rulesetId);
+        const destination = qualified ? catalogRoute(selected) : path;
+        const params = new URLSearchParams();
+        if (query) params.set("q", query);
+        if (qualified && path === "/all") params.set("browse", "1");
+        window.history.pushState({}, "", base + destination + (params.size ? "?" + params : ""));
+        resetSelection(parseToolRoute(destination), { query });
         app.activeView = "library";
         await app.render();
     };
@@ -54,62 +79,167 @@ export function installWikiExperience(app) {
         app.browserFilters.query = "";
         await navigate(type);
     };
-    app.prepareWikiExperience = async () => {
-        const readCatalog = app.api.getGlobalRulesCatalog.bind(app.api);
-        app.wikiIndex = await readCatalog({ limit: 100000 });
-        app.wikiKinds = new Set(app.wikiIndex.entityTypeFacets.map(f => f.entityType));
-        const searches = new Map();
-        // Preserve native search semantics, including owner and prerequisite matches.
-        // Reuse matching snapshot results while changing filters or pages.
-        app.api.getGlobalRulesCatalog = async (filters = {}) => {
-            const query = String(filters.query ?? "").trim();
-            let catalog = app.wikiIndex;
-            if (query) {
-                if (!searches.has(query)) searches.set(query, readCatalog({ query, limit: 100000 }).then(result => {
-                    if (result.fingerprint !== app.wikiIndex.fingerprint)
-                        throw new Error("The published rules have changed. Refresh to search the current snapshot.");
-                    return result;
-                }).catch(error => { searches.delete(query); throw error; }));
-                catalog = await searches.get(query);
-            }
-            const rows = catalog.rules.filter(row => !filters.entityType || row.entityType === filters.entityType);
-            const offset = filters.offset ?? 0;
-            return { ...catalog, rules: rows.slice(offset, offset + (filters.limit ?? 25)), totalCount: rows.length };
-        };
-        // Class summaries provide version labels without inventing a release date.
+    let generation = 0;
+    let bindingRoute = null;
+    const clearContext = () => {
+        cancelNativeDetailRender(app);
+        app.rulesContext = null;
+        app.rulesetReader = null;
+        app.wikiIndex = null;
+        app.wikiDescriptors = [];
+        app.wikiKinds = new Set();
         app.wikiPlaytests = [];
-        await Promise.all(app.wikiIndex.rules.filter(r => r.entityType === "class").map(async row => {
+        app.wikiPlaytestsPartial = false;
+        app.wikiUpdateAvailable = false;
+        app.wikiUpdateDismissed = false;
+        app.wikiPendingFingerprint = null;
+    };
+    const ensureContext = async serial => {
+        const path = currentToolRoute(app);
+        const route = parseToolRoute(path);
+        const scope = new URLSearchParams(window.location.search).get("scope");
+        const id = route.rulesetId ?? DEFAULT_RULESET_ID;
+        const unavailable = route.unsupportedRulesContext || (scope && scope !== "global");
+        if (!unavailable && app.rulesContext?.rulesetId === id && app.rulesetReader && app.wikiIndex) return true;
+        clearContext();
+        bindingRoute = path;
+        const entityType = browserEntityType(route, window.location.search);
+        resetSelection({ ...route, entityType }, parseBrowserViewStateFromLocation(entityType));
+        app.catalogError = null;
+        const acceptInventory = response => {
+            if (serial === generation) app.wikiDescriptors = authorizedRulesetDescriptors(response);
+        };
+        try {
+            if (unavailable) {
+                acceptInventory(await app.api.getNativeRulesets());
+                throw Error("This ruleset or campaign scope is unavailable.");
+            }
+            const reader = await app.api.openRulesetReader(id, acceptInventory);
+            if (serial !== generation) return false;
+            if (reader.context.rulesetId !== id) throw Error("Ruleset identity did not match the requested context.");
+            const index = await app.api.getGlobalRulesCatalog({ limit: 1, offset: 0 }, reader);
+            if (serial !== generation) return false;
+            app.rulesContext = reader.context;
+            app.rulesetReader = reader;
+            app.wikiIndex = index;
+            app.wikiKinds = new Set(index.entityTypeFacets.map(f => f.entityType));
+            return true;
+        } catch (error) {
+            if (serial !== generation) return false;
+            app.catalogError = error;
+            return false;
+        } finally {
+            if (serial === generation) bindingRoute = null;
+        }
+    };
+    app.prepareWikiExperience = async () => { await ensureContext(++generation); };
+    const renderApp = app.render.bind(app);
+    app.render = async (...args) => {
+        const serial = ++generation;
+        const route = parseToolRoute(currentToolRoute(app));
+        const scope = new URLSearchParams(window.location.search).get("scope");
+        const switching = route.unsupportedRulesContext || (scope && scope !== "global")
+            || app.rulesContext?.rulesetId !== (route.rulesetId ?? DEFAULT_RULESET_ID);
+        if (switching) app.root.replaceChildren(el("p", { text: "Loading ruleset…" }));
+        await ensureContext(serial);
+        if (serial === generation) await renderApp(...args);
+    };
+
+    // Persist only stable qualified identities in this tab. Legacy history
+    // contributes first-party IDs only; names are resolved in the bound snapshot.
+    const historyKey = "rulesWikiRecentQualified";
+    const readHistory = () => {
+        try {
+            const stored = JSON.parse(window.sessionStorage.getItem(historyKey));
+            if (Array.isArray(stored)) return stored;
+        } catch { /* Optional tab storage. */ }
+        return recentRules().map(rule => ({ rulesetId: DEFAULT_RULESET_ID, id: rule.id }));
+    };
+    let history = readHistory().filter(entry => {
+        try { referenceKey(entry.rulesetId, entry.id); return true; } catch { return false; }
+    }).slice(0, 64).map(({ rulesetId, id }) => ({ rulesetId, id }));
+    const saveHistory = () => {
+        try { window.sessionStorage.setItem(historyKey, JSON.stringify(history)); } catch { /* Optional tab storage. */ }
+    };
+    // Private labels belong to the current authorized reader, not a reusable
+    // cross-binding cache. Bound the cache even during long browsing sessions.
+    const recentNames = new WeakMap();
+    const namesFor = reader => {
+        if (!recentNames.has(reader)) recentNames.set(reader, new Map());
+        return recentNames.get(reader);
+    };
+    const rememberName = (reader, key, name) => {
+        if (reader !== app.rulesetReader) return;
+        const names = namesFor(reader);
+        names.delete(key);
+        names.set(key, name);
+        while (names.size > 64) names.delete(names.keys().next().value);
+    };
+    app.rememberNativeReference = (context, rule) => {
+        if (app.rulesContext !== context && (app.rulesContext?.rulesetId !== context.rulesetId ||
+            app.rulesContext?.fingerprint !== context.fingerprint)) return;
+        const key = referenceKey(context.rulesetId, rule.id);
+        history = [{ rulesetId: context.rulesetId, id: rule.id }, ...history.filter(entry =>
+            referenceKey(entry.rulesetId, entry.id) !== key)].slice(0, 64);
+        if (app.rulesetReader) rememberName(app.rulesetReader, snapshotKey(context, rule.id), rule.name);
+        saveHistory();
+    };
+    const loadRecents = async reader => {
+        const context = reader.context;
+        const entries = history.filter(entry => entry.rulesetId === context.rulesetId).slice(0, 8);
+        return (await Promise.all(entries.map(async entry => {
+            const key = snapshotKey(context, entry.id);
             try {
-                const response = await app.api.getNativeRule("first-party-001", row.nativeId);
-                const d = response.rule.definition.definition ?? response.rule.definition;
-                if (d.alphaVersion) app.wikiPlaytests.push({ id: row.nativeId, name: row.displayName, version: d.alphaVersion });
-            } catch { /* A class card must not prevent the reference from opening. */ }
-        }));
+                const names = namesFor(reader);
+                if (!names.has(key)) rememberName(reader, key, (await reader.resolve(entry.id)).rule.name);
+                if (reader !== app.rulesetReader || !names.has(key)) return null;
+                return { id: entry.id, name: names.get(key) };
+            } catch { return null; }
+        }))).filter(Boolean);
     };
-    const contexts = new Map();
-    app.decorateBrowserRows = async list => {
-        const rows = [...list.querySelectorAll(".rules-core-library-row")].filter(row =>
-            app.wikiIndex?.rules.find(rule => rule.nativeId === row.dataset.conceptKey)?.entityType === "classFeature");
-        for (let start = 0; start < rows.length; start += 4) await Promise.all(rows.slice(start, start + 4).map(async row => {
-            const id = row.dataset.conceptKey;
-            if (!contexts.has(id)) contexts.set(id, app.api.getNativeRule("first-party-001", id).then(response => {
-                if (response.fingerprint !== app.wikiIndex.fingerprint) return null;
-                const d = response.rule.definition;
-                const ownerId = d.parentClass ?? d.definition?.parentClass;
-                const owner = app.wikiIndex.rules.find(rule => rule.nativeId === ownerId)?.displayName;
-                const level = d.classLevel ?? d.definition?.classLevel;
-                return owner ? `${owner}${Number.isInteger(level) ? ` · Level ${level}` : ""}` : null;
-            }).catch(() => { contexts.delete(id); return null; }));
-            const context = await contexts.get(id);
-            if (context && row.isConnected && !row.querySelector(".wiki-row-context")) row.querySelector(".rules-core-library-cell--name")?.append(
-                el("span", { className: "wiki-row-context", text: context }));
-        }));
+    const playtestCache = new WeakMap();
+    const loadPlaytests = async reader => {
+        if (reader.context.rulesetId !== DEFAULT_RULESET_ID || !app.wikiKinds.has("class")) return { rules: [], partial: false };
+        if (!playtestCache.has(reader)) playtestCache.set(reader, (async () => {
+            const page = await app.api.getGlobalRulesCatalog({ entityType: "class", limit: 10 }, reader);
+            const rules = (await Promise.all(page.rules.map(async row => {
+                try {
+                    const response = await reader.resolve(row.nativeId);
+                    const d = response.rule.definition.definition ?? response.rule.definition;
+                    return d.alphaVersion ? { id: row.nativeId, name: row.displayName, version: d.alphaVersion } : null;
+                } catch { return null; }
+            }))).filter(Boolean);
+            return { rules, partial: page.totalCount > page.rules.length };
+        })().catch(() => ({ rules: [], partial: false })));
+        return playtestCache.get(reader);
     };
-    const availableGroups = () => WIKI_GROUPS.map(group => ({ ...group,
-        types: group.types.filter(([type]) => app.wikiKinds?.has(type)) })).filter(group => group.types.length);
+    // Current native projections lack contextual row fields. Do not resolve
+    // every visible row or infer owners from identifiers. Core projection is
+    // tracked in the workstream integration requirements.
+    app.decorateBrowserRows = null;
+    const availableGroups = () => {
+        const groups = WIKI_GROUPS.map(group => ({ ...group,
+            types: group.types.filter(([type]) => app.wikiKinds?.has(type)) })).filter(group => group.types.length);
+        const configured = new Set(groups.flatMap(group => group.types.map(([type]) => type)));
+        const extra = [...(app.wikiKinds ?? [])].filter(type => !configured.has(type))
+            .sort().map(type => [type, getEntityBrowserConfig(type).label]);
+        if (extra.length) groups.push({ name: "Other categories", description: "Additional native reference categories", types: extra });
+        return groups;
+    };
+    const populateRulesetSelector = selector => {
+        selector.replaceChildren();
+        selector.append(el("option", { value: "", text: "Select ruleset", disabled: true }));
+        for (const descriptor of app.wikiDescriptors ?? [])
+            selector.append(el("option", { value: descriptor.id,
+                text: descriptor.metadata?.displayName ?? descriptor.id }));
+        selector.value = app.rulesContext?.rulesetId ?? "";
+    };
     app.renderNavigation = () => {
         const nav = el("nav", { className: "wiki-ribbon", ariaLabel: "Rules Wiki" });
-        nav.append(el("button", { type: "button", text: "Wiki home", onClick: app.navigateWikiHome }));
+        const selector = el("select", { className: "form-select form-select-sm wiki-ruleset-selector", ariaLabel: "Ruleset" });
+        populateRulesetSelector(selector);
+        selector.addEventListener("change", () => { if (selector.value) void go("/", "", selector.value); });
+        nav.append(selector, el("button", { type: "button", text: "Wiki home", disabled: !app.rulesContext, onClick: app.navigateWikiHome }));
         const groups = el("div", { className: "wiki-ribbon-groups" });
         for (const group of availableGroups()) {
             const menu = el("details", { className: "wiki-ribbon-menu" }, el("summary", { text: group.name }));
@@ -123,27 +253,32 @@ export function installWikiExperience(app) {
         }
         const browse = el("details", { className: "wiki-mobile-menu" }, el("summary", { text: "Browse sections" }), groups);
         browse.open = window.innerWidth > 560;
-        nav.append(browse, el("button", { type: "button", text: "Search all rules", onClick: () => go("/all") }));
+        nav.append(browse, el("button", { type: "button", text: "Search all rules", disabled: !app.rulesContext, onClick: () => go("/all") }));
         return nav;
     };
     const render = app.renderActiveView.bind(app);
     app.renderActiveView = async container => {
         fitHost();
         container.classList.add("rules-core-main");
-        // The active browser is still first-party only. An explicit foreign
-        // or malformed qualified route must never render the default catalog.
-        if (parseToolRoute(currentToolRoute(app)).unsupportedRulesContext) {
+        if (!app.rulesContext || !app.rulesetReader || app.catalogError) {
             container.dataset.rulesView = "unavailable";
             container.replaceChildren(el("section", { className: "card card-body" },
                 el("h2", { text: "Ruleset unavailable" }),
-                el("p", { text: "This ruleset is not available in the active reference browser." }),
-                el("button", { type: "button", text: "Return to Wiki home", onClick: app.navigateWikiHome })));
+                el("p", { text: "This ruleset or scope is unavailable in the authorized native catalog. Select an available ruleset or retry." }),
+                el("button", { type: "button", text: "Retry", onClick: () => app.render() })));
             return;
         }
-        const home = currentToolRoute(app) === "/" && !new URLSearchParams(window.location.search).get("q");
-        if (home) { container.dataset.rulesView = "home"; renderHome(container); }
-        else {
+        const reader = app.rulesetReader;
+        if (routeIsHome()) {
+            container.dataset.rulesView = "home";
+            const [recent, playtests] = await Promise.all([loadRecents(reader), loadPlaytests(reader)]);
+            if (!container.isConnected || reader !== app.rulesetReader) return;
+            app.wikiPlaytests = playtests.rules;
+            app.wikiPlaytestsPartial = playtests.partial;
+            renderHome(container, recent);
+        } else {
             await render(container);
+            if (!container.isConnected || reader !== app.rulesetReader) return;
             const workspace = container.querySelector(".rules-core-library-workspace");
             if (workspace) installPaneDivider(workspace);
         }
@@ -157,12 +292,22 @@ export function installWikiExperience(app) {
         } }));
     let checking = false;
     const checkUpdates = async () => {
-        if (checking || document.visibilityState === "hidden") return;
+        if (checking || bindingRoute || document.visibilityState === "hidden" || !app.rulesContext) return;
         checking = true;
+        const reader = app.rulesetReader;
         try {
             const sets = await app.api.getNativeRulesets();
-            const current = sets.rulesets.find(r => r.id === "first-party-001");
-            if (current && current.fingerprint !== app.wikiIndex?.fingerprint) {
+            if (reader !== app.rulesetReader) return;
+            app.wikiDescriptors = authorizedRulesetDescriptors(sets);
+            const selector = app.root.querySelector(".wiki-ruleset-selector");
+            if (selector) populateRulesetSelector(selector);
+            const current = app.wikiDescriptors.find(r => r.id === reader.context.rulesetId);
+            if (!current) {
+                clearContext();
+                await app.render();
+                return;
+            }
+            if (current.fingerprint !== reader.context.fingerprint) {
                 if (app.wikiPendingFingerprint !== current.fingerprint) app.wikiUpdateDismissed = false;
                 app.wikiPendingFingerprint = current.fingerprint;
                 app.wikiUpdateAvailable = true;
@@ -183,11 +328,13 @@ export function installWikiExperience(app) {
         if (menu) menu.open = !compact;
     });
 
-    function renderHome(container) {
+    function renderHome(container, recent) {
         clear(container);
         const home = el("section", { className: "wiki-home" },
-            el("header", {}, el("p", { className: "wiki-eyebrow", text: "Dorks & Dice" }),
-                el("h1", { text: "Rules Wiki" }), el("p", { text: "Find a rule. Explore a class. Return to your game." })));
+            el("header", {}, el("p", { className: "wiki-eyebrow", text: packageDisplayName(app.rulesContext, app.rulesetReader.packageDescriptor) }),
+                el("h1", { text: "Rules Wiki" }), el("p", { text: app.wikiKinds.has("class")
+                    ? "Find a rule. Explore a class. Return to your game."
+                    : "Find a rule. Explore the reference. Return to your game." })));
         const search = el("input", { type: "search", placeholder: "Search all rules…", ariaLabel: "Search all rules", attributes: { autocomplete: "off" } });
         const form = el("form", { className: "wiki-home-search" }, search, el("button", { type: "submit", text: "Search" }));
         form.addEventListener("submit", event => { event.preventDefault(); go("/all", search.value.trim()); });
@@ -200,19 +347,24 @@ export function installWikiExperience(app) {
             card.append(links); grid.append(card);
         }
         home.append(grid);
-        const recent = recentRules().filter(entry => app.wikiIndex.rules.some(row => row.nativeId === entry.id));
         if (recent.length) {
             const section = el("section", { className: "wiki-recent" }, el("h2", { text: "Recently viewed" }));
             const list = el("ul");
             for (const rule of recent) list.append(el("li", {}, el("a", { text: rule.name,
-                attributes: { href: `${app.hostContext.toolBasePath}/rules/${encodeURIComponent(rule.id)}` } })));
-            section.append(list, el("button", { type: "button", text: "Clear recently viewed", onClick: () => { save("rulesWikiRecent", []); section.remove(); } }));
+                attributes: { href: app.hostContext.toolBasePath.replace(/\/$/, "") + ruleRoute(app.rulesContext.rulesetId, rule.id) } })));
+            section.append(list, el("button", { type: "button", text: "Clear recently viewed", onClick: () => {
+                history = history.filter(entry => entry.rulesetId !== app.rulesContext.rulesetId);
+                saveHistory();
+                section.remove();
+            } }));
             home.append(section);
         }
-        if (app.wikiPlaytests?.length) home.append(el("aside", { className: "wiki-playtest-notes" },
-            el("h2", { text: "Playtest information" }), el("p", { text: "These published classes are in active testing. Open a class for its current rules." }),
+        if (app.wikiPlaytests?.length || app.wikiPlaytestsPartial) home.append(el("aside", { className: "wiki-playtest-notes" },
+            el("h2", { text: "Playtest information" }), el("p", { text: app.wikiPlaytestsPartial
+                ? "Playtest information is shown for the first ten classes. Open a class for its current rules."
+                : "These published classes are in active testing. Open a class for its current rules." }),
             ...app.wikiPlaytests.map(rule => el("a", { text: `${rule.name} · Alpha ${rule.version}`,
-                attributes: { href: `${app.hostContext.toolBasePath}/rules/${encodeURIComponent(rule.id)}` } }))));
+                attributes: { href: app.hostContext.toolBasePath.replace(/\/$/, "") + ruleRoute(app.rulesContext.rulesetId, rule.id) } }))));
         if (app.wikiIndex?.rulesetId && app.wikiIndex?.fingerprint)
             home.append(renderPackageAttribution(app.wikiIndex, app.wikiIndex.packageDescriptor));
         container.append(home);
