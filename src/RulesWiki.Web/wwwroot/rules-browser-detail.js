@@ -42,7 +42,12 @@ export async function renderRuleDetailPane(
     const lifecycle = createRenderLifecycle();
     activeDetails.set(app, lifecycle);
     const wasConnected = container.isConnected;
+    const boundContext = app.rulesContext;
+    const indexRuleset = app.wikiIndex?.rulesetId;
+    const indexFingerprint = app.wikiIndex?.fingerprint;
     const isCurrent = () => activeDetails.get(app) === lifecycle && requestSerial === getCurrentSerial()
+        && app.rulesContext === boundContext
+        && (boundContext || (app.wikiIndex?.rulesetId === indexRuleset && app.wikiIndex?.fingerprint === indexFingerprint))
         && (!wasConnected || container.isConnected);
     container.replaceChildren(element("div", {
         className: "rules-core-library-detail-loading",

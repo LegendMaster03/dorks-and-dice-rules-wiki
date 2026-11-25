@@ -126,10 +126,13 @@ export function mountNativePresentation(container, registry, input, { decorate =
     if (!lease.isCurrent()) return false;
     const commit = result => {
         if (!lease.isCurrent()) return false;
+        const rendered = Array.isArray(result) ? result : [result];
+        if (!rendered.length || !rendered.every(node => node instanceof Node))
+            throw new Error("Native renderer must return DOM nodes.");
         const content = decorate(result);
         if (!lease.isCurrent()) return false;
         const nodes = Array.isArray(content) ? content : [content];
-        if (!nodes.every(node => node instanceof Node)) throw new Error("Native renderer must return DOM nodes.");
+        if (!nodes.length || !nodes.every(node => node instanceof Node)) throw new Error("Native renderer must return DOM nodes.");
         container.replaceChildren(...nodes);
         return true;
     };

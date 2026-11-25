@@ -121,6 +121,27 @@
       "nativeEntityId": "table.character-advancement",
       "sourceFile": "data/rulesets/dnd-5e/native/book-rules-and-tables.json",
       "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--rule.monster-statblock-foundation.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "rule.monster-statblock-foundation",
+      "sourceFile": "data/rulesets/first-party-001/native/monster-statblock-foundation.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--species.human.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "species.human",
+      "sourceFile": "data/rulesets/first-party-001/native/origination/biological/species/base/human.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--class-feature.warlock.pact-magic.1.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "class-feature.warlock.pact-magic.1",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/classes/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
     }
   ],
   "catalogAttribution": {
@@ -147,5 +168,16 @@
       "license": "CC-BY-3.0",
       "attribution": "This work is based on Fate Condensed (found at https://fate-srd.com/fate-condensed), a product of Evil Hat Productions, LLC, developed, authored, and edited by PK Sullivan, Lara Turner, Fred Hicks, Richard Bellingham, Robert Hanz, and Sophie Lagacé, and licensed for our use under the Creative Commons Attribution 3.0 Unported license (https://creativecommons.org/licenses/by/3.0/)."
     }
-  }
+  },
+  "syntheticFixtures": [
+    {
+      "file": "synthetic/kaiju-reference-fixture.json",
+      "sourceRepository": "LegendMaster03/dorks-and-dice-rules-wiki",
+      "sourceRevision": "0115e131d2cb4c5a9306b5cb8e6de8d3ffc1de27",
+      "sourceFile": "tools/validate-native-monster-renderer.mjs",
+      "sourceDescription": "Existing Kaiju Reference Fixture object and its kaijuReference object, combined without modifying their values.",
+      "representation": "Synthetic presentation test only; not a native Core entity or approved gameplay content.",
+      "nativeEntityId": null
+    }
+  ]
 }

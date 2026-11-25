@@ -94,36 +94,7 @@ assert.ok(cls(lich, "rw-stat-entry").length >= 4);
 
 // Kaiju fixture uses the reference concepts already implemented in Block
 // Initiative. Values are testing data, never added to authoritative creatures.
-const kaijuReference = {
-    chaosThreshold: 150, finishingBlow: 60, vulnerabilityIdentificationDc: 18,
-    xpMilestones: [{ criteria: "Chaos reduced to zero", xp: 5000 }, { criteria: "Victory", xp: 10000 }],
-    vulnerableAreas: [
-        { id: "head", name: "Head", maxHp: 35,
-            targetableWhen: "When exposed by the creature's Behaviour",
-            exploitationEffect: "Area-specific consequence", futureAreaRule: "Keep this detail",
-            variants: [{ cr: 12, ac: 15, hp: 35 }, { cr: 18, ac: 18, hp: 65 },
-                { cr: 24, ac: 21, hp: 105 }] },
-        { id: "arm", name: "Arm", hp: 25, ac: 17, onExploited: "Additional effect" }
-    ],
-    behaviours: [
-        { name: "Escalation", trigger: "At the stated encounter trigger", entries: ["Change combat behavior"],
-            gainedFeatures: ["New Slam"], lostFeatures: ["Old Slam"] },
-        { name: "Counterattack", when: "In response to an attack", description: "Use the listed counterattack" }
-    ],
-    rampage: "When Chaos Threshold reaches zero",
-    deathThroes: "Once all Vulnerable Areas are exploited",
-    deathRattle: "Post-defeat consequence",
-    additionalKaijuRule: { effect: "preserve unexplained mechanics" }
-};
-const kaiju = show({
-    name: "Kaiju Reference Fixture", blockType: "kaiju", size: ["G"], type: "monstrosity",
-    ac: [22], hp: { average: 999, formula: "99d10" }, speed: { walk: 40 },
-    str: 26, dex: 10, con: 24, int: 8, wis: 12, cha: 8,
-    kaiju: kaijuReference,
-    action: [{ name: "Slam", lostWhile: "Head Exploited",
-        entries: ["{@atkr m} {@hit 10}, {@h}{@damage 3d10 + 8} force."] }],
-    legendary: [{ name: "Legendary Action", entries: ["Special attack."] }]
-});
+const kaiju = show(JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/synthetic/kaiju-reference-fixture.json", import.meta.url))));
 assert.equal(cls(kaiju, "rw-statblock-kaiju").length, 1);
 assert.match(kaiju.textContent, /Kaiju Reference/);
 assert.equal(cls(kaiju, "rw-stat-kaiju-columns").length, 1,
