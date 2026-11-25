@@ -66,13 +66,13 @@ export function createBiologicalHierarchy(envelope, context) {
                 for (const ancestor of chain(row.id)) result.add(ancestor.id);
         return result;
     }
-    return { rows, children, roots, chain, visible };
+    return { snapshot: snapshotKey(context), rows, children, roots, chain, visible };
 }
 
 export function biologicalDetailModel(hierarchy, source, context) {
     assertSnapshot(context, source);
     const selected = hierarchy.rows.get(source.sourceId);
-    if (context.rulesetId !== DEFAULT_RULESET_ID || source.contractVersion !== 1 || !selected ||
+    if (context.rulesetId !== DEFAULT_RULESET_ID || hierarchy.snapshot !== snapshotKey(context) || source.contractVersion !== 1 || !selected ||
         !Array.isArray(source.lineage)) throw new Error("Invalid biological source projection.");
     const expected = hierarchy.chain(selected.id);
     if (source.lineage.length !== expected.length || source.lineage.some((row, i) =>
@@ -87,7 +87,7 @@ export function biologicalDetailModel(hierarchy, source, context) {
         occurrenceKey: JSON.stringify([row.id, occurrence.path]),
         bindings: (direct?.candidates ?? []).filter(c => c.sourceId === row.id && c.path === occurrence.path)
     })));
-    return { selected, lineage: source.lineage, occurrences, direct,
+    return { snapshot: hierarchy.snapshot, selected, lineage: source.lineage, occurrences, direct,
         effectiveProjectionAvailable: source.effectiveProjectionAvailable };
 }
 
@@ -138,6 +138,8 @@ function status(row) {
 /** B owns the outer panes and route. Native details/summary and links are keyboard
  * operable without pretending to implement an ARIA tree keyboard contract. */
 export function renderBiologicalIndex(tree, input, { selectedId = null, onNavigate = null, state = {} } = {}) {
+    if (!supportsBiologicalReader(input.references) || !contextMatches(input.context, input.references.context) ||
+        tree.snapshot !== snapshotKey(input.context)) throw new Error("Biological index context mismatch.");
     const root = node("nav", undefined, "origin-biological-index");
     root.setAttribute("aria-label", "Species and Ancestries");
     const searchLabel = node("label", "Search Species and Ancestries");
@@ -207,8 +209,8 @@ function offerTable(offers, model, input, fixed = false) {
     return list;
 }
 export function renderBiologicalDetail(model, input) {
-    if (!supportsBiologicalReader(input.references) || !contextMatches(input.context, input.references.context))
-        throw new Error("Biological detail context mismatch.");
+    if (!supportsBiologicalReader(input.references) || !contextMatches(input.context, input.references.context) ||
+        model.snapshot !== snapshotKey(input.context)) throw new Error("Biological detail context mismatch.");
     const article = node("article", undefined, "origin-biological-detail");
     const selected = model.selected, own = model.lineage.at(-1), definition = own.definition;
     const breadcrumb = node("nav");
@@ -230,6 +232,7 @@ export function renderBiologicalDetail(model, input) {
     for (const row of model.lineage) {
         const block = node("section");
         block.append(node("h4", row.name + (row.inheritedSource ? " — Inherited source" : " — Selected source")));
+        if (row.inheritedSource && row.definition.description != null) block.append(format(row.definition.description, input));
         const authored = Object.fromEntries(Object.entries(row.definition).filter(([key]) =>
             !["id", "kind", "name", "traits", "reviewNotes", "source", "sourcePackage", "description"].includes(key)));
         block.append(disclosure("Authored source properties and other fields", format(authored, input)));
@@ -275,9 +278,10 @@ export async function renderBiologicalExplanation(input) {
     if (!supportsBiologicalReader(input.references) || !contextMatches(input.context, input.references.context) ||
         !input.lifecycle?.isCurrent()) return null;
     const reader = input.references;
-    const [origination, inheritance] = await Promise.all([
+    let origination, inheritance;
+    try { [origination, inheritance] = await Promise.all([
         reader.resolve("rule.creature-origination"), reader.resolve("rule.species-subspecies-upbringing")
-    ]);
+    ]); } catch (error) { if (!input.lifecycle.isCurrent()) return null; throw error; }
     if (!input.lifecycle.isCurrent()) return null;
     const o = origination.rule.definition, i = inheritance.rule.definition;
     const biological = o.methodDefinitions?.find(m => m.id === "biological");
