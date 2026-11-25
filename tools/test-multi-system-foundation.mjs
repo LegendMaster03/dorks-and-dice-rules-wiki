@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { createRulesContext, referenceKey, readingKey, snapshotKey, ruleRoute, catalogRoute, categoryRoute, parseQualifiedRoute, discoverRulesContext, createRenderLifecycle } from "../src/RulesWiki.Web/wwwroot/rules-context.js";
@@ -63,4 +64,22 @@ assert.equal(container.childElementCount, 0);
 assert.equal(current.isCurrent(), true);
 lifecycle.cancel();
 assert.equal(current.isCurrent(), false);
+const manifest = JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/manifest.json", import.meta.url)));
+const identities = new Set();
+for (const fixture of manifest.fixtures) {
+    const record = JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/" + fixture.file, import.meta.url)));
+    assert.equal(record.id, fixture.nativeEntityId);
+    assert.equal(fixture.sourceRevision, manifest.sourceRevision);
+    assert.ok(fixture.sourceFile.startsWith("data/rulesets/" + fixture.rulesetId + "/native/"));
+    identities.add(referenceKey(fixture.rulesetId, record.id));
+    const ctx = context(fixture.rulesetId);
+    const envelope = { rulesetId: ctx.rulesetId, fingerprint: ctx.fingerprint,
+        rule: { id: record.id, kind: record.kind, name: record.name, definition: record } };
+    const fixtureInput = createPresentationInput(ctx, envelope, null);
+    const view = await generic.render(fixtureInput);
+    assert.equal(view.querySelector("h2").textContent, record.name);
+    assert.equal(view.querySelector("script"), null);
+}
+assert.equal(identities.size, manifest.fixtures.length);
+assert.equal(manifest.fixtures.filter(x => x.nativeEntityId === id).length, 3);
 console.log("Multi-system foundation contracts passed.");

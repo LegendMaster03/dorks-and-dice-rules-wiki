@@ -1,0 +1,147 @@
+{
+  "id": "background.acolyte",
+  "kind": "background",
+  "name": "Acolyte",
+  "ability": [
+    {
+      "choose": {
+        "weighted": {
+          "from": [
+            "int",
+            "wis",
+            "cha"
+          ],
+          "weights": [
+            2,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "choose": {
+        "weighted": {
+          "from": [
+            "int",
+            "wis",
+            "cha"
+          ],
+          "weights": [
+            1,
+            1,
+            1
+          ]
+        }
+      }
+    }
+  ],
+  "feats": [
+    {
+      "magic initiate; cleric|srd52": true
+    }
+  ],
+  "skillProficiencies": [
+    {
+      "insight": true,
+      "religion": true
+    }
+  ],
+  "toolProficiencies": [
+    {
+      "calligrapher's supplies": true
+    }
+  ],
+  "startingEquipment": [
+    {
+      "A": [
+        {
+          "item": "book|srd52",
+          "displayName": "Book (Prayers)"
+        },
+        {
+          "item": "calligrapher's supplies|srd52"
+        },
+        {
+          "item": "holy symbol|srd52"
+        },
+        {
+          "item": "parchment|srd52",
+          "quantity": 10
+        },
+        {
+          "item": "robe|srd52"
+        },
+        {
+          "value": 800
+        }
+      ],
+      "B": [
+        {
+          "value": 5000
+        }
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "type": "list",
+      "style": "list-hang-notitle",
+      "items": [
+        {
+          "type": "item",
+          "name": "Ability Scores:",
+          "entry": "Intelligence, Wisdom, Charisma"
+        },
+        {
+          "type": "item",
+          "name": "Feat:",
+          "entry": "{@feat Magic Initiate|SRD52} (Cleric)"
+        },
+        {
+          "type": "item",
+          "name": "Skill Proficiencies:",
+          "entry": "{@skill Insight|SRD52}, {@skill Religion|SRD52}"
+        },
+        {
+          "type": "item",
+          "name": "Tool Proficiency:",
+          "entry": "{@item Calligrapher's Supplies|SRD52}"
+        },
+        {
+          "type": "item",
+          "name": "Equipment:",
+          "entry": "Choose A or B: (A) {@item Calligrapher's Supplies|SRD52}, {@item Book|SRD52|Book (prayers)}, {@item Holy Symbol|SRD52}, {@item Parchment|SRD52} (10 sheets), {@item Robe|srd52}, 8 GP; or (B) 50 GP"
+        }
+      ]
+    }
+  ],
+  "catalogReferences": [
+    "baseitem.calligrapher-s-supplies",
+    "feat.magic-initiate",
+    "item-group.holy-symbol",
+    "item.book",
+    "item.parchment",
+    "item.robe",
+    "rulebook.page-083",
+    "skill.insight",
+    "skill.religion"
+  ],
+  "source": {
+    "release": "srd-5.2.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+    "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [
+      83
+    ],
+    "candidatePage": 178,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "backgrounds.json",
+      "pointer": "/background/1"
+    },
+    "structuredStatus": "publisher name/page locator and pinned structured projection; full descriptive and mechanical field review pending"
+  }
+}

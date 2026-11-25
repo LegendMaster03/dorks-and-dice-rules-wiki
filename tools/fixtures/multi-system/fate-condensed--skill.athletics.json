@@ -1,0 +1,19 @@
+{
+  "id": "skill.athletics",
+  "kind": "skill",
+  "name": "Athletics",
+  "description": "A measurement of physical potential. Athletics stunts focus on movement—running, jumping, parkour—and dodging attacks.",
+  "catalogReferences": [
+    "section.getting-started.create-your-characters.skills.skill-list",
+    "section.getting-started.create-your-characters.skills"
+  ],
+  "source": {
+    "commit": "93ed848e723f31b4994b466b7241011ba24be885",
+    "path": "docs/markdown/Fate-Condensed-SRD-CC-BY.md",
+    "line": 352,
+    "license": "CC-BY-3.0",
+    "attribution": "This work is based on Fate Condensed (found at https://fate-srd.com/fate-condensed), a product of Evil Hat Productions, LLC, developed, authored, and edited by PK Sullivan, Lara Turner, Fred Hicks, Richard Bellingham, Robert Hanz, and Sophie Lagacé, and licensed for our use under the Creative Commons Attribution 3.0 Unported license (https://creativecommons.org/licenses/by/3.0/).",
+    "url": "https://github.com/fate-srd/fate-srd-content/blob/93ed848e723f31b4994b466b7241011ba24be885/docs/markdown/Fate-Condensed-SRD-CC-BY.md"
+  },
+  "defaultRating": 0
+}

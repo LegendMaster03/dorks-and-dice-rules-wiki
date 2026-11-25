@@ -1,0 +1,79 @@
+{
+  "id": "species.human",
+  "kind": "species",
+  "name": "Human",
+  "creatureTypes": [
+    "humanoid"
+  ],
+  "size": [
+    "S",
+    "M"
+  ],
+  "speed": 30,
+  "feats": [
+    {
+      "anyFromCategory": {
+        "category": [
+          "O"
+        ],
+        "count": 1
+      }
+    }
+  ],
+  "skillProficiencies": [
+    {
+      "any": 1
+    }
+  ],
+  "sizeEntry": {
+    "type": "item",
+    "name": "Size:",
+    "entries": [
+      "Medium (about 4-7 feet tall) or Small (about 2-4 feet tall), chosen when you select this species"
+    ]
+  },
+  "entries": [
+    {
+      "type": "entries",
+      "name": "Resourceful",
+      "entries": [
+        "You gain {@variantrule Heroic Inspiration|SRD52} whenever you finish a {@variantrule Long Rest|SRD52}."
+      ]
+    },
+    {
+      "type": "entries",
+      "name": "Skillful",
+      "entries": [
+        "You gain proficiency in one skill of your choice."
+      ]
+    },
+    {
+      "type": "entries",
+      "name": "Versatile",
+      "entries": [
+        "You gain an {@filter Origin feat|feats|category=o} of your choice."
+      ]
+    }
+  ],
+  "catalogReferences": [
+    "rulebook.page-086"
+  ],
+  "source": {
+    "release": "srd-5.2.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+    "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [
+      86
+    ],
+    "candidatePage": 86,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "races.json",
+      "pointer": "/race/14"
+    },
+    "structuredStatus": "publisher name/page locator and pinned structured projection; full descriptive and mechanical field review pending"
+  }
+}

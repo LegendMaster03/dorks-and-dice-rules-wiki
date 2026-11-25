@@ -1,0 +1,34 @@
+{
+  "id": "item.backpack",
+  "kind": "item",
+  "name": "Backpack",
+  "type": "G",
+  "rarity": "none",
+  "weight": 5,
+  "value": 200,
+  "entries": [
+    "A backpack can hold one cubic foot or 30 pounds of gear. You can also strap items, such as a bedroll or a coil of rope, to the outside of a backpack."
+  ],
+  "containerCapacity": {
+    "weight": [
+      30
+    ]
+  },
+  "catalogReferences": [],
+  "source": {
+    "release": "srd-5.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+    "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [],
+    "candidatePage": 224,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "items.json",
+      "pointer": "/item/38"
+    },
+    "structuredStatus": "source-tagged structured item; official body and inventory review pending"
+  }
+}
