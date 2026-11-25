@@ -9,7 +9,7 @@ public sealed class RulesWikiUiOperationRequest
 }
 
 /// <summary>
-/// Explicit allowlist. Browser callers can select only these three native reads;
+/// Explicit allowlist. Browser callers can select only explicitly named native reads;
 /// they can not supply arbitrary Core paths, HTTP methods, or request bodies.
 /// </summary>
 public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rulesCore)
@@ -80,8 +80,32 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
             "searchNativeRules" when arguments.Length == 2 => Search(arguments),
             "getNativeRule" when arguments.Length == 2 => Get(
                 $"/api/private/rulesets/{Escape(Id(arguments, 0))}/rules/{Escape(Id(arguments, 1, rule: true))}"),
+            "getNativeOriginHierarchy" when arguments.Length == 3 => Origin(arguments, "hierarchy"),
+            "getNativeOriginSource" when arguments.Length == 3 => Origin(arguments, "source"),
+            "getNativeOriginTraitSources" when arguments.Length == 3 => Origin(arguments, "trait-sources"),
+            "getNativeOriginComponent" when arguments.Length == 3 => Origin(arguments, "component"),
             _ => throw new KeyNotFoundException("Unknown or unsupported Rules Wiki operation.")
         };
+    }
+
+    private static bool OriginFamily(string value) =>
+        value is "biological" or "upbringing" or "construct-components";
+
+    private static bool ValidFingerprint(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && value.Length <= 160 &&
+        !value.Any(char.IsWhiteSpace);
+
+    private static RulesCorePrivateRequest Origin(JsonElement[] arguments, string projection)
+    {
+        var ruleset = Id(arguments, 0);
+        if (ruleset != "first-party-001" || arguments[1].ValueKind != JsonValueKind.String ||
+            arguments[2].ValueKind != JsonValueKind.String) throw new InvalidDataException();
+        var fingerprint = arguments[1].GetString();
+        var target = arguments[2].GetString();
+        if (!ValidFingerprint(fingerprint) || target is null ||
+            !(projection == "hierarchy" ? OriginFamily(target) : IsRuleId(target)))
+            throw new InvalidDataException();
+        return Get($"/api/private/rulesets/{Escape(ruleset)}/origins/{projection}/{Escape(target)}?fingerprint={Escape(fingerprint!)}");
     }
 
     // Search parameters are an allowlist, including their value types and size.
@@ -120,7 +144,7 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
     }
 
     // Reuse the identity grammar in the private client as defense in depth.
-    // Only the three native read route shapes can be sent, even if another
+    // Only explicitly allowed native read route shapes can be sent, even if another
     // server-side caller is added later. The dispatcher owns query validation.
     internal static bool IsNativeReadPath(string pathAndQuery)
     {
@@ -129,6 +153,20 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
         if (path.Length < 4 || path[0] != "" || path[1] != "api" ||
             path[2] != "private" || path[3] != "rulesets") return false;
         if (path.Length == 4) return parts.Length == 1;
+        if (path.Length == 8 && path[4] == "first-party-001" && path[5] == "origins")
+        {
+            if (parts.Length != 2 || !parts[1].StartsWith("fingerprint=", StringComparison.Ordinal))
+                return false;
+            var encoded = parts[1]["fingerprint=".Length..];
+            var fingerprint = Uri.UnescapeDataString(encoded);
+            if (!ValidFingerprint(fingerprint) || Escape(fingerprint) != encoded) return false;
+            return path[6] switch
+            {
+                "hierarchy" => OriginFamily(path[7]),
+                "source" or "trait-sources" or "component" => IsRuleId(path[7]),
+                _ => false
+            };
+        }
         if (path.Length is not (6 or 7) || !IsRulesetId(path[4]) || path[5] != "rules") return false;
         return path.Length == 6 || (parts.Length == 1 && IsRuleId(path[6]));
     }

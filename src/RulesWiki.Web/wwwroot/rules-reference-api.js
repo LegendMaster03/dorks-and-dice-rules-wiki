@@ -9,6 +9,10 @@ export function installNativeReferenceApi(api) {
     api.getNativeRulesets = () => api.operation("getNativeRulesets");
     api.searchNativeRules = (rulesetId, filters = {}) => api.operation("searchNativeRules", [rulesetId, filters]);
     api.getNativeRule = (rulesetId, id) => api.operation("getNativeRule", [rulesetId, id]);
+    api.getNativeOriginHierarchy = (rulesetId, fingerprint, family) => api.operation("getNativeOriginHierarchy", [rulesetId, fingerprint, family]);
+    api.getNativeOriginSource = (rulesetId, fingerprint, id) => api.operation("getNativeOriginSource", [rulesetId, fingerprint, id]);
+    api.getNativeOriginTraitSources = (rulesetId, fingerprint, id) => api.operation("getNativeOriginTraitSources", [rulesetId, fingerprint, id]);
+    api.getNativeOriginComponent = (rulesetId, fingerprint, id) => api.operation("getNativeOriginComponent", [rulesetId, fingerprint, id]);
     return api;
 }
 export function installWikiReferenceApi(api) {
