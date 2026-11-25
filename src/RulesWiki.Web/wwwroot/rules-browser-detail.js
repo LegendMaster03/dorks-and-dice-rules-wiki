@@ -117,6 +117,11 @@ export async function renderRuleDetailPane(
     } catch (error) {
         if (!isCurrent()) return;
         container.replaceChildren(alertNode("danger", describeError(error)));
+        if (error?.status === 404 && originsEnabled(boundRulesetReader) && referenceIdentity.startsWith("subspecies.")) {
+            const base = (app.hostContext.toolBasePath ?? "/tools/rules-wiki").replace(/\/$/, "");
+            container.append(element("p", { text: "This historical Subspecies identity is not present in the current native snapshot. No replacement has been assumed." }),
+                element("a", { text: "Browse Species and Ancestries", attributes: { href: base + originRoute("species-and-ancestries") } }));
+        }
         app.presentRenderedFragment?.(container);
     }
 }

@@ -268,11 +268,21 @@ export function installWikiExperience(app) {
                 attributes: { ...(app.browserFilters.entityType === type ? { "aria-current": "page" } : {}) },
                 onClick: () => app.navigateRuleFamily(type) }));
             menu.append(items);
+            menu.addEventListener("keydown", event => {
+                if (event.key !== "Escape" || !menu.open) return;
+                event.preventDefault(); event.stopPropagation();
+                menu.open = false; menu.querySelector("summary")?.focus();
+            });
             menu.addEventListener("toggle", () => { if (menu.open) for (const other of groups.children) if (other !== menu) other.open = false; });
             groups.append(menu);
         }
         const browse = el("details", { className: "wiki-mobile-menu" }, el("summary", { text: "Browse sections" }), groups);
         browse.open = window.innerWidth > 560;
+        browse.addEventListener("keydown", event => {
+            if (event.key !== "Escape" || window.innerWidth > 560 || !browse.open) return;
+            event.preventDefault(); event.stopPropagation();
+            browse.open = false; browse.querySelector("summary")?.focus();
+        });
         nav.append(browse, el("button", { type: "button", text: "Search all rules", disabled: !app.rulesContext, onClick: () => go("/all") }));
         return nav;
     };

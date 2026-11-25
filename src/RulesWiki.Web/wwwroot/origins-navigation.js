@@ -49,7 +49,7 @@ export function parseOriginsRoute(path) {
 
 /** Use authoritative kind (never infer it from a display name or ID prefix). */
 export function originWorkspaceForRule(rule) {
-    if (rule.kind === "species" || rule.kind === "ancestry") return ["species-and-ancestries", null];
+    if (rule.kind === "species" || rule.kind === "ancestry" || rule.kind === "subspecies") return ["species-and-ancestries", null];
     if (rule.kind === "origin-trait") return ["characteristics", null];
     if (rule.kind === "upbringing") return ["upbringings", null];
     if (rule.kind === "background") return ["backgrounds", null];
@@ -90,7 +90,7 @@ function link(text, href) {
 export async function renderOriginsWorkspace(app, container, route) {
     cancelOriginsWorkspace(app);
     const reader = app.rulesetReader;
-    if (!originsEnabled(reader) || reader.context !== app.rulesContext) {
+    if (!originsEnabled(reader) || reader.context !== app.rulesContext || route.rulesetId !== reader.context.rulesetId || !views.has(route.originsView)) {
         container.replaceChildren(el("section", { className: "wiki-home" },
             el("h1", { text: "Character Origins unavailable" }),
             el("p", { text: "This authorized catalog does not supply the Origins reference contract." })));
@@ -106,7 +106,8 @@ export async function renderOriginsWorkspace(app, container, route) {
     const input = Object.freeze({
         reader, context: reader.context, view, section,
         lifecycle: Object.freeze({ ...lease, isCurrent: current }),
-        hrefForRule: id => base + ruleRoute(reader.context.rulesetId, id),
+        hrefForRule: (id, kind = null) => base + ruleRoute(reader.context.rulesetId, id) +
+            (kind ? "?" + new URLSearchParams({ category: kind }).toString() : ""),
         hrefForCategory: kind => base + categoryRoute(reader.context.rulesetId, kind),
         hrefForWorkspace: (next, subsection = null) => base + originRoute(next, subsection)
     });
@@ -153,7 +154,7 @@ async function renderFallback(input) {
         body.append(el("p", { text: "Origination describes how a character comes into existence. Heritage identifies the sources of inherent characteristics; Manifestations describe their expression. Life Experiences cover Upbringings and Backgrounds." }),
             el("p", { text: "Biological Origination and Construct Assembly are distinct families. This is a reference to authored rules and options, not a character builder or a guarantee that every method is executable." }),
             el("h2", { text: "Rules reference" }),
-            el("ul", {}, ...rules.map(({ rule }) => el("li", {}, link(rule.name, hrefForRule(rule.id))))));
+            el("ul", {}, ...rules.map(({ rule }) => el("li", {}, link(rule.name, hrefForRule(rule.id, rule.kind))))));
         const grid = el("div", { className: "wiki-home-grid" });
         for (const group of ORIGIN_GROUPS.filter(group => group.label)) grid.append(
             el("section", { className: "wiki-home-category" }, el("h2", { text: group.label }),
@@ -208,7 +209,7 @@ async function renderFallback(input) {
     body.append(categories);
     const list = el("ul", { className: "wiki-origins-records" });
     for (const row of rows) {
-        const item = el("li", {}, link(row.name, hrefForRule(row.id)));
+        const item = el("li", {}, link(row.name, hrefForRule(row.id, row.kind)));
         if (row.parentId && byId.has(row.parentId)) item.append(el("span", { className: "wiki-muted", text: " — Parent: " + byId.get(row.parentId).name }));
         if (row.selectable === false) item.append(el("span", { className: "wiki-muted", text: " — Not independently selectable" }));
         const status = row.rulesStatus ?? row.status;

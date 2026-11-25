@@ -26,7 +26,23 @@ const captured = prefix => async (rulesetId, fingerprint, target) => {
     assert.ok(response, "Missing captured response " + target);
     return structuredClone(response);
 };
-const reader = createRulesetReader({ getNativeOriginHierarchy: captured("hierarchy-"), getNativeOriginMethods: captured("methods-") }, context, descriptor);
+// The two overview records are exact raw Core sources at the merged commit,
+ // wrapped in synthetic reader envelopes; the method/hierarchy responses above
+ // are unchanged captured HTTP envelopes from A.
+const coreRecords = new Map(["creature-origination", "species-subspecies-upbringing"].map(name => {
+    const record = JSON.parse(readFileSync(new URL("./fixtures/origin-navigation/" + name + ".json", import.meta.url), "utf8"));
+    return [record.id, record];
+}));
+const reader = createRulesetReader({
+    getNativeOriginHierarchy: captured("hierarchy-"), getNativeOriginMethods: captured("methods-"),
+    async getNativeRule(rulesetId, id) {
+        assert.equal(rulesetId, context.rulesetId);
+        calls.push("rule-" + id);
+        const definition = coreRecords.get(id);
+        assert.ok(definition);
+        return { rulesetId, fingerprint: context.fingerprint, rule: { id, kind: definition.kind, name: definition.name, definition } };
+    }
+}, context, descriptor);
 const app = { rulesetReader: reader, rulesContext: reader.context, hostContext: { toolBasePath: "/tools/rules-wiki" }, render() {} };
 for (const [, title] of ORIGIN_GROUPS.flatMap(g => g.views)) assert.ok(title);
 for (const [view] of ORIGIN_GROUPS.flatMap(g => g.views)) assert.equal(parseToolRoute(originRoute(view)).originsView, view);
@@ -56,10 +72,16 @@ async function open(view, section = null) {
     await renderOriginsWorkspace(app, root, parseToolRoute(originRoute(view, section)));
     assert.ok(root.querySelector(".wiki-origins"), root.textContent);
 }
+await open("overview");
+assert.deepEqual(calls, ["rule-rule.creature-origination", "rule-rule.species-subspecies-upbringing"]);
+assert.match(root.textContent, /Creature Type Origination Methods and Compatibility/);
+assert.match(root.textContent, /Character Origin Selection and Inheritance/);
+for (const [view] of ORIGIN_GROUPS.flatMap(g => g.views).filter(([view]) => view !== "overview"))
+    assert.ok(root.querySelector('a[href$="' + originRoute(view) + '"]'), view);
 await open("species-and-ancestries");
 assert.deepEqual(calls, ["hierarchy-biological"]);
 assert.equal(root.querySelectorAll(".wiki-origins-records li").length, 43);
-assert.ok(root.querySelector('a[href$="/rules/ancestry.dragonborn.red"]'));
+assert.ok(root.querySelector('a[href$="/rules/ancestry.dragonborn.red?category=ancestry"]'));
 await open("characteristics");
 assert.deepEqual(calls, ["hierarchy-characteristics"]);
 assert.equal(root.querySelectorAll(".wiki-origins-records li").length, 105);

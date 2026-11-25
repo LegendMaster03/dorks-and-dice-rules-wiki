@@ -1,0 +1,19 @@
+name: Origins Navigation Workstream CI
+
+on:
+  push:
+    branches: [ feature/wiki-origins-navigation ]
+
+permissions:
+  contents: read
+
+jobs:
+  navigation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node tools/test-origins-navigation.mjs
