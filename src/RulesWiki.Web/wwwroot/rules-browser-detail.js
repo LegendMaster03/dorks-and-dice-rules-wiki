@@ -12,6 +12,7 @@ import {
     setButtonBusy
 } from "./ui.js";
 import { renderNativeDetail } from "./native-rule-detail.js";
+import { renderPackageAttribution } from "./package-attribution.js";
 import { renderResolvedRule } from "./rule-renderers.js";
 import { renderSemanticComparison } from "./semantic-comparison.js";
 import {
@@ -43,6 +44,12 @@ export async function renderRuleDetailPane(
 
         if (detail.native) {
             renderNativeDetail(container, detail.native, onBackToList, app);
+            // The legacy first-party index belongs to this session and snapshot.
+            // Foreign renderers use the context-bound reader attribution hook.
+            if (detail.native.rulesetId === "first-party-001" && detail.native.fingerprint) {
+                const body = container.querySelector(".rules-core-library-detail-body");
+                body?.append(renderPackageAttribution(detail.native, app.wikiIndex?.packageDescriptor));
+            }
             app.presentRenderedFragment?.(container);
             return;
         }
