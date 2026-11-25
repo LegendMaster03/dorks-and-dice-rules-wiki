@@ -1,0 +1,49 @@
+{
+  "sourceRepository": "LegendMaster03/dorks-and-dice-rules-core",
+  "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+  "representation": "Verbatim authored native class catalog arrays. Synthetic fingerprints are test-only.",
+  "fixtures": [
+    {
+      "file": "dnd-5e--warlock.json",
+      "rulesetId": "dnd-5e",
+      "sourceFile": "data/rulesets/dnd-5e/native/classes/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+      "blobSha": "548d0e5fd1a12f286352b2b9d5a438894437616d"
+    },
+    {
+      "file": "dnd-5e--fighter.json",
+      "rulesetId": "dnd-5e",
+      "sourceFile": "data/rulesets/dnd-5e/native/classes/fighter.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+      "blobSha": "423c1cd81e3b988d7e65c1b5436b803385b7576f"
+    },
+    {
+      "file": "dnd-5e--wizard.json",
+      "rulesetId": "dnd-5e",
+      "sourceFile": "data/rulesets/dnd-5e/native/classes/wizard.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+      "blobSha": "04282b1aba5973b4865221fbf697a02a7dc09957"
+    },
+    {
+      "file": "dnd-5-5e--warlock.json",
+      "rulesetId": "dnd-5-5e",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/classes/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+      "blobSha": "8d0b75d265790a9fcea43c60a01675cd8c2618a5"
+    },
+    {
+      "file": "dnd-5-5e--fighter.json",
+      "rulesetId": "dnd-5-5e",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/classes/fighter.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+      "blobSha": "83e2d8a78fb209fb049dc59a4a02906182050473"
+    },
+    {
+      "file": "dnd-5-5e--wizard.json",
+      "rulesetId": "dnd-5-5e",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/classes/wizard.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+      "blobSha": "26e48abd42aff7381030b34e7f85cdfb2f956c88"
+    }
+  ]
+}
