@@ -1,0 +1,327 @@
+{
+  "coreCommit": "0baa466b7fc8f55e5d675b886f76e95f9a4b551f",
+  "sourceRoot": "data/rulesets/first-party-001/native/origination/construct-assembly/",
+  "records": {
+    "power-sources.json": [
+      {
+        "id": "construct-power-source.solar-crystal",
+        "kind": "construct-power-source",
+        "name": "Solar energy collector",
+        "rulesStatus": "owner-approved generation, storage, solar exhaustion fallback, and Overdrive; host exhaustion authority/persistence pending",
+        "description": "A solar-driven magical generator with an integrated rechargeable battery. Sunlight generates and stores energy. If supply is insufficient, the generator continues at normal output while the Construct accrues exhaustion. Concentrated sunlight enables Overdrive.",
+        "compatibleComponentCapabilities": [
+          "power-housing"
+        ],
+        "operatingPrinciple": "solar-recharge",
+        "craftingRecipeId": "crafting-recipe.construct-power-source.solar-crystal",
+        "powerOutput": 8,
+        "overdrivePowerOutput": 12,
+        "overdriveIncreasePercent": 50,
+        "solarCollectionPower": {
+          "none": 0,
+          "indirect": 8,
+          "direct": 16,
+          "concentrated": 24
+        },
+        "storageCapacityPowerUnitHours": 96,
+        "storageResourceKind": "solar-energy",
+        "overdriveCondition": "dm-confirmed-concentrated-sunlight",
+        "energyShortagePolicy": {
+          "fallbackPowerOutput": 8,
+          "consequence": "exhaustion",
+          "firstLevel": "on-first-operation-with-insufficient-energy",
+          "additionalLevelPeriodMinutes": 1440,
+          "recoveryBlockedWhileShortageContinues": true
+        }
+      },
+      {
+        "id": "construct-power-source.soul-gem",
+        "kind": "construct-power-source",
+        "name": "Soul-powered core",
+        "rulesStatus": "owner-approved narrative behavior; candidate 8/12 output and 30-foot radius; soul-energy sufficiency and consumption remain DM-adjudicated",
+        "description": "An inherently active magical generator that automatically imprisons eligible souls released by deaths within its capture range. Capture is involuntary and has no fixed storage limit. Captured souls fuel power; their consumption and the nature of the core's interior are intentionally undefined.",
+        "compatibleComponentCapabilities": [
+          "power-housing"
+        ],
+        "operatingPrinciple": "soul-energy",
+        "craftingRecipeId": "crafting-recipe.construct-power-source.soul-gem",
+        "powerOutput": 8,
+        "overdrivePowerOutput": 12,
+        "overdriveIncreasePercent": 50,
+        "captureRangeFeet": 30,
+        "captureTrigger": "eligible-soul-released-by-death-within-range",
+        "capturePolicy": "automatic-unselective",
+        "storagePolicy": "no-fixed-soul-cap",
+        "operatingPolicy": "inherently-active-independent-of-construct-power",
+        "energyAvailabilityPolicy": "dm-adjudicated",
+        "consumptionRatePolicy": "intentionally-unspecified",
+        "overdriveFuelUsePolicy": "accelerated-consumption-unquantified"
+      },
+      {
+        "id": "construct-power-source.infernal-engine",
+        "kind": "construct-power-source",
+        "name": "Infernal Engine",
+        "rulesStatus": "owner-approved 8-unit output, long-rest fuel, and once-per-turn fire-damage Infernal Empowerment; damage amount, qualifying attacks, fuel quantity and instability remain unresolved",
+        "description": "An infernal generator with long-rest sustaining fuel. Missed sustenance imposes instability without shutting down normal power. Additional fuel activates Infernal Empowerment until the next long rest, granting a once-per-turn fire-damage enhancement once its damage value and trigger are separately authored.",
+        "compatibleComponentCapabilities": [
+          "power-housing"
+        ],
+        "operatingPrinciple": "infernal",
+        "craftingRecipeId": "crafting-recipe.construct-power-source.infernal-engine",
+        "powerOutput": 8,
+        "longRestSustenance": {
+          "resourceKind": "infernal-engine-fuel-charge",
+          "unitsPerLongRest": 1
+        },
+        "fuelShortagePolicy": "continues-at-normal-output-with-infernal-instability-or-overheating",
+        "overheatingConsequencesStatus": "not-yet-authored",
+        "infernalEmpowerment": {
+          "activation": "host-verified-additional-infernal-fuel-consumption",
+          "duration": "until-next-long-rest",
+          "powerOutputBonus": 0,
+          "effectStatus": "approved-shape-pending-damage-and-trigger",
+          "additionalFuelQuantityStatus": "not-yet-authored",
+          "damageType": "fire",
+          "maximumApplicationsPerTurn": 1,
+          "damageAmountStatus": "not-yet-authored",
+          "qualifyingAttackStatus": "not-yet-authored"
+        }
+      },
+      {
+        "id": "construct-power-source.mechanical-engine",
+        "kind": "construct-power-source",
+        "name": "Mechanical engine",
+        "rulesStatus": "provisional output and recipe; fuel/sustaining rules not yet balanced",
+        "description": "A basic mechanical generator with eight power output. Its daily sustenance is one ordinary mechanical-fuel charge instead of a food ration. Normal deprivation and recovery use the shared 2014 food-survival rules. Overdrive and fuel inventory transactions remain separately authored.",
+        "compatibleComponentCapabilities": [
+          "power-housing"
+        ],
+        "operatingPrinciple": "mechanical",
+        "craftingRecipeId": "crafting-recipe.construct-power-source.mechanical-engine",
+        "powerOutput": 8,
+        "dailySustenance": {
+          "resourceKind": "mechanical-engine-fuel-charge",
+          "unitsPerDay": 1
+        }
+      }
+    ],
+    "crafting-ingredients.json": [
+      {
+        "id": "crafting-material.alchemical-reagent",
+        "kind": "crafting-material",
+        "name": "Alchemical reagent",
+        "description": "Prepared chemical reagent for specialized mechanical fabrication.",
+        "rulesStatus": "candidate input; acquisition and price not balanced"
+      },
+      {
+        "id": "crafting-material.activated-medium",
+        "kind": "crafting-material",
+        "name": "Activated alchemical medium",
+        "description": "Recipe-stage intermediate; not a generic free-standing fuel supply.",
+        "rulesStatus": "candidate input; acquisition and price not balanced"
+      },
+      {
+        "id": "crafting-material.fine-mechanisms",
+        "kind": "crafting-material",
+        "name": "Precision mechanisms",
+        "description": "Gears, bearings, controls, and similar manufactured subcomponents.",
+        "rulesStatus": "provisional retained ingredient mass per recipe unit; price and full output weight unbalanced",
+        "massPoundsPerUnit": 2
+      },
+      {
+        "id": "crafting-material.optical-elements",
+        "kind": "crafting-material",
+        "name": "Optical elements",
+        "description": "Prepared lenses, reflectors, and sensor elements.",
+        "rulesStatus": "provisional retained ingredient mass per recipe unit; price and full output weight unbalanced",
+        "massPoundsPerUnit": 1
+      },
+      {
+        "id": "crafting-material.arcane-catalyst",
+        "kind": "crafting-material",
+        "name": "Arcane catalyst",
+        "description": "Specialized magical manufacturing input; not an animating force by itself.",
+        "rulesStatus": "candidate input; acquisition and price not balanced"
+      },
+      {
+        "id": "crafting-material.sealing-compound",
+        "kind": "crafting-material",
+        "name": "Sealing compound",
+        "description": "Manufactured barrier treatment for environmental sealing.",
+        "rulesStatus": "provisional retained ingredient mass per recipe unit; price and full output weight unbalanced",
+        "massPoundsPerUnit": 1
+      },
+      {
+        "id": "crafting-material.soul-essence",
+        "kind": "crafting-material",
+        "name": "Soul essence",
+        "description": "Source-specific magical ingredient; acquisition and ethical restrictions belong to campaign rules.",
+        "rulesStatus": "candidate input; acquisition and price not balanced"
+      },
+      {
+        "id": "crafting-material.infernal-reagent",
+        "kind": "crafting-material",
+        "name": "Infernal reagent",
+        "description": "Source-specific magical ingredient, independent of creature origination method.",
+        "rulesStatus": "candidate input; acquisition and price not balanced"
+      }
+    ],
+    "crafting-recipes.json": [
+      {
+        "id": "crafting-recipe.construct-component.alchemical-actuator",
+        "kind": "crafting-recipe",
+        "name": "Alchemical actuator — manufacture",
+        "rulesStatus": "candidate recipe; ingredient quantities and competency ranks require balancing",
+        "producesDefinitionId": "construct-component.alchemical-actuator",
+        "stages": [
+          {
+            "stepId": "prepare-medium",
+            "competencyId": "competency.alchemy",
+            "minimumRanks": 2,
+            "dependencies": [],
+            "inputs": [
+              {
+                "materialId": "crafting-material.alchemical-reagent",
+                "amount": 1
+              }
+            ],
+            "outputs": [
+              {
+                "materialId": "crafting-material.activated-medium",
+                "amount": 1
+              }
+            ]
+          },
+          {
+            "stepId": "assemble",
+            "competencyId": "competency.alchemy",
+            "minimumRanks": 2,
+            "dependencies": [
+              "prepare-medium"
+            ],
+            "inputs": [
+              {
+                "materialSlot": "actuator",
+                "amount": 3,
+                "retainedInProduct": true
+              },
+              {
+                "materialId": "crafting-material.activated-medium",
+                "amount": 1
+              },
+              {
+                "materialId": "crafting-material.alchemical-reagent",
+                "amount": 1
+              }
+            ],
+            "outputs": []
+          }
+        ]
+      },
+      {
+        "id": "crafting-recipe.construct-component.structural-frame.medium",
+        "kind": "crafting-recipe",
+        "name": "Structural frame (medium) — manufacture",
+        "rulesStatus": "candidate manufacturing, quantities and complete product-mass ledger for scenario testing; not approved gameplay balance",
+        "producesDefinitionId": "construct-component.structural-frame",
+        "stages": [
+          {
+            "stepId": "manufacture",
+            "competencyId": "competency.smithing",
+            "minimumRanks": 1,
+            "dependencies": [],
+            "inputs": [
+              {
+                "materialSlot": "frame",
+                "amount": 8,
+                "retainedInProduct": true
+              }
+            ],
+            "outputs": []
+          }
+        ],
+        "physicalMassAccounting": {
+          "fullyAccounted": true,
+          "additionalProductMassPounds": 0
+        }
+      }
+    ],
+    "materials.json": [
+      {
+        "id": "construct-material.steel",
+        "kind": "construct-material",
+        "name": "Steel",
+        "rulesStatus": "provisional retained-material mass per recipe unit; no finalized density/encumbrance rule",
+        "description": "Dense, stiff structural metal; strong under suitable loads but adds substantial mass.",
+        "physicalProfile": {
+          "relativeMassCategory": "dense",
+          "rigidity": "rigid",
+          "combustibility": "noncombustible"
+        },
+        "massPoundsPerUnit": 7
+      }
+    ],
+    "components/structure/structural-frame.json": {
+      "name": "Structural frame",
+      "rulesStatus": "candidate physical design; recipe quantities and operating values provisional",
+      "description": "A load-bearing framework. No humanoid topology, body size, or minimum quantity is implied.",
+      "provides": [
+        "structural-support"
+      ],
+      "materialSlots": [
+        "frame"
+      ],
+      "powerDemand": 0,
+      "craftingRecipeId": "crafting-recipe.construct-component.structural-frame",
+      "definesBodySize": true,
+      "constructionVariants": [
+        {
+          "id": "small",
+          "craftingRecipeId": "crafting-recipe.construct-component.structural-frame.small",
+          "bodySize": "small"
+        },
+        {
+          "id": "medium",
+          "craftingRecipeId": "crafting-recipe.construct-component.structural-frame.medium",
+          "bodySize": "medium"
+        },
+        {
+          "id": "large",
+          "craftingRecipeId": "crafting-recipe.construct-component.structural-frame.large",
+          "bodySize": "large"
+        }
+      ]
+    },
+    "components/integrated-weapon-mounts/armblade-mount.json": {
+      "name": "Armblade mount",
+      "description": "Weapon mount inspired by Warforged armblades. No weapon damage is granted without an approved canonical rule.",
+      "rulesStatus": "candidate physical design; recipe quantities and operating values provisional",
+      "provides": [
+        "equipment-mount",
+        "integrated-melee-interface"
+      ],
+      "materialSlots": [
+        "mount"
+      ],
+      "craftingRecipeId": "crafting-recipe.construct-component.armblade-mount",
+      "powerDemand": 0
+    },
+    "components/locomotion/locomotion-unit.json": {
+      "name": "Locomotion unit",
+      "description": "Generic ground locomotion support adaptable to different arrangements. Its operational trait supplies candidate ordinary ground movement, subject to applicable movement and physical-support rules. Additional units do not independently grant extra movement speed.",
+      "rulesStatus": "candidate ordinary ground-movement trait; numerical support capacity remains unapproved",
+      "provides": [
+        "locomotion-interface"
+      ],
+      "materialSlots": [
+        "contact"
+      ],
+      "craftingRecipeId": "crafting-recipe.construct-component.locomotion-unit",
+      "powerDemand": 1,
+      "sharesLoadSupport": true,
+      "operationalOriginTraitIds": [
+        "trait.construct.ordinary-ground-movement"
+      ]
+    }
+  }
+}
