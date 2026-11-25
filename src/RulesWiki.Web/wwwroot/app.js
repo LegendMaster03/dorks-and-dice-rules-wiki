@@ -8,7 +8,7 @@ import { installWikiReferenceBrowserEnhancements, installWikiReferenceNavigation
 import { installRulesCoreUx } from "./ux-shell.js";
 import { alertNode, clear, describeError, element } from "./ui.js";
 import { installWikiExperience } from "./wiki-experience.js";
-import { discoverRulesContext } from "./rules-context.js";
+import { discoverPackageContext } from "./package-attribution.js";
 import { createRulesetReader } from "./native-presentation.js";
 
 const root = document.getElementById("tool-root");
@@ -25,7 +25,10 @@ root.append(element("div", { className: "card card-body text-body-secondary", te
 try {
     const hostContext = await loadToolHostContext(root);
     const api = installWikiReferenceApi(new RulesCoreApi(hostContext));
-    api.openRulesetReader = async rulesetId => createRulesetReader(api, await discoverRulesContext(api, rulesetId));
+    api.openRulesetReader = async rulesetId => {
+        const { context, descriptor } = await discoverPackageContext(api, rulesetId);
+        return createRulesetReader(api, context, descriptor);
+    };
     const session = await api.getOptionalSession();
     // The Site supplies identity; the native Core currently exposes no authoring
     // or campaign capabilities. Never infer those capabilities from Site roles.

@@ -4,6 +4,7 @@
  */
 import { element as el, clear } from "./ui.js";
 import { currentToolRoute, parseToolRoute } from "./rules-browser-routing.js";
+import { renderPackageAttribution } from "./package-attribution.js";
 
 export const WIKI_GROUPS = [
     { name: "Characters", description: "Classes, choices, skills, and competencies", types: [
@@ -212,6 +213,8 @@ export function installWikiExperience(app) {
             el("h2", { text: "Playtest information" }), el("p", { text: "These published classes are in active testing. Open a class for its current rules." }),
             ...app.wikiPlaytests.map(rule => el("a", { text: `${rule.name} · Alpha ${rule.version}`,
                 attributes: { href: `${app.hostContext.toolBasePath}/rules/${encodeURIComponent(rule.id)}` } }))));
+        if (app.wikiIndex?.rulesetId && app.wikiIndex?.fingerprint)
+            home.append(renderPackageAttribution(app.wikiIndex, app.wikiIndex.packageDescriptor));
         container.append(home);
     }
 }

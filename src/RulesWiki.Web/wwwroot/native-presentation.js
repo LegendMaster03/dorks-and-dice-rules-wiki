@@ -1,9 +1,11 @@
 /** Native presentation adapters use the existing private transport. */
 import { requireBaseContext, validateNativeEnvelope, assertSnapshot, nativeRuleIdentity, ruleRoute } from "./rules-context.js";
-export function createRulesetReader(api, context) {
+import { packageDescriptor, renderPackageAttribution } from "./package-attribution.js";
+export function createRulesetReader(api, context, descriptor = null) {
     const c = requireBaseContext(context);
     return Object.freeze({
         context: c,
+        packageDescriptor: packageDescriptor(c, descriptor),
         async search(filters = {}) {
             const response = assertSnapshot(c, await api.searchNativeRules(c.rulesetId, filters));
             if (!Array.isArray(response.rules) || !Number.isInteger(response.total) || response.total < 0)
@@ -27,6 +29,7 @@ export function createPresentationInput(context, envelope, reader, options = {})
     return Object.freeze({ context: c, rule, record,
         source: record.source ?? record.definition?.source ?? null,
         sourcePackage: record.sourcePackage ?? record.definition?.sourcePackage ?? null,
+        packageDescriptor: packageDescriptor(c, reader?.packageDescriptor ?? null),
         references: reader ?? null,
         hrefForRule: id => (options.toolBasePath ?? "").replace(/\/$/, "") + ruleRoute(c.rulesetId, id),
         renderSource: options.renderSource ?? null,
@@ -114,7 +117,8 @@ export function renderGenericNative(input) {
     const article = node("article");
     article.append(node("h2", input.rule.name),
         node("p", "Generic native reference · " + input.context.rulesetId + " · " + input.rule.kind),
-        renderStructuredContent(input.record), renderNativeAttribution(input));
+        renderStructuredContent(input.record), renderNativeAttribution(input),
+        renderPackageAttribution(input.context, input.packageDescriptor));
     return article;
 }
 /** Mount synchronous and asynchronous renderers through the same current lease.

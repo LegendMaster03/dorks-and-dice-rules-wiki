@@ -2,6 +2,7 @@
 // the native API; presentation keys preserve exact native IDs, not legacy IDs.
 // Adapt native Core records to the existing browser's presentation shape;
 // retain authoritative native rule IDs and ruleset fingerprints.
+import { packageDescriptor } from "./package-attribution.js";
 const RULESET_ID = "first-party-001";
 const PAGE_SIZE = 100;
 export function installNativeReferenceApi(api) {
@@ -48,6 +49,7 @@ export function installWikiReferenceApi(api) {
         return {
             rules: filtered.slice(offset, offset + (filters.limit ?? 25)),
             totalCount: filtered.length, fingerprint, rulesetId: RULESET_ID,
+            packageDescriptor: packageDescriptor({ rulesetId: RULESET_ID, fingerprint }, ruleset),
             entityTypeFacets: [...counts].map(([entityType, count]) => ({ entityType, count })),
             sourceFacets: [], revisionNumber: fingerprint, nativeCatalog: true
         };

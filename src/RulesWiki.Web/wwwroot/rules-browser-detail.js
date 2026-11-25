@@ -74,7 +74,7 @@ export async function renderRuleDetailPane(
             .some(key => boundReader.context?.[key] !== requestedContext[key])))
             throw new Error("Reference reader does not match the active rules context.");
         const reader = boundReader ?? (requestedContext && app.api.getNativeRule && app.api.searchNativeRules
-            ? createRulesetReader(app.api, requestedContext) : null);
+            ? createRulesetReader(app.api, requestedContext, boundContext ? null : app.wikiIndex?.packageDescriptor) : null);
         const detail = app.rulesContext && reader && !campaignId
             ? { native: await reader.resolve(referenceIdentity) }
             : await app.api.getWikiReferenceDetail(referenceIdentity, campaignId);
