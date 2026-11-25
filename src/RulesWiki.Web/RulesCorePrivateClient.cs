@@ -45,6 +45,13 @@ public sealed class RulesCorePrivateClient(IHttpClientFactory httpClientFactory)
         if (string.IsNullOrWhiteSpace(authentication.PrivateTunnelCapability))
             throw new RulesCorePrivateTunnelException("Rules Wiki private authorization is unavailable.");
 
+        // Reject unexpected routes before spending a one-time Site ticket.
+        if (request.Method != HttpMethod.Get || request.Body is not null ||
+            !Uri.TryCreate(request.PathAndQuery, UriKind.Relative, out var relative) ||
+            !RulesCoreUiOperationDispatcher.IsNativeReadPath(request.PathAndQuery) ||
+            request.PathAndQuery.Contains('#'))
+            throw new RulesCorePrivateTunnelException("The requested native operation is not permitted.", 400);
+
         // The capability authorizes a ticket exchange; it is not itself sent to Core.
         var toolHostClient = httpClientFactory.CreateClient(ToolHostClientName);
         using var exchange = new HttpRequestMessage(HttpMethod.Post, TicketExchangePath);
@@ -70,13 +77,6 @@ public sealed class RulesCorePrivateClient(IHttpClientFactory httpClientFactory)
             string.IsNullOrWhiteSpace(ticket.Ticket) ||
             !string.Equals(ticket.IntrospectionPath, TargetIntrospectionPath, StringComparison.Ordinal))
             throw new RulesCorePrivateTunnelException("Rules Wiki received an invalid target credential.");
-
-        // Never send an arbitrary method or path, even if a future dispatcher changes.
-        if (request.Method != HttpMethod.Get || request.Body is not null ||
-            !Uri.TryCreate(request.PathAndQuery, UriKind.Relative, out var relative) ||
-            !request.PathAndQuery.StartsWith("/api/private/rulesets", StringComparison.Ordinal) ||
-            request.PathAndQuery.Contains('#'))
-            throw new RulesCorePrivateTunnelException("The requested native operation is not permitted.", 400);
 
         // Forward only the validated target ticket and fixed introspection route.
         // The outbound client is configured against the private Core base address.

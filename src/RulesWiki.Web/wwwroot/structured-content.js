@@ -105,8 +105,9 @@ export async function resolveSourceReferenceIds(input,value=input?.record){
     const current=()=>!lease||lease.isCurrent();
     if(!current())return result;
     const release=edition(input.source?.release);
-    const ids=new Set([...(Array.isArray(input.record?.catalogReferences)?input.record.catalogReferences:[]),
-        ...(Array.isArray(input.record?.definition?.catalogReferences)?input.record.definition.catalogReferences:[])]);
+    const sameScope=record=>typeof record?.rulesetId!=="string"||record.rulesetId===context.rulesetId;
+    const explicitIds=record=>sameScope(record)&&Array.isArray(record?.catalogReferences)?record.catalogReferences:[];
+    const ids=new Set(sameScope(input.record)?[...explicitIds(input.record),...explicitIds(input.record?.definition)]:[]);
     const tokens=new Map();
     function walk(v,d=0){
         if(d>80||v==null)return;

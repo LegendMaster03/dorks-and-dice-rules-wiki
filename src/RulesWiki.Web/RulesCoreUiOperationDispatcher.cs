@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace RulesWiki.Web;
 
@@ -13,6 +14,11 @@ public sealed class RulesWikiUiOperationRequest
 /// </summary>
 public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rulesCore)
 {
+    private static readonly Regex SafeRulesetId = new(@"\A[a-z0-9]+(?:-[a-z0-9]+)*\z",
+        RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+    private static readonly Regex SafeRuleId = new(@"\A[a-z0-9-]+(?:\.[a-z0-9-]+)+\z",
+        RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+
     /// <summary>Translate a browser operation into one validated private Core read.</summary>
     public async Task InvokeAsync(HttpContext context, string operation, RulesWikiUiOperationRequest request)
     {
@@ -67,13 +73,13 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
     /// </summary>
     public static RulesCorePrivateRequest BuildRequest(string operation, JsonElement[] arguments)
     {
-        ArgumentNullException.ThrowIfNull(arguments);
+        if (arguments is null) throw new InvalidDataException();
         return operation switch
         {
             "getNativeRulesets" when arguments.Length == 0 => Get("/api/private/rulesets"),
             "searchNativeRules" when arguments.Length == 2 => Search(arguments),
             "getNativeRule" when arguments.Length == 2 => Get(
-                $"/api/private/rulesets/{Escape(Id(arguments, 0))}/rules/{Escape(Id(arguments, 1))}"),
+                $"/api/private/rulesets/{Escape(Id(arguments, 0))}/rules/{Escape(Id(arguments, 1, rule: true))}"),
             _ => throw new KeyNotFoundException("Unknown or unsupported Rules Wiki operation.")
         };
     }
@@ -99,14 +105,32 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
         return Get(parameters.Count == 0 ? path : $"{path}?{string.Join('&', parameters)}");
     }
 
-    private static string Id(JsonElement[] arguments, int index)
+    // Validate identities before constructing a URI: escaping alone does not
+    // prevent dot-segment normalization by the outbound HTTP client.
+    private static bool IsRulesetId(string value) => value.Length <= 80 && SafeRulesetId.IsMatch(value);
+    private static bool IsRuleId(string value) => value.Length <= 160 && SafeRuleId.IsMatch(value);
+
+    private static string Id(JsonElement[] arguments, int index, bool rule = false)
     {
         var value = arguments[index].ValueKind == JsonValueKind.String
             ? arguments[index].GetString() : null;
-        if (string.IsNullOrWhiteSpace(value) || value.Length > 160 ||
-            value.Contains('/') || value.Contains('\\'))
+        if (value is null || !(rule ? IsRuleId(value) : IsRulesetId(value)))
             throw new InvalidDataException();
         return value;
+    }
+
+    // Reuse the identity grammar in the private client as defense in depth.
+    // Only the three native read route shapes can be sent, even if another
+    // server-side caller is added later. The dispatcher owns query validation.
+    internal static bool IsNativeReadPath(string pathAndQuery)
+    {
+        var parts = pathAndQuery.Split('?', 2);
+        var path = parts[0].Split('/');
+        if (path.Length < 4 || path[0] != "" || path[1] != "api" ||
+            path[2] != "private" || path[3] != "rulesets") return false;
+        if (path.Length == 4) return parts.Length == 1;
+        if (path.Length is not (6 or 7) || !IsRulesetId(path[4]) || path[5] != "rules") return false;
+        return path.Length == 6 || (parts.Length == 1 && IsRuleId(path[6]));
     }
 
     private static string Escape(string value) => Uri.EscapeDataString(value);

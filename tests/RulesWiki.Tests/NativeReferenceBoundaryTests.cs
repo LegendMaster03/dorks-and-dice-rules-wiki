@@ -43,6 +43,35 @@ public sealed class NativeReferenceBoundaryTests
             "searchNativeRules", JsonSerializer.Deserialize<JsonElement[]>(json)!));
     }
 
+    [Theory]
+    [InlineData("..", "condition.blinded")]
+    [InlineData("first-party-001", "..")]
+    [InlineData("first-party-001", "%2e%2e")]
+    [InlineData("first-party-001", "condition.blinded/other")]
+    public void DispatcherRejectsNonNativePathIdentities(string rulesetId, string ruleId)
+    {
+        var args = JsonSerializer.SerializeToElement(new[] { rulesetId, ruleId }).EnumerateArray().ToArray();
+        Assert.Throws<InvalidDataException>(() => RulesCoreUiOperationDispatcher.BuildRequest("getNativeRule", args));
+    }
+
+    [Theory]
+    [InlineData("/api/private/rulesets/../rules/..")]
+    [InlineData("/api/private/rulesets-other")]
+    [InlineData("/api/private/rulesets/first-party-001/rules/condition.blinded/extra")]
+    [InlineData("/api/private/rulesets/first-party-001/rules/condition.blinded?q=other")]
+    public async Task PrivateClientRejectsNonNativeReadRoutesBeforeTicketExchange(string path)
+    {
+        // No clients are registered: any attempt to exchange a ticket or call
+        // Core would fail the test rather than return the expected rejection.
+        var client = new RulesCorePrivateClient(new FixedClientFactory(new Dictionary<string, HttpClient>()));
+        var exception = await Assert.ThrowsAsync<RulesCorePrivateTunnelException>(() => client.SendAsync(
+            new ToolHostAuthenticationContext(1, "rules-wiki", "dorks-and-dice",
+                new ToolHostUserContext("u", "User"), [], [])
+            { ToolKey = "rules-wiki", PrivateTunnelCapability = "server-only" },
+            new RulesCorePrivateRequest(HttpMethod.Get, path)));
+        Assert.Equal(400, exception.StatusCode);
+    }
+
     [Fact]
     public async Task RealNamedOperationRequiresSiteAuthentication()
     {
