@@ -239,6 +239,8 @@ if (richAvailable) {
 const sparse = { id: "spell.sparse-fixture", name: "Sparse fixture", kind: "spell", school: "V" };
 const sparseInput = makeInput(old, sparse).input;
 const sparseView = registry.render(sparseInput);
+const compatible = makeInput("compatible-fixture", sparse).input;
+assert.equal(registry.select(compatible).id, "reference.spell");
 assert.equal(summary(sparseView, "Level"), null);
 assert.equal(summary(sparseView, "Duration"), null);
 assert.equal(summary(sparseView, "School"), "Evocation");

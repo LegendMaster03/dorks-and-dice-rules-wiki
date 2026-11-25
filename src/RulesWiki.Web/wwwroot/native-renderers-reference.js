@@ -3,7 +3,7 @@
  * structured rule renderer; all rich content is delegated to Workstream B.
  * Do not resolve mechanics or infer entity identity from display names.
  */
-import { renderStructuredContent, renderNativeAttribution } from "./native-presentation.js";
+import { renderStructuredContent, renderNativeAttribution, renderStructuredReference } from "./native-presentation.js";
 import { nativeRuleIdentity } from "./rules-context.js";
 import { element } from "./ui.js";
 import { formatDetailValue, formatSize, formatSpeed, formatArmorClass, humanizeKey } from "./rule-renderer-support.js";
@@ -15,7 +15,6 @@ import {
 } from "./rule-renderers-specialized.js";
 
 const FIRST = "first-party-001";
-const DND = new Set(["dnd-5e", "dnd-5-5e"]);
 const EQUIPMENT = new Set(["item", "baseitem", "item-group", "magic-variant", "item-property", "item-mastery", "item-type"]);
 const IMPORTED_ORIGINS = new Set(["race", "subrace", "species", "subspecies", "background"]);
 const NATIVE_ORIGINS = new Set(["species", "subspecies", "ancestry", "heritage", "origination", "origin-trait", "manifestation", "upbringing", "background",
@@ -29,7 +28,8 @@ const present = value => value !== undefined && value !== null && value !== "";
 const own = (record, key) => Object.hasOwn(record, key);
 const object = value => value !== null && typeof value === "object" && !Array.isArray(value);
 const has = (record, keys) => keys.some(key => own(record, key) && present(record[key]));
-const imported = input => DND.has(input.context.rulesetId);
+// Select compatible foreign flat records by shape; first-party and Fate retain their distinct semantics.
+const imported = input => !first(input) && !fate(input) && input.record.id === input.rule.id && !object(input.record.definition);
 const first = input => input.context.rulesetId === FIRST;
 const fate = input => input.context.rulesetId === "fate-condensed";
 const schema = input => object(input.record) && (!own(input.record, "id") || input.record.id === input.rule.id) &&
@@ -110,9 +110,7 @@ function references(input) {
     const ids = explicitReferences(input.record, input.context.rulesetId).filter(id => id !== input.rule.id);
     if (!ids.length) return null;
     const list = element("ul");
-    for (const id of ids) list.append(element("li", {}, input.references
-        ? element("a", { text: id, attributes: { href: input.hrefForRule(id) } })
-        : element("span", { text: id })));
+    for (const id of ids) list.append(element("li", {}, renderStructuredReference(id, input)));
     return element("section", { className: "rules-core-structured-section native-reference-links" },
         element("h3", { className: "h5", text: "Related references" }), list);
 }

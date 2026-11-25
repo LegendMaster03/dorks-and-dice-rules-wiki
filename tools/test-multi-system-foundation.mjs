@@ -22,8 +22,10 @@ assert.throws(() => ruleRoute("..", id));
 assert.equal(parseToolRoute("/rules/class.warlock").conceptKey, id);
 assert.equal(parseToolRoute(ruleRoute(a.rulesetId, id)).conceptKey, id);
 assert.equal(parseToolRoute(categoryRoute(a.rulesetId, "class")).entityType, "class");
-assert.equal(parseToolRoute(ruleRoute(b.rulesetId, id)).unsupportedRulesContext, true);
-assert.equal(parseToolRoute("/rulesets/unknown").unsupportedRulesContext, true);
+assert.equal(parseToolRoute(ruleRoute(b.rulesetId, id)).rulesetId, b.rulesetId);
+assert.equal(parseToolRoute(ruleRoute(b.rulesetId, id)).conceptKey, id);
+assert.equal(parseToolRoute("/rulesets/unknown").rulesetId, "unknown");
+assert.equal(parseToolRoute("/rulesets/unknown/rules/%ZZ").unsupportedRulesContext, true);
 const calls = [];
 const response = { rulesetId: b.rulesetId, fingerprint: b.fingerprint, rule: { id, name: "Warlock", kind: "class", definition: { id, hd: { faces: 8 }, entries: ["<img src=x onerror=alert(1)>"] } } };
 const api = {
