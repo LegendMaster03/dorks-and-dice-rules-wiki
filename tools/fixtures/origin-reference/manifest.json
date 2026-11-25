@@ -29,5 +29,7 @@
       "crafting-recipe": 90
     }
   },
-  "source": "Isolated authenticated HTTP test OriginReferenceReadsUseActualExpandedSnapshotAndExactFingerprint. No synthetic responses, character data, or deployed reads in this pack."
+  "source": "Isolated authenticated HTTP test OriginReferenceReadsUseActualExpandedSnapshotAndExactFingerprint. No synthetic responses, character data, or deployed reads in this pack.",
+  "hierarchyPackSha256": "c687921f42ea83ec038905529c4bf77c8fdd3a87fbb050099d97e6a450e4d041",
+  "hierarchyFixtureCount": 3
 }

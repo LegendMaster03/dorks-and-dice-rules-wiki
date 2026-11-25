@@ -86,6 +86,11 @@ try {
     assert.equal(createHash('sha256').update(compressed).digest('hex'), manifest.responsePackSha256);
     const actual = JSON.parse(gunzipSync(compressed).toString('utf8'));
     assert.equal(Object.keys(actual).length, manifest.fixtureCount);
+    const hierarchyCompressed = readFileSync(new URL('hierarchies.json.gz', fixturePath));
+    assert.equal(createHash('sha256').update(hierarchyCompressed).digest('hex'), manifest.hierarchyPackSha256);
+    const hierarchies = JSON.parse(gunzipSync(hierarchyCompressed).toString('utf8'));
+    assert.equal(Object.keys(hierarchies).length, manifest.hierarchyFixtureCount);
+    Object.assign(actual, hierarchies);
     const pinned = createRulesContext({ rulesetId: manifest.rulesetId, fingerprint: manifest.fingerprint });
     const pinnedDescriptor = { id: pinned.rulesetId, fingerprint: pinned.fingerprint,
         capabilities: { read: true, originReferenceContractVersion: 1 } };
@@ -99,12 +104,26 @@ try {
         return structuredClone(envelope);
     };
     const pinnedReader = createRulesetReader({
+        getNativeOriginHierarchy: fromFixture('hierarchy-'),
         getNativeOriginSource: fromFixture('source-'),
         getNativeOriginComponent: fromFixture('component-'),
         getNativeOriginComponentSources: fromFixture('component-sources-'),
         getNativeOriginTraitSources: fromFixture('trait-sources-'),
         getNativeOriginMethods: fromFixture('methods-')
     }, pinned, pinnedDescriptor);
+    const biological = await pinnedReader.originHierarchy('biological');
+    assert.equal(biological.rows.length, 43);
+    assert.equal(biological.rows.find(x => x.id === 'ancestry.dragonborn.red').parentId, 'ancestry.dragonborn.chromatic');
+    assert.equal(biological.rows.find(x => x.id === 'ancestry.dragonborn.chromatic').parentId, 'species.dragonborn');
+    assert.equal(biological.rows.find(x => x.id === 'species.dragonborn').selectable, false);
+    const upbringingTree = await pinnedReader.originHierarchy('upbringing');
+    assert.equal(upbringingTree.rows.length, 13);
+    assert.equal(upbringingTree.rows.find(x => x.id === 'upbringing.elf.wood').parentId, 'upbringing.elf.general');
+    assert.equal(upbringingTree.rows.find(x => x.id === 'upbringing.elf.general').selectable, false);
+    const backgrounds = await pinnedReader.originHierarchy('backgrounds');
+    assert.equal(backgrounds.rows.length, 16);
+    assert.equal(backgrounds.rows.find(x => x.id === 'background.acolyte').selectable, true);
+    assert.equal(actualCalls, 3); // one call for every complete family, no row-detail fan-out
     const red = await pinnedReader.originSource('ancestry.dragonborn.red');
     assert.deepEqual(red, actual['source-ancestry.dragonborn.red.json']);
     assert.deepEqual(red.lineage.map(row => row.id), [
@@ -149,7 +168,7 @@ try {
     const typeMethods = await pinnedReader.originMethods('creature-type.dragon');
     assert.equal(typeMethods.methods.find(m => m.reference.methodId === 'biological').defaultAvailability, 'available');
     assert.equal(typeMethods.methods.find(m => m.reference.methodId === 'rite-of-rebirth').createsNewIndividual, false);
-    assert.equal(actualCalls, 10); // exactly one operation per requested projection
+    assert.equal(actualCalls, 13); // exactly one operation per requested projection
     // Corrupt only identity metadata, not mechanical content. The real fixture
     // must be rejected if its occurrence or chain identity is misattributed.
     for (const corrupt of [

@@ -49,6 +49,7 @@ export function createOriginReferenceReader(api, context, descriptor) {
         const chain = response.lineage;
         if (!Array.isArray(chain) || chain.length < 1 || chain.length > 64 ||
             chain.at(-1)?.id !== id) return false;
+        if (chain.reduce((total, row) => total + (row?.traitOccurrences?.length ?? 0), 0) > 1024) return false;
         const sourceIds = new Set(chain.map(row => row?.id));
         if (sourceIds.size !== chain.length || !chain.every((row, index) => validRow(row) &&
             row.definition?.id === row.id && row.definition?.kind === row.kind &&
@@ -78,26 +79,28 @@ export function createOriginReferenceReader(api, context, descriptor) {
         async originTraitSources(id) {
             nativeRuleIdentity(id);
             return read("getNativeOriginTraitSources", id, "traitId", r =>
-                r.complete === true && Array.isArray(r.sources) && r.sources.every(row => {
+                r.complete === true && Array.isArray(r.sources) && r.sources.length <= 1024 && r.sources.every(row => {
                     try { nativeRuleIdentity(row.sourceId); } catch { return false; }
-                    return typeof row.path === "string" && (row.relation === "biological-occurrence"
-                        ? ["species", "ancestry"].includes(row.kind) && /^\\/traits\\/\\d+$/.test(row.path)
-                        : row.relation === "construct-operational-reference" && row.kind.startsWith("construct-") &&
-                            /^\\/operationalOriginTraitIds\\/\\d+$/.test(row.path));
+                    const indexed = prefix => typeof row.path === "string" && row.path.startsWith(prefix) &&
+                        /^[0-9]+$/.test(row.path.slice(prefix.length));
+                    return row.relation === "biological-occurrence"
+                        ? ["species", "ancestry"].includes(row.kind) && indexed("/traits/")
+                        : row.relation === "construct-operational-reference" && typeof row.kind === "string" &&
+                            row.kind.startsWith("construct-") && indexed("/operationalOriginTraitIds/");
                 }));
         },
         async originMethods(scope = "all") {
             if (scope !== "all" && (!nativeRuleIdentity(scope).startsWith("creature-type.")))
                 throw new Error("Invalid creature-type reference scope.");
             return read("getNativeOriginMethods", scope, "scope", r =>
-                r.previewOnly === true && Array.isArray(r.methods) &&
+                r.previewOnly === true && Array.isArray(r.methods) && r.methods.length <= 256 &&
                 r.methods.every(m => m.reference?.ruleId === "rule.creature-origination" &&
                     typeof m.reference.methodId === "string" && !!m.reference.methodId));
         },
         async originComponentSources(id) {
             nativeRuleIdentity(id);
             return read("getNativeOriginComponentSources", id, "targetId", r =>
-                r.complete === true && Array.isArray(r.sources) && Array.isArray(r.recipes) &&
+                r.complete === true && Array.isArray(r.sources) && r.sources.length <= 1024 && Array.isArray(r.recipes) &&
                 r.sources.every(row => {
                     try { nativeRuleIdentity(row.sourceId); } catch { return false; }
                     return typeof row.path === "string" && ["compatible-design", "compatible-enhancement",

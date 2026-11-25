@@ -1,6 +1,6 @@
 # Actual native Origins reference fixtures
 
-The manifest pins the Core commit, snapshot fingerprint, CI run, archive digest and fixture pack digest. The gzip pack contains ten **complete** HTTP JSON responses, extracted without changing JSON values from the isolated authenticated Core capture artifact. The other six captured envelopes are complete hierarchy families; their verified counts are recorded in the manifest and tested in Core. The gzip pack avoids duplicating the loader-expanded payload and traits across several source lineages as large uncompressed files. It is not a runtime asset.
+The manifest pins the Core commit, snapshot fingerprint, CI run, archive digest and fixture pack digest. The gzip pack contains ten **complete** detail/relationship/method HTTP JSON responses, extracted without changing JSON values from the isolated authenticated Core capture artifact. The second pack (hierarchies.json.gz) contains the complete biological, upbringing and background hierarchy HTTP envelopes. The other three captured hierarchy families' verified counts are recorded in the manifest and tested in Core. The gzip pack avoids duplicating the loader-expanded payload and traits across several source lineages as large uncompressed files. It is not a runtime asset.
 
 Inspect any response with standard Python or Node tools:
 
