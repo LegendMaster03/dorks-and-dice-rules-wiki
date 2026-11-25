@@ -45,6 +45,22 @@ function payload(input) {
 
 const format = (value, formatter = formatDetailValue) => present(value) ? formatter(value) : null;
 const sourceLabel = value => typeof value === "string" ? value.split("|")[0] : value;
+// Display labels for observed D&D source codes; do not infer a rule ID.
+const abilityLabels = new Map([["str","Strength"], ["dex","Dexterity"], ["con","Constitution"],
+    ["int","Intelligence"], ["wis","Wisdom"], ["cha","Charisma"], ["strength","Strength"],
+    ["dexterity","Dexterity"], ["constitution","Constitution"], ["intelligence","Intelligence"],
+    ["wisdom","Wisdom"], ["charisma","Charisma"]]);
+const propertyLabels = new Map([["2H","Two-Handed"], ["A","Ammunition"], ["F","Finesse"], ["H","Heavy"],
+    ["L","Light"], ["LD","Loading"], ["R","Reach"], ["T","Thrown"], ["V","Versatile"]]);
+function propertyName(input, value) {
+    const code = sourceLabel(value);
+    if (typeof code !== "string") return formatDetailValue(code);
+    if (input.context.rulesetId === "dnd-5e" && code.toUpperCase() === "S") return "Special";
+    return propertyLabels.get(code.toUpperCase()) ?? code;
+}
+function abilityName(value) {
+    return typeof value === "string" ? abilityLabels.get(value.toLowerCase()) ?? value : formatAbilityReference(value);
+}
 const yesNo = value => typeof value === "boolean" ? (value ? "Yes" : "No") : null;
 const sign = value => typeof value === "number" && value >= 0 ? "+" + value : value;
 const labels = {
@@ -109,8 +125,8 @@ function sourceDisclosure(input, title, value) {
     return element("details", { className: "rules-core-structured-section" },
         element("summary", { text: title }), content(input, value));
 }
-function publisherText(title, value) {
-    return element("details", { className: "rules-core-structured-section" },
+function publisherText(title, value, expanded = false) {
+    return element("details", { className: "rules-core-structured-section", attributes: expanded ? { open: "" } : {} },
         element("summary", { text: title }), element("pre", { className: "text-wrap", text: value }));
 }
 // Native sections are explicit projections for reading, not replacement
@@ -179,6 +195,7 @@ function equipment(input) {
         ["Attunement", format(r.reqAttune ?? r.requiresAttunement, value => object(value) || Array.isArray(value)
             ? formatDetailValue(value) : formatAttunement(value))],
         ["Weapon category", format(r.weaponCategory)],
+        ["Weapon properties", Array.isArray(r.property) ? r.property.map(x => propertyName(input, x)).join(", ") : format(r.property)],
         ["Weapon Mastery", format(Array.isArray(r.mastery) ? r.mastery.map(sourceLabel) : r.mastery)]);
     const fields = ["property", "mastery", "reqAttuneTags", "prerequisite", "requires", "excludes", "inherits",
         "items", "baseItem", "baseItemId", "variantOf", "dmg2", "range", "strength", "stealth",
@@ -214,6 +231,13 @@ function nativeOrigin(input) {
     ], sections: [["Description", r.description], ["Traits", r.traits], ["Benefits", r.benefits],
         ["Trait definition", r.trait]], consumed: ["description", "traits", "benefits", "trait"] });
 }
+function originRule(input) {
+    const r = payload(input);
+    const fields = ["scope", "methodDefinitions", "methodInheritance", "methodAvailability", "compatibility",
+        "biologicalTransmission", "riteOfRebirth", "darkvisionSensitivity", "upbringings", "originInheritance",
+        "duplicateTraining", "dmOverridePolicy"];
+    return frame(input, { summary: [["Status", format(r.status)]], sections: fieldSections(r, fields), consumed: fields });
+}
 function condition(input) {
     const r = payload(input);
     return frame(input, { summary: [["Levels", typeof r.levels === "number" ? r.levels : null]],
@@ -222,7 +246,7 @@ function condition(input) {
 function skill(input) {
     const r = payload(input);
     const summary = fate(input) ? [["Default rating", sign(r.defaultRating)]] : [
-        ["Ability", format(r.ability ?? r.stat ?? r.defaultAbility, formatAbilityReference)],
+        ["Ability", format(r.ability ?? r.stat ?? r.defaultAbility, abilityName)],
         ["Independently ranked", yesNo(r.independentlyRanked)],
         ["Independent children", yesNo(r.independentChildren)]];
     return frame(input, { summary, sections: [["Description", r.description], ["Rules", r.entries]],
@@ -260,11 +284,11 @@ function textual(input) {
     const r = payload(input);
     const sections = [["Rules", r.entries ?? r.rules ?? r.text], ["Description", r.description]];
     if (typeof r.markdown === "string") sections.unshift(["Source text", { markdown: r.markdown }]);
-    if (typeof r.textLayout === "string") sections.unshift(["Publisher page", r.textLayout]);
+    // Page records preserve the publisher line layout as inert, selectable text.
     return frame(input, { summary: [
         ["Time", format(r.time, formatCastingTime)], ["Reactive", yesNo(r.reactive)],
         ["Heading level", typeof r.headingLevel === "number" ? r.headingLevel : null], ["Page", r.page]
-    ], sections, consumed: ["entries", ...(r.entries === undefined ? ["rules"] : []),
+    ], sections, publisher: ["Publisher page", r.textLayout, true], consumed: ["entries", ...(r.entries === undefined ? ["rules"] : []),
         ...(r.entries === undefined && r.rules === undefined ? ["text"] : []), "description", "markdown", "textLayout"] });
 }
 
@@ -283,6 +307,9 @@ export function registerNativeRenderers(registry) {
         has(payload(i), ["entries", "size", "raceName", "startingEquipment", "skillProficiencies"]), importedOrigin);
     add("native-origin", i => first(i) && NATIVE_ORIGINS.has(i.rule.kind) &&
         has(payload(i), ["description", "traits", "trait", "benefits", "rulesStatus", "status", "sizeChoice"]), nativeOrigin);
+    add("origin-rule", i => first(i) && i.rule.kind === "rule" &&
+        ((Array.isArray(payload(i).methodDefinitions) && object(payload(i).methodInheritance)) ||
+         (object(payload(i).upbringings) && object(payload(i).originInheritance))), originRule);
     // Do not supersede the established first-party condition renderer.
     add("condition", i => imported(i) && i.rule.kind === "condition" && Array.isArray(payload(i).entries), condition);
     add("skill", i => SKILLS.has(i.rule.kind) && (

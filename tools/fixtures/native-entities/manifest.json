@@ -233,6 +233,13 @@
       "nativeEntityId": "baseitem.plate-armor",
       "sourceFile": "data/rulesets/dnd-5-5e/native/items/structured-12.json",
       "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--rule.species-subspecies-upbringing.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "rule.species-subspecies-upbringing",
+      "sourceFile": "data/rulesets/first-party-001/native/rules/species-subspecies-upbringing.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
     }
   ]
 }

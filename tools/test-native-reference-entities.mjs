@@ -106,6 +106,7 @@ assert.equal(summary(backpack, "Value"), "2 gp");
 assert.match(backpack.textContent, /Container Capacity/i);
 const javelin = show(modern, "item.javelin-of-lightning", "reference.equipment");
 assert.equal(summary(javelin, "Weapon Mastery"), "Slow");
+assert.equal(summary(javelin, "Weapon properties"), "Thrown");
 assert.ok(scopedLink(javelin, modern, "item-mastery.slow"));
 const plate = show(modern, "baseitem.plate-armor", "reference.equipment");
 assert.equal(summary(plate, "Reference type"), "Base item");
@@ -151,6 +152,9 @@ assert.ok(scopedLink(drow, first, "upbringing.elf.drow"));
 show(first, "trait.skillful", "reference.native-origin");
 show(first, "upbringing.aristocratic", "reference.native-origin");
 show(first, "construct-design.reinforced-frame", "reference.native-origin");
+const originRules = show(first, "rule.species-subspecies-upbringing", "reference.origin-rule");
+assert.match(originRules.textContent, /Origin Inheritance/);
+assert.match(originRules.textContent, /Upbringings/);
 
 const exhaust51 = show(old, "condition.exhaustion", "reference.condition");
 const exhaust52 = show(modern, "condition.exhaustion", "reference.condition");
