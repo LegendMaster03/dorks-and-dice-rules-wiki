@@ -155,6 +155,10 @@ show(first, "construct-design.reinforced-frame", "reference.native-origin");
 const originRules = show(first, "rule.species-subspecies-upbringing", "reference.origin-rule");
 assert.match(originRules.textContent, /Origin Inheritance/);
 assert.match(originRules.textContent, /Upbringings/);
+const origination = show(first, "rule.creature-origination", "reference.origin-rule");
+assert.match(origination.textContent, /Biological reproduction/);
+assert.match(origination.textContent, /Construct assembly/);
+assert.match(origination.textContent, /Elemental manifestation/);
 
 const exhaust51 = show(old, "condition.exhaustion", "reference.condition");
 const exhaust52 = show(modern, "condition.exhaustion", "reference.condition");
