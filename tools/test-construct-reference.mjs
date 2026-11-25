@@ -10,7 +10,8 @@ const { loadConstructIndex, renderConstructReference, supportsConstructReference
     await import("../src/RulesWiki.Web/wwwroot/native-construct-reference.js");
 const { createRulesContext, ruleRoute, createRenderLifecycle } =
     await import("../src/RulesWiki.Web/wwwroot/rules-context.js");
-const { createNativeRendererRegistry } = await import("../src/RulesWiki.Web/wwwroot/native-presentation.js");
+const { createNativeRendererRegistry, mountNativePresentation } = await import("../src/RulesWiki.Web/wwwroot/native-presentation.js");
+const { createOriginReferenceReader } = await import("../src/RulesWiki.Web/wwwroot/origin-reference-reader.js");
 const fixtureRoot = new URL("./fixtures/origin-reference/", import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL("manifest.json", fixtureRoot), "utf8"));
 const actual = Object.assign({}, ...["responses.json.gz", "hierarchies.json.gz",
@@ -61,6 +62,7 @@ for (const tab of CONSTRUCT_TABS) {
     calls = [];
     const index = await loadConstructIndex(reader, tab.kind);
     assert.equal(calls.length, 1);
+    assert.equal(index.context.fingerprint, context.fingerprint);
     assert.equal(index.rows.length, tab.kind === "construct-component" ?
         manifest.inventory["construct-components"] : manifest.inventory["construct-options"][tab.kind]);
     assert.ok(index.rows.every(row => row.kind === tab.kind));
@@ -132,6 +134,54 @@ assert.equal(indexNode.querySelectorAll("a").length, grouped.rows.length);
 assert.equal(indexNode.querySelector("[aria-current=page]").getAttribute("href"), "/wiki" + ruleRoute(context.rulesetId, component.componentId));
 assert.equal(renderConstructIngredientLink(reader, "/wiki").getAttribute("href"), "/wiki/rulesets/first-party-001/types/crafting-material");
 const mismatchedReader = { ...reader, context: { ...context, fingerprint: "other" } };
+assert.throws(() => renderConstructIndex({ ...locomotionInput, context: mismatchedReader.context,
+    references: mismatchedReader }, grouped), /context is unavailable/);
+const materialIndex = await loadConstructIndex(reader, "construct-material");
+const materialList = renderConstructIndex(locomotionInput, materialIndex, null, { toolBasePath: "/wiki" });
+assert.equal(materialList.querySelector("a").getAttribute("href"), "/wiki/rulesets/first-party-001/types/crafting-material");
+assert.equal(source.constructMethod.initialConstructionCostModel, "recipe-inputs");
+assert.ok(Number.isFinite(source.constructMethod.initialConstructionAllowance));
+assert.ok(!detail.textContent.includes("starting allowance"));
+const captureCalls = [];
+const captureApi = {
+    async getNativeOriginHierarchy(rulesetId, fingerprint, family) {
+        captureCalls.push(["hierarchy", rulesetId, fingerprint, family]);
+        return envelopes.find(e => e.family === family);
+    },
+    async getNativeOriginComponent(rulesetId, fingerprint, id) {
+        captureCalls.push(["component", rulesetId, fingerprint, id]); return component;
+    },
+    async getNativeOriginComponentSources(rulesetId, fingerprint, id) {
+        captureCalls.push(["reverse", rulesetId, fingerprint, id]);
+        return envelopes.find(e => e.targetId === id);
+    }
+};
+const capturedReader = { context, ...createOriginReferenceReader(captureApi, context,
+    { capabilities: { originReferenceContractVersion: 1 } }) };
+const actualIndex = await loadConstructIndex(capturedReader, "construct-component");
+assert.equal(actualIndex.rows.length, grouped.rows.length);
+const capturedInput = { ...locomotionInput, references: capturedReader };
+assert.ok(hasLink(await renderConstructReference(capturedInput), "construct-design.wheeled-drive"));
+const capturedRecipe = source.records["crafting-recipes.json"].find(r => r.id === "crafting-recipe.construct-component.locomotion-unit");
+const reverse = envelopes.find(e => e.targetId === capturedRecipe.id);
+assert.equal(reverse.output.id, component.componentId);
+const capturedRecipeArticle = await renderConstructReference(input(capturedRecipe, capturedRecipe.kind, capturedRecipe.id, capturedReader));
+assert.ok(hasLink(capturedRecipeArticle, component.componentId));
+assert.match(capturedRecipeArticle.textContent, /Recipe output reference/);
+assert.deepEqual(captureCalls, [
+    ["hierarchy", context.rulesetId, context.fingerprint, "construct-components"],
+    ["component", context.rulesetId, context.fingerprint, component.componentId],
+    ["reverse", context.rulesetId, context.fingerprint, capturedRecipe.id]
+]);
+const mountLifecycle = createRenderLifecycle();
+const mounted = document.createElement("div");
+const mountInput = { ...capturedInput, lifecycle: mountLifecycle.begin(context, component.componentId) };
+assert.equal(await mountNativePresentation(mounted, registry, mountInput), true);
+assert.ok(hasLink(mounted, "trait.construct.ordinary-ground-movement"));
+const late = { ...capturedInput, lifecycle: mountLifecycle.begin(context, component.componentId),
+    references: { ...capturedReader, async originComponent() { mountLifecycle.cancel(); return component; } } };
+assert.equal(await mountNativePresentation(mounted, registry, late), false);
+assert.ok(hasLink(mounted, "trait.construct.ordinary-ground-movement"));
 assert.equal(supportsConstructReference({ ...locomotionInput, references: mismatchedReader }), false);
 const wrongTarget = { ...reader, async originComponent() { return { ...component, componentId: "construct-component.structural-frame" }; } };
 await assert.rejects(renderConstructReference({ ...locomotionInput, references: wrongTarget }), /identity mismatch/);

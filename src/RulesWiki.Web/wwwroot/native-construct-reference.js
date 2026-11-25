@@ -49,14 +49,14 @@ export async function loadConstructIndex(reader, kind, lease, { offset = 0, limi
                 page.rules.length !== Math.min(limit, Math.max(0, page.total - offset)) ||
                 !page.rules.every(row => row.kind === kind && validId(row.id) && typeof row.name === "string"))
                 throw new Error("Invalid ingredient reference page.");
-            return { kind, rows: page.rules, groups: [{ category: kind, rows: page.rules }],
+            return { context: reader.context, kind, rows: page.rules, groups: [{ category: kind, rows: page.rules }],
                 offset, limit, total: page.total, complete: offset === 0 && page.rules.length === page.total };
         }
         const family = kind === "construct-component" ? "construct-components" : "construct-options";
         const response = await reader.originHierarchy(family);
         if (!current(lease)) return null;
         assertSnapshot(reader.context, response);
-        if (response.complete !== true || response.family !== family || !Array.isArray(response.rows))
+        if (response.contractVersion !== 1 || response.complete !== true || response.family !== family || !Array.isArray(response.rows))
             throw new Error("Incomplete Construct Assembly family.");
         const rows = response.rows.filter(row => row.kind === kind).sort(compare);
         const groups = new Map();
@@ -67,7 +67,7 @@ export async function loadConstructIndex(reader, kind, lease, { offset = 0, limi
             if (!groups.has(category)) groups.set(category, []);
             groups.get(category).push(row);
         }
-        return { kind, rows, offset: 0, total: rows.length, complete: true, groups: [...groups].sort(([a], [b]) => a.localeCompare(b))
+        return { context: reader.context, kind, rows, offset: 0, total: rows.length, complete: true, groups: [...groups].sort(([a], [b]) => a.localeCompare(b))
             .map(([category, rows]) => ({ category, rows })) };
     } catch (error) {
         if (!current(lease)) return null;
@@ -106,20 +106,16 @@ export function renderConstructIngredientLink(reader, toolBasePath = "") {
 
 /** Detached grouped index; B may instead use the returned data in its own
  * resizable workspace. Selection is always an exact qualified rule route. */
-export function renderConstructIndex(input, index, selectedId = null) {
-    if (!index || !available(input.references) || !sameContext(input.context, input.references.context))
+export function renderConstructIndex(input, index, selectedId = null, { toolBasePath = "" } = {}) {
+    if (!index || !available(input.references) || !sameContext(input.context, input.references.context) ||
+        !sameContext(input.context, index.context) || !current(input.lifecycle))
         throw new Error("Construct index context is unavailable.");
     const root = node("div", undefined, "native-construct-index");
     if (index.kind === "construct-material" || index.kind === "crafting-material") {
         const link = node("a", index.kind === "construct-material" ? "Crafting ingredients" : "Construct materials");
         const target = index.kind === "construct-material" ? "crafting-material" : "construct-material";
-        // Derive the hosted base from the existing qualified route, never from source data.
-        const sample = input.hrefForRule("rule.creature-origination");
-        const suffix = "/rulesets/" + input.context.rulesetId + "/rules/rule.creature-origination";
-        if (typeof sample === "string" && sample.startsWith("/") && !sample.startsWith("//") && sample.endsWith(suffix)) {
-            link.href = sample.slice(0, -suffix.length) + categoryRoute(input.context.rulesetId, target);
-            root.append(link);
-        }
+        link.href = toolBasePath.replace(/\/$/, "") + categoryRoute(input.context.rulesetId, target);
+        root.append(link);
     }
     if (!index.rows.length) root.append(node("p", "No records found."));
     for (const group of index.groups) {
@@ -329,8 +325,7 @@ export async function renderConstructReference(input) {
     // path-identified identity and category. The original reader record is retained.
     const authored = projection && input.rule.kind === "construct-component" ? projection.definition : record;
     const article = authoredDetail(input, authored, projection?.componentCategory ?? null);
-    if (input.rule.kind === "construct-component" && input.record.id !== undefined &&
-        authored.kind !== input.rule.kind) throw new Error("Construct component kind mismatch.");
+    if (input.rule.kind === "construct-component" && authored.kind !== input.rule.kind) throw new Error("Construct component kind mismatch.");
     if (input.rule.kind === "construct-component") appendConfiguration(article, input, projection);
     else if (projection) appendReverse(article, input, projection);
     else if (input.rule.kind === "crafting-material") section(article, "Recipe input references",

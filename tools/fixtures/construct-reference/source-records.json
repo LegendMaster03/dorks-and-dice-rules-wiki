@@ -244,6 +244,38 @@
           "fullyAccounted": true,
           "additionalProductMassPounds": 0
         }
+      },
+      {
+        "id": "crafting-recipe.construct-component.locomotion-unit",
+        "kind": "crafting-recipe",
+        "name": "Locomotion unit — manufacture",
+        "rulesStatus": "candidate manufacturing, quantities and complete product-mass ledger for scenario testing; not approved gameplay balance",
+        "producesDefinitionId": "construct-component.locomotion-unit",
+        "stages": [
+          {
+            "stepId": "manufacture",
+            "competencyId": "competency.tinkering",
+            "minimumRanks": 2,
+            "dependencies": [],
+            "inputs": [
+              {
+                "materialSlot": "contact",
+                "amount": 4,
+                "retainedInProduct": true
+              },
+              {
+                "materialId": "crafting-material.fine-mechanisms",
+                "amount": 1,
+                "retainedInProduct": true
+              }
+            ],
+            "outputs": []
+          }
+        ],
+        "physicalMassAccounting": {
+          "fullyAccounted": true,
+          "additionalProductMassPounds": 0
+        }
       }
     ],
     "materials.json": [
