@@ -17,7 +17,7 @@ function renderImportedClass(input) {
     const root = renderNativeClass(input.rule, {
         presentation, context: input.context, lifecycle: input.lifecycle,
         catalogFingerprint: input.context.fingerprint,
-        renderValue: value => renderStructuredContent(value, input),
+        renderValue: value => renderStructuredContent(value, { input }),
         hrefForRule: input.hrefForRule, getRule,
         additionalSections: importedClassSections(input, presentation)
     });
@@ -43,8 +43,8 @@ function renderImportedFeature(input) {
         } else root.append(classRuleLink(input, id, "Related class reference: " + id));
     }
     if (Number.isInteger(record.level)) root.append(node("p", "Class level " + record.level));
-    if (record.prerequisite !== undefined) root.append(node("h3", "Prerequisites"), renderStructuredContent(record.prerequisite, input));
-    root.append(renderStructuredContent(record.entries, input));
+    if (record.prerequisite !== undefined) root.append(node("h3", "Prerequisites"), renderStructuredContent(record.prerequisite, { input }));
+    root.append(renderStructuredContent(record.entries, { input }));
     const related = node("section");
     related.append(node("h3", "Related references"));
     for (const id of record.catalogReferences ?? []) {
@@ -54,7 +54,7 @@ function renderImportedFeature(input) {
     }
     root.append(related);
     const raw = node("details");
-    raw.append(node("summary", "Complete authoritative feature record"), renderStructuredContent(record, input));
+    raw.append(node("summary", "Complete authoritative feature record"), renderStructuredContent(record, { input }));
     root.append(raw, renderNativeAttribution(input));
     return root;
 }
