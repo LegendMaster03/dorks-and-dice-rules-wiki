@@ -30,6 +30,7 @@ export function createPresentationInput(context, envelope, reader, options = {})
         references: reader ?? null,
         hrefForRule: id => (options.toolBasePath ?? "").replace(/\/$/, "") + ruleRoute(c.rulesetId, id),
         renderSource: options.renderSource ?? null,
+        onBack: options.onBack ?? null,
         lifecycle: options.lifecycle ?? null });
 }
 export function createNativeRendererRegistry(fallback = renderGenericNative) {
@@ -48,7 +49,7 @@ export function createNativeRendererRegistry(fallback = renderGenericNative) {
             entries.set(id, Object.freeze({ id, supports, render, priority }));
         },
         select,
-        async render(input) { return select(input).render(input); }
+        render(input) { return select(input).render(input); }
     });
 }
 const node = (tag, text) => {
@@ -116,17 +117,30 @@ export function renderGenericNative(input) {
         renderStructuredContent(input.record), renderNativeAttribution(input));
     return article;
 }
-export async function mountNativePresentation(container, registry, input) {
+/** Mount synchronous and asynchronous renderers through the same current lease.
+ * A renderer may return a node or an array of detached nodes (legacy adapter).
+ * decorate runs only for a current result and must return the final node(s). */
+export function mountNativePresentation(container, registry, input, { decorate = result => result } = {}) {
     const lease = input.lifecycle;
     if (!lease || typeof lease.isCurrent !== "function") throw new Error("A render lease is required.");
     if (!lease.isCurrent()) return false;
-    try {
-        const result = await registry.render(input);
+    const commit = result => {
         if (!lease.isCurrent()) return false;
-        container.replaceChildren(result);
+        const content = decorate(result);
+        if (!lease.isCurrent()) return false;
+        const nodes = Array.isArray(content) ? content : [content];
+        if (!nodes.every(node => node instanceof Node)) throw new Error("Native renderer must return DOM nodes.");
+        container.replaceChildren(...nodes);
         return true;
-    } catch (error) {
+    };
+    const failed = error => {
         if (!lease.isCurrent()) return false;
         throw error;
-    }
+    };
+    try {
+        const result = registry.render(input);
+        return result && typeof result.then === "function"
+            ? Promise.resolve(result).then(commit).catch(failed)
+            : commit(result);
+    } catch (error) { return failed(error); }
 }

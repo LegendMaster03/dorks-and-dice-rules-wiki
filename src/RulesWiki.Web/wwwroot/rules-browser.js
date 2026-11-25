@@ -9,7 +9,7 @@ import {
     formatDate,
     DEFAULT_PAGE_SIZE
 } from "./ui.js";
-import { renderRuleDetailPane } from "./rules-browser-detail.js";
+import { cancelNativeDetailRender, renderRuleDetailPane } from "./rules-browser-detail.js";
 import { restoreMountedClassFragment } from "./native-class-navigation.js";
 import {
     catalogRouteForEntity,
@@ -152,6 +152,11 @@ export function installResolvedRulesBrowser(app) {
     app.viewNavigation.library = async () =>
         app.navigateRuleFamily(app.browserFilters.entityType);
 
+    const renderApp = app.render.bind(app);
+    app.render = async (...args) => {
+        cancelNativeDetailRender(app);
+        return renderApp(...args);
+    };
     const renderActiveView = app.renderActiveView.bind(app);
     app.renderActiveView = async container => {
         if (app.activeView === "library") {
@@ -918,6 +923,8 @@ async function renderRulesBrowser(app, container) {
                 list.replaceChildren(renderIndexState(message, "Published rules will appear here when they are available."));
                 app.browserSelectedConceptKey = null;
                 workspace.classList.remove("has-selection");
+                cancelNativeDetailRender(app);
+                detailSerial += 1;
                 detail.replaceChildren(renderEmptyDetail(message));
                 return;
             }
@@ -987,6 +994,8 @@ async function renderRulesBrowser(app, container) {
                 await renderSelection(conceptKey);
             } else {
                 workspace.classList.remove("has-selection");
+                cancelNativeDetailRender(app);
+                detailSerial += 1;
                 detail.replaceChildren(renderEmptyDetail("Select a rule from the list."));
             }
         } catch (error) {
@@ -1009,6 +1018,7 @@ async function renderRulesBrowser(app, container) {
 
     scope.addEventListener("change", async () => {
         detailSerial += 1;
+        cancelNativeDetailRender(app);
         if (!scope.value.startsWith("campaign:")) overrideInput.checked = false;
         app.browserScope = scope.value;
         app.browserFilters.overridesOnly = scope.value.startsWith("campaign:") && overrideInput.checked;

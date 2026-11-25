@@ -12,6 +12,8 @@ import {
     setButtonBusy
 } from "./ui.js";
 import { renderNativeDetail } from "./native-rule-detail.js";
+import { DEFAULT_RULESET_ID, createRulesContext, createRenderLifecycle, validateNativeEnvelope } from "./rules-context.js";
+import { createRulesetReader } from "./native-presentation.js";
 import { renderResolvedRule } from "./rule-renderers.js";
 import { renderSemanticComparison } from "./semantic-comparison.js";
 import {
@@ -19,6 +21,13 @@ import {
     renderClassFamilyReferenceDetail
 } from "./class-family-workspace.js";
 
+// The application has one active reference detail surface. Cancel the old
+// request before starting a new read, even if the new selection has no envelope yet.
+const activeDetails = new WeakMap();
+export function cancelNativeDetailRender(app) {
+    activeDetails.get(app)?.cancel();
+    activeDetails.delete(app);
+}
 /** Ignore a completed detail fetch when a newer selection has superseded it. */
 export async function renderRuleDetailPane(
     app,
@@ -29,6 +38,12 @@ export async function renderRuleDetailPane(
     getCurrentSerial,
     onBackToList)
 {
+    cancelNativeDetailRender(app);
+    const lifecycle = createRenderLifecycle();
+    activeDetails.set(app, lifecycle);
+    const wasConnected = container.isConnected;
+    const isCurrent = () => activeDetails.get(app) === lifecycle && requestSerial === getCurrentSerial()
+        && (!wasConnected || container.isConnected);
     container.replaceChildren(element("div", {
         className: "rules-core-library-detail-loading",
         text: "Loading reference…"
@@ -38,12 +53,28 @@ export async function renderRuleDetailPane(
         ? scopeValue.slice("campaign:".length)
         : null;
     try {
-        const detail = await app.api.getWikiReferenceDetail(referenceIdentity, campaignId);
-        if (requestSerial !== getCurrentSerial()) return;
+        // Until catalog navigation binds a new rulesContext, the legacy
+        // first-party index provides the authoritative snapshot for detail reads.
+        const requestedContext = app.rulesContext ?? (app.wikiIndex?.fingerprint
+            ? createRulesContext({ rulesetId: app.wikiIndex.rulesetId ?? DEFAULT_RULESET_ID,
+                fingerprint: app.wikiIndex.fingerprint }) : null);
+        if (requestedContext?.campaignId || (campaignId && app.nativeReferenceOnly))
+            throw new Error("Campaign rules are not available in the native Core yet.");
+        const reader = requestedContext && app.api.getNativeRule && app.api.searchNativeRules
+            ? createRulesetReader(app.api, requestedContext) : null;
+        const detail = app.rulesContext && reader && !campaignId
+            ? { native: await reader.resolve(referenceIdentity) }
+            : await app.api.getWikiReferenceDetail(referenceIdentity, campaignId);
+        if (!isCurrent()) return;
 
         if (detail.native) {
-            renderNativeDetail(container, detail.native, onBackToList, app);
-            app.presentRenderedFragment?.(container);
+            const context = requestedContext ?? createRulesContext(detail.native);
+            validateNativeEnvelope(context, referenceIdentity, detail.native);
+            const token = lifecycle.begin(context, referenceIdentity);
+            const lease = Object.freeze({ ...token, isCurrent: () => token.isCurrent() && isCurrent() });
+            const mounted = await renderNativeDetail(container, detail.native, onBackToList, app,
+                { context, reader, lifecycle: lease, ruleId: referenceIdentity });
+            if (mounted && lease.isCurrent()) app.presentRenderedFragment?.(container);
             return;
         }
 
@@ -57,9 +88,9 @@ export async function renderRuleDetailPane(
                 {
                     renderResolutionStatus: (reference, activeCampaignId) =>
                         renderResolutionStatus(app, reference, activeCampaignId),
-                    isCurrent: () => requestSerial === getCurrentSerial()
+                    isCurrent
                 });
-            if (requestSerial !== getCurrentSerial()) return;
+            if (!isCurrent()) return;
             app.presentRenderedFragment?.(container);
             return;
         }
@@ -67,7 +98,7 @@ export async function renderRuleDetailPane(
         renderGenericReferenceDetail(app, container, detail, campaignId, onBackToList);
         app.presentRenderedFragment?.(container);
     } catch (error) {
-        if (requestSerial !== getCurrentSerial()) return;
+        if (!isCurrent()) return;
         container.replaceChildren(alertNode("danger", describeError(error)));
         app.presentRenderedFragment?.(container);
     }
