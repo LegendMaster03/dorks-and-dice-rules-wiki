@@ -20,7 +20,7 @@ const EQUIPMENT = new Set(["item", "baseitem", "item-group", "magic-variant", "i
 const IMPORTED_ORIGINS = new Set(["race", "subrace", "species", "subspecies", "background"]);
 const NATIVE_ORIGINS = new Set(["species", "subspecies", "ancestry", "heritage", "origination", "origin-trait", "manifestation", "upbringing", "background",
     "construct-component", "construct-design", "construct-material", "construct-enhancement", "construct-power-source",
-    "crafting-recipe", "crafting-ingredient"]);
+    "crafting-recipe", "crafting-material"]);
 const SKILLS = new Set(["skill", "skill-family", "competency", "competency-category"]);
 const TEXTUAL = new Set(["action", "activity", "attack-option", "combat-option", "equipment-option", "reaction-option",
     "rule", "rulebook", "rulebook-page", "chapter", "section", "language", "sense", "glossary", "hazard", "trap",
@@ -32,7 +32,8 @@ const has = (record, keys) => keys.some(key => own(record, key) && present(recor
 const imported = input => DND.has(input.context.rulesetId);
 const first = input => input.context.rulesetId === FIRST;
 const fate = input => input.context.rulesetId === "fate-condensed";
-const schema = input => object(input.record) && (!input.record.kind || input.record.kind === input.rule.kind);
+const schema = input => object(input.record) && (!own(input.record, "id") || input.record.id === input.rule.id) &&
+    (!own(input.record, "kind") || input.record.kind === input.rule.kind);
 // Core can preserve a wrapper. Only a known first-party identity-matched
 // definition may be read as a gameplay payload; the original remains intact.
 function payload(input) {
@@ -56,17 +57,18 @@ const labels = {
     baseItemId: "Base item ID", variantOf: "Derived from template", reqAttuneTags: "Attunement prerequisites",
     property: "Weapon properties", mastery: "Weapon Mastery", reviewNotes: "Review notes", _versions: "Versions"
 };
-const nameOf = key => labels[key] ?? humanizeKey(key);
+const nameOf = key => Object.hasOwn(labels, key) ? labels[key] : humanizeKey(key);
 
 function content(input, value) {
     // One rich renderer: the foundation implementation is intentionally inert.
     // B owns Markdown/tag interpretation, including the typed Markdown wrapper.
-    return renderStructuredContent(value, { ...input, input });
+    return renderStructuredContent(value, { input });
 }
 
 const referenceFields = new Set(["catalogReferences", "parentId", "baseItemId", "variantOf", "traitId",
     "parentSkill", "childSkills", "family", "competencyIds", "skillId", "skill", "actionId",
-    "craftingRecipeId", "speciesId", "subspeciesId", "parentSpecies", "parentAncestry"]);
+    "craftingRecipeId", "producesDefinitionId", "speciesId", "subspeciesId", "parentSpecies", "parentAncestry",
+    "parent", "defaultUpbringing", "ruleId"]);
 function explicitReferences(record) {
     const ids = new Set();
     const add = value => {
@@ -90,20 +92,35 @@ function references(input) {
     const ids = explicitReferences(input.record).filter(id => id !== input.rule.id);
     if (!ids.length) return null;
     const list = element("ul");
-    for (const id of ids) list.append(element("li", {}, element("a", {
-        text: id, attributes: { href: input.hrefForRule(id) }
-    })));
+    for (const id of ids) list.append(element("li", {}, input.references
+        ? element("a", { text: id, attributes: { href: input.hrefForRule(id) } })
+        : element("span", { text: id })));
     return element("section", { className: "rules-core-structured-section native-reference-links" },
         element("h3", { className: "h5", text: "Related references" }), list);
 }
 const metadata = new Set(["id", "kind", "name", "source", "sourcePackage", "catalogReferences"]);
+function validNativeId(id) {
+    try { nativeRuleIdentity(id); return true; } catch { return false; }
+}
+const fieldSections = (record, keys) => keys.map(key => [nameOf(key), record[key]]);
+function sourceDisclosure(input, title, value) {
+    return element("details", { className: "rules-core-structured-section" },
+        element("summary", { text: title }), content(input, value));
+}
+function publisherText(title, value) {
+    return element("details", { className: "rules-core-structured-section" },
+        element("summary", { text: title }), element("pre", { className: "text-wrap", text: value }));
+}
 // Native sections are explicit projections for reading, not replacement
 // records. Unconsumed fields remain visible, including unknown nested shapes.
-function frame(input, { summary = [], sections = [], consumed = [] } = {}) {
+function frame(input, { summary = [], sections = [], consumed = [], disclose = false, publisher = null } = {}) {
     const r = payload(input);
     const used = new Set([...metadata, ...consumed]);
     const remaining = Object.entries(r).filter(([key, value]) => !used.has(key) && present(value))
         .map(([key, value]) => [nameOf(key), value]);
+    // Preserve malformed reference fields as data, never as guessed links.
+    if (present(r.catalogReferences) && (!Array.isArray(r.catalogReferences) || !r.catalogReferences.every(validNativeId)))
+        remaining.push(["Catalog references (source data)", r.catalogReferences]);
     if (r !== input.record) {
         const wrapper = Object.fromEntries(Object.entries(input.record)
             .filter(([key]) => !metadata.has(key) && key !== "definition"));
@@ -111,8 +128,11 @@ function frame(input, { summary = [], sections = [], consumed = [] } = {}) {
     }
     const article = renderStructuredRule(r, {
         nativeTitle: input.rule.name, renderContent: value => content(input, value)
-    }, { summary, sections: [...sections, ...remaining] });
+    }, { summary, sections: disclose ? sections : [...sections, ...remaining] });
     article.classList.add("card", "card-body", "mb-3", "native-reference-article");
+    if (publisher && typeof publisher[1] === "string") article.append(publisherText(...publisher));
+    if (disclose && remaining.length) article.append(sourceDisclosure(input, "Additional source fields",
+        remaining.map(([name, value]) => ({ name, entries: [value] }))));
     const related = references(input);
     if (related) article.append(related);
     article.append(renderNativeAttribution(input));
@@ -133,9 +153,11 @@ function spell(input) {
     const sections = [["Rules", r.entries ?? r.description], ["Higher-level effects", r.entriesHigherLevel ?? r.higherLevel]];
     // Keep precise component/range/duration fields and publisher text even
     // when the concise, edition-specific header is sufficient for reading.
-    return frame(input, { summary, sections, consumed: [
+    return frame(input, { summary, sections, disclose: true,
+        publisher: ["Publisher text", r.officialTextLayout], consumed: [
         "entries", ...(r.entries === undefined ? ["description"] : []),
-        "entriesHigherLevel", ...(r.entriesHigherLevel === undefined ? ["higherLevel"] : [])
+        "entriesHigherLevel", ...(r.entriesHigherLevel === undefined ? ["higherLevel"] : []),
+        ...(typeof r.officialTextLayout === "string" ? ["officialTextLayout"] : [])
     ] });
 }
 
@@ -152,11 +174,15 @@ function equipment(input) {
         ["Armor Class", format(r.ac ?? r.armorClass, formatArmorClass)],
         ["Damage", format(r.dmg1 ?? r.damage, () => formatItemDamage(r))],
         ["Weight", format(r.weight, formatWeight)], ["Value", format(r.value, formatCurrency)],
-        ["Attunement", format(r.reqAttune ?? r.requiresAttunement, formatAttunement)],
+        ["Attunement", format(r.reqAttune ?? r.requiresAttunement, value => object(value) || Array.isArray(value)
+            ? formatDetailValue(value) : formatAttunement(value))],
         ["Weapon category", format(r.weaponCategory)],
         ["Weapon Mastery", format(Array.isArray(r.mastery) ? r.mastery.map(sourceLabel) : r.mastery)]);
-    return frame(input, { summary, sections: [["Rules", r.entries ?? r.description]],
-        consumed: ["entries", ...(r.entries === undefined ? ["description"] : [])] });
+    const fields = ["property", "mastery", "reqAttuneTags", "prerequisite", "requires", "excludes", "inherits",
+        "items", "baseItem", "baseItemId", "variantOf", "dmg2", "range", "strength", "stealth",
+        "containerCapacity", "packContents", "charges", "recharge", "resist", "bonusAc", "bonusWeapon"];
+    return frame(input, { summary, sections: [["Rules", r.entries ?? r.description], ...fieldSections(r, fields)],
+        disclose: true, consumed: [...fields, "entries", ...(r.entries === undefined ? ["description"] : [])] });
 }
 function importedOrigin(input) {
     const r = payload(input);
@@ -164,7 +190,11 @@ function importedOrigin(input) {
         ["Origin type", nameOf(input.rule.kind)], ["Size", format(r.size, formatSize)],
         ["Speed", format(r.speed, formatSpeed)], ["Parent race", format(r.raceName)],
         ["Creature type", format(r.creatureTypes ?? r.creatureType)]
-    ], sections: [[input.rule.kind === "background" ? "Rules" : "Traits", r.entries]], consumed: ["entries"] });
+    ], sections: [[input.rule.kind === "background" ? "Rules" : "Traits", r.entries],
+        ...fieldSections(r, ["ability", "skillProficiencies", "toolProficiencies", "weaponProficiencies",
+            "languageProficiencies", "feats", "startingEquipment", "additionalSpells", "sizeEntry"])],
+        consumed: ["entries", "ability", "skillProficiencies", "toolProficiencies", "weaponProficiencies",
+            "languageProficiencies", "feats", "startingEquipment", "additionalSpells", "sizeEntry"], disclose: true });
 }
 function nativeOrigin(input) {
     const r = payload(input);
@@ -215,17 +245,18 @@ function fateRule(input) {
         sections.push(["Stress thresholds", { type: "table", colLabels: ["Minimum rating", "Boxes", "Additional mild consequence"],
             rows: r.thresholds.map(x => [sign(x.minimumRating), x.boxes, yesNo(x.additionalMildConsequence) ?? "—"]) }]);
     return frame(input, { summary: [["Remaining rating", sign(r.remainingRating)], ["Box value", r.boxValue]],
-        sections, consumed });
+        sections: [...sections, ...fieldSections(r, ["tracks"])], consumed: [...consumed, "tracks"], disclose: true });
 }
 function textual(input) {
     const r = payload(input);
     const sections = [["Rules", r.entries ?? r.rules ?? r.text], ["Description", r.description]];
-    if (typeof r.markdown === "string") sections.unshift(["Source text", { type: "markdown", markdown: r.markdown }]);
+    if (typeof r.markdown === "string") sections.unshift(["Source text", { markdown: r.markdown }]);
+    if (typeof r.textLayout === "string") sections.unshift(["Publisher page", r.textLayout]);
     return frame(input, { summary: [
         ["Time", format(r.time, formatCastingTime)], ["Reactive", yesNo(r.reactive)],
-        ["Heading level", typeof r.headingLevel === "number" ? r.headingLevel : null]
+        ["Heading level", typeof r.headingLevel === "number" ? r.headingLevel : null], ["Page", r.page]
     ], sections, consumed: ["entries", ...(r.entries === undefined ? ["rules"] : []),
-        ...(r.entries === undefined && r.rules === undefined ? ["text"] : []), "description", "markdown"] });
+        ...(r.entries === undefined && r.rules === undefined ? ["text"] : []), "description", "markdown", "textLayout"] });
 }
 
 /** Specific adapters win over generic textual entries; C/D may register
@@ -236,7 +267,7 @@ export function registerNativeRenderers(registry) {
     add("spell", i => i.rule.kind === "spell" && (imported(i) || first(i)) &&
         has(payload(i), ["level", "school", "header", "castingTime", "time"]), spell);
     add("equipment", i => imported(i) && EQUIPMENT.has(i.rule.kind) &&
-        has(payload(i), ["type", "entries", "rarity", "requires", "inherits", "items", "name", "baseItemId"]), equipment);
+        has(payload(i), ["type", "entries", "rarity", "requires", "inherits", "items", "abbreviation", "template", "baseItemId"]), equipment);
     add("imported-origin", i => imported(i) && IMPORTED_ORIGINS.has(i.rule.kind) &&
         has(payload(i), ["entries", "size", "raceName", "startingEquipment", "skillProficiencies"]), importedOrigin);
     add("native-origin", i => first(i) && NATIVE_ORIGINS.has(i.rule.kind) &&
@@ -253,5 +284,5 @@ export function registerNativeRenderers(registry) {
     add("fate-ratings", i => fate(i) && i.rule.kind === "rule" &&
         has(payload(i), ["ratings", "allocations", "thresholds"]), fateRule);
     add("text", i => (imported(i) || fate(i)) && TEXTUAL.has(i.rule.kind) &&
-        has(payload(i), ["entries", "markdown", "description", "rules", "text", "typicalSpeakers", "dialects", "type"]), textual, -100);
+        has(payload(i), ["entries", "markdown", "description", "rules", "text", "textLayout", "typicalSpeakers", "dialects", "type"]), textual, -100);
 }
