@@ -28,7 +28,7 @@ Import renderStructuredContent(value, options) from native-presentation.js (the 
         }
     });
 
-Exact catalogReferences and structured ruleId references produce qualified paths only when a matching bound reader is present. Source tags are not native IDs. Optional preparation resolves only Core-listed native IDs using that reader, matching exact normalized name, kind and source release, without name-based searches or deriving slugs. Unknown release, ambiguous target, denied/missing record, or stale lease yields plain text. No links for class feature tags with insufficient identity, filter queries, or page-style quickrefs without authoritative mapping. Caller-provided referenceIds must contain only authoritative exact token-to-ID mappings. No new transport or access policy. No persistent caches. To bound optional preparation, >64 relevant candidates remain plain text. The synchronous generic fallback displays explicit reference links separately; it does not initiate resolution requests.
+Exact catalogReferences and structured ruleId references produce qualified paths only when a matching bound reader is present. Explicitly foreign-scoped objects (including nested descendants, wrapped table rows, and definition wrappers) can not borrow local reference authority; foreign-only tags do not initiate local reads. Source tags are not native IDs. Optional preparation resolves only Core-listed native IDs using that reader, matching exact normalized name, kind and source release, without name-based searches or deriving slugs. Unknown release, ambiguous target, denied/missing record, or stale lease yields plain text. No links for class feature tags with insufficient identity, filter queries, or page-style quickrefs without authoritative mapping. Caller-provided referenceIds must contain only authoritative exact token-to-ID mappings. No new transport or access policy. No persistent caches. To bound optional preparation, >64 relevant candidates remain plain text. The synchronous generic fallback displays explicit reference links separately; it does not initiate resolution requests.
 
 ## Supported content
 
@@ -57,7 +57,9 @@ Markdown supports the observed Fate subset, not a general CommonMark implementat
 
 Inspected the foundation fixture records for first-party Goblin Warrior, D&D 5e Warlock, Avatar of Death, Character Advancement, D&D 5.5e Acid Splash, and Fate Taking Action and Adjective Ladder. Actual pinned Core samples: both spells-001-025.json, both book-rules-and-tables.json, both bestiary/structured-01.json, D&D 5.5e character-origins.json and classes/warlock.json, D&D 5e items/structured-01.json, Fate sections.json. These demonstrate nested entries, list/item/inset, row wrappers, formatting, display overrides, source releases, dice and attack tags, explicit catalogReferences, and Fate's exported tables, anchors and dice elements. This is a representative inspection, not an exhaustive audit of every D&D shard. Unsupported tags remain inert and readable. No external proprietary material fetched.
 
-## Migration and integration
+## Historical migration plan and integrated outcome
+
+C, D and E now consume the shared entry points; C's independent creature inline/recursive parser was removed, and the integrated test suite requires the shared content and class option adapters. The remaining legacy first-party resolved-rule paths and explicit specialized layouts are preserved. The list below records original ownership and migration decisions, not outstanding work.
 
 - native-presentation.js now delegates its generic fallback to the common module, retaining exactly-once attribution and registry behavior.
 - rule-renderer-support.js delegates renderNamedRuleEntry, renderRuleContent, appendRuleContent, renderRuleTable, stripRendererTags and formatRendererTag. Existing legacy caller signatures remain valid. Specialized layouts remain untouched.

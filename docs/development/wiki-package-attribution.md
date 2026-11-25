@@ -19,12 +19,9 @@ input preserves packageDescriptor independently of entity source and
 sourcePackage. The shared generic renderer adds the package notice regardless
 of entity source hook. Existing first-party home and detail views use the
 snapshot-bound legacy index descriptor. Never use the legacy first-party
-index for a foreign page. Foreign qualified routes remain guarded.
+index for a foreign page. Foreign qualified routes are now enabled only for authorized descriptors through A's bound reader.
 
-Workstream A should use discoverPackageContext or the active reader's
-packageDescriptor to establish selector labels (packageDisplayName) and append
-renderPackageAttribution(reader.context, reader.packageDescriptor) to each
-authorized ruleset landing page. Use the same detached view for any shared
+Workstream A uses the authorized reader's packageDescriptor and packageDisplayName for selector labels and renderPackageAttribution for the ruleset landing page. Use the same detached view for any shared
 attribution page, only for exact authorized descriptors. Active foreign
 specialized renderer integration should mount the notice once outside the
 renderer body and honor the owning render lease. Do not reuse the first-party
@@ -62,5 +59,4 @@ a reader; do not persist metadata across sessions or use an unchanged
 fingerprint as proof that notices have not changed.
 
 Workstream F does not change tool access, authorization, or publication
-policy. Full multi-system browser acceptance belongs to the subsequent
-integration pass, not this metadata workstream.
+policy. The integrated Wiki contains A–E as well as F/G. Full live metadata and browser acceptance still requires Core PR #212's exact compatible metadata revision and authorized isolated test configuration; the older Core contract remains compatible with an explicit unavailable notice.

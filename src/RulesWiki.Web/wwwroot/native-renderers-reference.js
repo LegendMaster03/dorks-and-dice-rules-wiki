@@ -76,8 +76,7 @@ const labels = {
 const nameOf = key => Object.hasOwn(labels, key) ? labels[key] : humanizeKey(key);
 
 function content(input, value) {
-    // One rich renderer: the foundation implementation is intentionally inert.
-    // B owns Markdown/tag interpretation, including the typed Markdown wrapper.
+    // The common renderer owns Markdown/tag interpretation, including the typed Markdown wrapper.
     return renderStructuredContent(value, { input });
 }
 

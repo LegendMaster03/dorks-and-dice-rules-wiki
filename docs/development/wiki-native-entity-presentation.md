@@ -8,7 +8,7 @@ The reference registration slot now selects structural adapters for spells, impo
 
 The recovered historical renderStructuredRule frame is used for all new adapters. Its default resolved-rule path, existing extensions, disclosures, and historical category functions remain intact. Native callers supply a structured content callback; the shared frame continues to own summary statistics and section layout. Existing formatting functions are reused for spell, item, size, speed, armor, and feat summaries. Known D&D ability and item property labels are display normalization only. No formula, choice, qualification, template inheritance, skill rank, or origin inheritance is executed.
 
-Workstream B's documented renderStructuredContent(value, { input }) contract is the only rich content entry point. Fate Markdown is passed as { markdown }, and nested entries/tables/choices remain native values. On the independent baseline, the shared foundation renderer displays them inertly; after B integrates, the same adapter calls use B's rich renderer. E does not implement a separate Markdown or source-tag parser. Exact catalog references and known explicit reference fields are linked with input.hrefForRule only with a bound reader. Foreign-scoped nested references are not converted into local links. Display-name/5etools-tag inference is prohibited; optional inline mapping through B's exact resolver is not used. Entity attribution uses renderNativeAttribution; package attribution is left to the dispatcher.
+Workstream B's documented renderStructuredContent(value, { input }) contract is the only rich content entry point. Fate Markdown is passed as { markdown }, and nested entries/tables/choices remain native values. The integrated adapter uses B's rich renderer for those native values; the pre-B fallback is no longer an acceptable test outcome. E does not implement a separate Markdown or source-tag parser. Exact catalog references and known explicit reference fields are linked with input.hrefForRule only with a bound reader. Foreign-scoped nested references are not converted into local links. Display-name/5etools-tag inference is prohibited; optional inline mapping through B's exact resolver is not used. Entity attribution uses renderNativeAttribution; package attribution is left to the dispatcher.
 
 The original record is never mutated. Important authored fields are visible, other source fields remain readable in sections or a collapsed disclosure, and exact spell publisher layout is retained separately. Rulebook page text is rendered as selectable plain text. Source review status remains in attribution. Numeric summaries do not substitute for source data.
 
@@ -70,10 +70,9 @@ Run:
 
     npm ci --ignore-scripts --no-audit --no-fund
     npm run test:reference-entities
-    npm run test:reference-entities -- --require-structured
     npm run test:reference-entities -- --preview-dir /tmp/wiki-entity-previews
 
-The explicit require-structured option is for the integrated B+E candidate; it rejects the baseline without B. If B is present, the normal tests also require actual Markdown/table/tag rendering. The preview option generates standalone DOM fixture pages using repository stylesheets; it is a review aid, not a hosted browser acceptance result. Review desktop and narrow mobile layouts for the following cases:
+The integrated test always requires B's actual Markdown/table/tag rendering and D's ownership of class-specific options. The preview option generates standalone DOM fixture pages using repository stylesheets; it is a review aid, not a hosted browser acceptance result. Review desktop and narrow mobile layouts for the following cases:
 
 | Case | Reading focus |
 | --- | --- |
@@ -88,8 +87,8 @@ The explicit require-structured option is for the integrated B+E candidate; it r
 
 ## Remaining work and integration conditions
 
-- B #44 must be integrated first; E #45 consumes its documented contract. Full visual and browser acceptance of the combined A/B/E candidate is still required. Without A, the foundation foreign-route guard remains intentional. No private foreign access change is requested.
-- E adds one npm test entry; B also modifies package.json. The integration owner must preserve both additive test commands (and C/D commands). No other shared ownership file is modified.
+- B #44 and A #43 are integrated before E #45; the combined registry also contains C and D. Full hosted visual and browser acceptance of the integrated A–G candidate remains required. No private foreign access change is requested.
+- The integrated npm test entry retains all workstream commands and requires the actual shared structured renderer.
 - Exact explicit source IDs are linked when a reader is bound. Inline tags remain readable; optional exact-token matching via B's authorized resolver can be a bounded follow-up if useful. No link inferred from names.
 - Reverse membership for skill families and document child sections is not computed from display names or by crawling the entire catalog. Authored forward references and parent links remain available; a bounded navigation/query enhancement belongs with A/Core if needed.
 - First-party concrete spell/item records and standalone Heritage/Manifestation entity families were not identified at the pinned revision. No fabricated mechanics or fixtures were introduced. Actual loader-expanded origin projections, additional unknown imported shards, and complex construct recipes merit integrated visual review.

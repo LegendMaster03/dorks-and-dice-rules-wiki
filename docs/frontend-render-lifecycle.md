@@ -1,12 +1,18 @@
 # Frontend render lifecycle
 
-Rules Core treats application state and application render functions as the source of truth for its DOM. Application-owned DOM must not use `MutationObserver` as its normal render lifecycle.
+Rules Wiki treats application state and application render functions as the source of truth for its DOM. Application-owned DOM must not use `MutationObserver` as its normal render lifecycle.
+
+## Active native detail lifecycle
+
+The catalog browser owns the bound ruleset context and reader. `createRenderLifecycle()` issues one lease per mounted native detail; changing selection, catalog, route, or snapshot cancels the preceding lease. `mountNativePresentation()` commits detached nodes only while that lease is current. Async class disclosures and creature reference resolution also check the owning lease and mounted surface before updating. Advisory cancellation is not a substitute for these checks because the existing browser transport does not accept an AbortSignal. Native renderer registration is centralized; the shared structured renderer creates inert detached DOM without observers. Package notices are mounted once at the detail boundary.
+
+See [the multi-system contract](development/wiki-multi-system-contract.md) for identity, reader, and cache constraints. The general lifecycle below applies to the retained shell; authoring examples document historical modules, not active native capabilities.
 
 ## Lifecycle contract
 
 The frontend follows this sequence:
 
-1. Rules Core state or view changes.
+1. Rules Wiki state or view changes.
 2. The owning render function updates the DOM.
 3. The explicit presentation phase runs.
 4. The DOM settles without further meaningful mutation.
@@ -24,13 +30,13 @@ When those methods execute inside a full active-view render, the outer render ow
 
 ## Partial and in-place updates
 
-Rules Core feature modules build application-owned UI through the shared `element()` helper. That helper invokes the fragment presentation lifecycle as each fragment is created. Tables, responsive table wrappers, forms, lists, and alerts therefore receive their presentation classes before they are inserted or used to replace an existing result region.
+Rules Wiki feature modules build application-owned UI through the shared `element()` helper. That helper invokes the fragment presentation lifecycle as each fragment is created. Tables, responsive table wrappers, forms, lists, and alerts therefore receive their presentation classes before they are inserted or used to replace an existing result region.
 
 This covers partial updates used by the scoped rules browser, Source Library, monster/source detail rendering, source import results, Web-source refresh state, package ignore/restore, normalization results, and source-adapter administration without requiring mutation discovery.
 
-View-level enhancement remains responsible for presentation that depends on the active Rules Core view rather than an individual fragment, including generated page leads, Rules Lawyer workflow copy, secondary-tool disclosure wrappers, and top-level panel/page-lead treatment.
+View-level enhancement remains responsible for presentation that depends on the active Rules Wiki view rather than an individual fragment, including generated page leads, Rules Lawyer workflow copy, secondary-tool disclosure wrappers, and top-level panel/page-lead treatment.
 
-Shared layout primitives live in `ui.js`. Page leads, panels, toolbars, and fields should use those primitives when a feature needs custom markup instead of re-creating Bootstrap card spacing independently. The compact Rules Library remains a specialized list/detail workspace, but its density and spacing define the default direction for the rest of the Rules Core workspace.
+Shared layout primitives live in `ui.js`. Page leads, panels, toolbars, and fields should use those primitives when a feature needs custom markup instead of re-creating Bootstrap card spacing independently. The compact Rules Library remains a specialized list/detail workspace, but its density and spacing define the default direction for the rest of the Rules Wiki workspace.
 
 ## Frontend module ownership
 
@@ -42,7 +48,8 @@ The frontend follows the same coordinator-plus-focused-modules rule as the backe
 - `rules-browser-routing.js` owns Rules Library URL/scope parsing and history updates.
 - `rule-renderers.js` is the stable renderer registry facade.
 - `rule-renderers-specialized.js` owns entity-specific renderers.
-- `rule-renderer-support.js` owns shared structured-content rendering and formatting utilities.
+- `rule-renderer-support.js` owns shared formatting and legacy entry-point adapters; `structured-content.js` owns the common structured content, inline tags, Markdown, and scoped references.
+- `native-presentation.js` owns the pinned reader, presentation input, registry, and lease-aware mount; `native-renderer-registration.js` composes the class, creature and reference slots.
 
 Feature modules may remain larger when they own one coherent workflow. New cross-view presentation behavior belongs in shared primitives or the UX shell rather than being copied into each feature.
 
@@ -60,6 +67,6 @@ The validation harness exercises repeated full-view and fragment passes, generat
 
 ## MutationObserver policy
 
-Rules Core currently has no `MutationObserver` in its frontend lifecycle. No current Rules Core DOM boundary requires one: the Tool Host supplies context and routing through explicit integration inputs, while Rules Core owns the rendered workspace DOM itself.
+Rules Wiki currently has no `MutationObserver` in its frontend lifecycle. No current Rules Wiki DOM boundary requires one: the Tool Host supplies context and routing through explicit integration inputs, while Rules Wiki owns the rendered workspace DOM itself.
 
-A future observer may be introduced only for a genuine external DOM boundary that Rules Core can not receive through an explicit callback, event, or render hook. Such an observer must be centralized, documented at the boundary, and guarded against reacting recursively to DOM changes that Rules Core itself performs.
+A future observer may be introduced only for a genuine external DOM boundary that Rules Wiki can not receive through an explicit callback, event, or render hook. Such an observer must be centralized, documented at the boundary, and guarded against reacting recursively to DOM changes that Rules Wiki itself performs.

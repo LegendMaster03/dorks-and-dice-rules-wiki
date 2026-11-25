@@ -1,6 +1,18 @@
 # Rules Wiki reference browser
 
-Rules Wiki is the human-facing browser for rules and source history. Its primary browsing boundary is the Rules Core Wiki-reference API, not the resolved consumer catalog.
+Rules Wiki is the human-facing browser for rules and source history.
+
+## Current native reference browser
+
+The active browser uses the Site Tool Host and the pair-specific private Rules Core tunnel. Browser operations are limited to `getNativeRulesets`, `searchNativeRules`, and `getNativeRule`. The private dispatcher translates them into the authorized `/api/private/rulesets` discovery, search, and detail contracts. Neither the old Wiki-reference API nor a public Core API is an active fallback.
+
+The catalog selector shows only authorized descriptors. Stable identity is (ruleset ID, native entity ID); snapshot-sensitive data additionally carries the Core fingerprint. Direct qualified links, browser history, selected category, recent references, and renderer leases are scoped to that identity. Existing first-party URLs remain supported. Discovery failure, denied catalogs, and malformed routes do not display another catalog.
+
+Search and paging use Core's exact matching total and catalog-wide category facets with 1–100 rows per operation. Unknown categories remain discoverable. The first-party Condition and Rule aliases concatenate a fixed number of native streams; imported category terminology is preserved. Source filters, arbitrary field filters, and global sorting of partial results are not supported. The active browser does not combine editions into a shared concept history or resolve effective campaign rules.
+
+See [the active multi-system contract](development/wiki-multi-system-contract.md), [Workstream A](development/wiki-ruleset-browser.md), and [the integration review](development/wiki-multi-system-integration-review.md). The following historical reference design is retained as architecture recovery evidence only. Its endpoints, publication/source-grant rules, comparison semantics and campaign resolution are not the active native implementation.
+
+## Historical pre-rewrite reference architecture
 
 ## API ownership
 

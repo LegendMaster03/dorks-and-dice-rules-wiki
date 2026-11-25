@@ -52,7 +52,7 @@ Counts describe the actual imported records, not a normative assertion that all 
 * The imported base class records do not enumerate subclass or option native IDs. On expansion, page the authorized catalog and verify subclass reverse ownership or explicit feature-type/category membership, including available class/subclass ownership constraints. General feat categories are reference lists, not eligibility decisions. Render prerequisites without executing them. This fallback makes no inference about character choices and never reaches another ruleset.
 * The class spell list is the explicit level-grouped spellList in the record. Links use exact qualified IDs; human-readable names are requested lazily from the same snapshot. If name resolution is unavailable, the existing explicit ID link remains.
 * Imported reading state is isolated by readingKey(context, classId, "class"). Native feature retrieval checks exact snapshot and record identity; asynchronous commits require the current render lease and current mount. Legacy first-party class storage and links remain unchanged; first-party async customization/feature reads additionally avoid mutating detached hosted nodes. A future unified first-party navigation/state migration belongs with the navigation integration.
-* All imported entry values are sent to the existing shared renderStructuredContent boundary. Workstream B must supply the final rich-entry/tag implementation and coordinate its context argument. No class-specific tag parser is implemented. The safe foundation fallback is intentionally inert until that integration.
+* All imported entry values are sent to B's integrated shared renderStructuredContent boundary with `{ input }`. No class-specific tag parser is implemented, and the pre-B fallback is not an acceptable integrated test outcome.
 * The class registry slot registers structural imported classes/subclasses, imported class/subclass features and class-owned optional features. General feats and unrelated option records remain reference-workstream ownership. Entity attribution uses renderNativeAttribution; the dispatcher owns the package notice. The established first-party compatibility route is retained.
 
 ### Core relationship projections requested for follow-up
@@ -75,7 +75,7 @@ Use the exact fixture-backed reader or an authorized dev-only context, not publi
 | Narrow reader | Responsive existing section selector, horizontally scrollable tables, visible focus/keyboard targets; no body horizontal overflow |
 | Fate Condensed | No fabricated class or mandatory class navigation |
 
-Automated DOM tests cover structure, relationships, reading state and lifecycle. They are not a substitute for visual browser acceptance. Run the existing class reading suite plus the new fixture-driven module through npm test; final integrated acceptance requires B's rich structured renderer and A's authorized navigation, along with browser verification of the cases above. No production deployment or access-policy modification.
+Automated DOM tests cover structure, relationships, reading state and lifecycle. They are not a substitute for visual browser acceptance. Run the existing class reading suite and the fixture-driven multi-system class suite as separate npm test processes. B's rich structured renderer and A's authorized navigation are integrated; hosted browser verification of the cases above remains required. No production deployment or access-policy modification.
 
 ## Workstream validation record
 

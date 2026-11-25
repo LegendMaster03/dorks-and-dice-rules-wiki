@@ -29,7 +29,7 @@ recordsByRuleset.set("fate-condensed", new Map([[fate.id, fate]]));
 const dom = new JSDOM('<main class="rules-core-library-detail" id="detail"></main>', {
     url: "https://site.test/rulesets/dnd-5e/rules/class.warlock", pretendToBeVisual: true
 });
-for (const key of ["window", "document", "Element", "HTMLElement", "Node", "Event", "MouseEvent"])
+for (const key of ["window", "document", "Element", "HTMLElement", "Node", "NodeFilter", "Event", "MouseEvent"])
     globalThis[key] = dom.window[key];
 const container = document.querySelector("#detail");
 const contextFor = (rulesetId, fingerprint = "same-test-fingerprint") =>
