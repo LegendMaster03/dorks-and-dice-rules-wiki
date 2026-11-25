@@ -90,7 +90,17 @@ try {
     assert.equal(createHash('sha256').update(hierarchyCompressed).digest('hex'), manifest.hierarchyPackSha256);
     const hierarchies = JSON.parse(gunzipSync(hierarchyCompressed).toString('utf8'));
     assert.equal(Object.keys(hierarchies).length, manifest.hierarchyFixtureCount);
-    Object.assign(actual, hierarchies);
+    const constructCompressed = readFileSync(new URL('construct-characteristic-hierarchies.json.gz', fixturePath));
+    assert.equal(createHash('sha256').update(constructCompressed).digest('hex'), manifest.constructCharacteristicHierarchyPackSha256);
+    const constructHierarchies = JSON.parse(gunzipSync(constructCompressed).toString('utf8'));
+    assert.equal(Object.keys(constructHierarchies).length, manifest.constructCharacteristicHierarchyFixtureCount);
+    Object.assign(actual, hierarchies, constructHierarchies);
+    assert.equal(Object.keys(actual).length, manifest.totalEnvelopeCount);
+    for (const envelope of Object.values(actual)) {
+        assert.equal(envelope.rulesetId, manifest.rulesetId);
+        assert.equal(envelope.fingerprint, manifest.fingerprint);
+        assert.equal(envelope.contractVersion, manifest.contractVersion);
+    }
     const pinned = createRulesContext({ rulesetId: manifest.rulesetId, fingerprint: manifest.fingerprint });
     const pinnedDescriptor = { id: pinned.rulesetId, fingerprint: pinned.fingerprint,
         capabilities: { read: true, originReferenceContractVersion: 1 } };
@@ -123,7 +133,23 @@ try {
     const backgrounds = await pinnedReader.originHierarchy('backgrounds');
     assert.equal(backgrounds.rows.length, 16);
     assert.equal(backgrounds.rows.find(x => x.id === 'background.acolyte').selectable, true);
-    assert.equal(actualCalls, 3); // one call for every complete family, no row-detail fan-out
+    const characteristicTree = await pinnedReader.originHierarchy('characteristics');
+    assert.equal(characteristicTree.rows.length, 105);
+    assert.equal(characteristicTree.rows.filter(x => x.characteristicFamily === 'biological').length, 97);
+    assert.equal(characteristicTree.rows.filter(x => x.characteristicFamily === 'construct').length, 8);
+    assert.ok(characteristicTree.rows.every(x => x.selectable === null));
+    const components = await pinnedReader.originHierarchy('construct-components');
+    assert.equal(components.rows.length, 46);
+    assert.equal(components.rows.find(x => x.id === 'construct-component.locomotion-unit').componentCategory, 'locomotion');
+    assert.ok(components.rows.every(x => x.selectable === null && typeof x.rulesStatus === 'string'));
+    const options = await pinnedReader.originHierarchy('construct-options');
+    assert.equal(options.rows.length, 146);
+    assert.ok(options.rows.every(x => x.selectable === null));
+    for (const [kind, count] of Object.entries(manifest.inventory['construct-options']))
+        assert.equal(options.rows.filter(x => x.kind === kind).length, count);
+    const recipe = options.rows.find(x => x.id === 'crafting-recipe.construct-component.locomotion-unit');
+    assert.equal(recipe.producesDefinitionId, 'construct-component.locomotion-unit');
+    assert.equal(actualCalls, 6); // one call for every complete family, no row-detail fan-out
     const red = await pinnedReader.originSource('ancestry.dragonborn.red');
     assert.deepEqual(red, actual['source-ancestry.dragonborn.red.json']);
     assert.deepEqual(red.lineage.map(row => row.id), [
@@ -168,7 +194,7 @@ try {
     const typeMethods = await pinnedReader.originMethods('creature-type.dragon');
     assert.equal(typeMethods.methods.find(m => m.reference.methodId === 'biological').defaultAvailability, 'available');
     assert.equal(typeMethods.methods.find(m => m.reference.methodId === 'rite-of-rebirth').createsNewIndividual, false);
-    assert.equal(actualCalls, 13); // exactly one operation per requested projection
+    assert.equal(actualCalls, 16); // exactly one operation per requested projection
     // Corrupt only identity metadata, not mechanical content. The real fixture
     // must be rejected if its occurrence or chain identity is misattributed.
     for (const corrupt of [
