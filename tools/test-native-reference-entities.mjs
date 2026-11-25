@@ -33,8 +33,6 @@ const previewArg = process.argv.indexOf("--preview-dir");
 const previewDir = previewArg >= 0 ? process.argv[previewArg + 1] : null;
 if (previewArg >= 0 && !previewDir) throw Error("--preview-dir requires a directory");
 if (previewDir) fs.mkdirSync(previewDir, { recursive: true });
-const richAvailable = fs.existsSync(new URL("../src/RulesWiki.Web/wwwroot/structured-content.js", import.meta.url));
-if (process.argv.includes("--require-structured")) assert.ok(richAvailable, "Workstream B must be integrated");
 
 function makeInput(system, record, withReader = true, kind = record.kind) {
     const context = createRulesContext({ rulesetId: system, fingerprint: "synthetic-entity-fixture" });
@@ -195,11 +193,10 @@ assert.ok(scopedLink(competencyCategory, first, "competency.smithing"));
 const feat = show(modern, "feat.ability-score-improvement", "reference.feat");
 assert.equal(summary(feat, "Repeatable"), "Yes");
 assert.match(feat.textContent, /Prerequisites/);
-// Workstream D owns class-specific options when its adapter is integrated.
+// The integrated registry gives class-specific options to D, ahead of E’s generic text fallback.
 const invocation = makeInput(modern, fixture(modern, "optional-feature.agonizing-blast")).input;
 assert.equal(referenceRegistry.select(invocation).id, "reference.text");
-const classIntegrated = fs.existsSync(new URL("../src/RulesWiki.Web/wwwroot/native-class-presentation-model.js", import.meta.url));
-show(modern, "optional-feature.agonizing-blast", classIntegrated ? "class.imported-option" : "reference.text");
+show(modern, "optional-feature.agonizing-blast", "class.imported-option");
 show(modern, "trap.collapsing-roof", "reference.text");
 show(modern, "glossary.ability-check", "reference.text");
 show(old, "language.abyssal", "reference.text");
@@ -225,15 +222,10 @@ const advancement = show(old, "table.character-advancement", "reference.table");
 assert.equal(advancement.querySelectorAll("tbody tr").length, 20);
 assert.match(advancement.querySelector("table").textContent, /355,00020\+6/);
 
-if (richAvailable) {
-    assert.ok(chapter.querySelector(".rules-core-markdown h3"));
-    assert.ok(nested.querySelector(".rules-core-markdown table"));
-    assert.ok(action.querySelector(".rules-core-markdown ul"));
-    assert.doesNotMatch(acolyte.querySelector(".native-reference-article").textContent, /\{@(?:feat|skill|item) /);
-} else {
-    assert.match(chapter.textContent, /Taking Action, Rolling the Dice/);
-    console.log("Workstream B not integrated: Markdown and inline tags use the safe foundation fallback.");
-}
+assert.ok(chapter.querySelector(".rules-core-markdown h3"));
+assert.ok(nested.querySelector(".rules-core-markdown table"));
+assert.ok(action.querySelector(".rules-core-markdown ul"));
+assert.doesNotMatch(acolyte.querySelector(".native-reference-article").textContent, /\{@(?:feat|skill|item) /);
 
 // Synthetic presentation edge cases, never presented as authored Core content.
 const sparse = { id: "spell.sparse-fixture", name: "Sparse fixture", kind: "spell", school: "V" };

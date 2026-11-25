@@ -120,7 +120,10 @@ export async function resolveSourceReferenceIds(input,value=input?.record){
             tokens.set(token,{name:normalizeName(name),requested,kinds:referenceKinds[tag]});
         });
         else if(Array.isArray(v))for(const x of v)walk(x,d+1);
-        else if(typeof v==="object")for(const [key,x] of Object.entries(v))if(!technical.has(key)&&!key.startsWith("_"))walk(x,d+1);
+        else if(typeof v==="object") {
+            if(typeof v.rulesetId==="string"&&v.rulesetId!==context.rulesetId)return;
+            for(const [key,x] of Object.entries(v))if(!technical.has(key)&&!key.startsWith("_"))walk(x,d+1);
+        }
     }
     walk(value);
     if(!tokens.size||!ids.size)return result;
@@ -163,6 +166,12 @@ function extras(root,v,used,o,d){
     return root;
 }
 const heading=d=>"h"+Math.min(6,Math.max(3,d+3));
+// A foreign-scoped subtree is readable, but can not borrow local reference
+// authority or token mappings, including through nested entries or table rows.
+function scopedOptions(value,o){
+    return typeof value?.rulesetId==="string"&&value.rulesetId!==o.input?.context?.rulesetId
+        ? {...o,input:null,referenceIds:null}:o;
+}
 function table(v,o,d){
     const root=el("div",undefined,"table-responsive rules-core-inline-table"),t=el("table",undefined,"table table-sm mb-0");
     if(v.caption!=null||v.name!=null)t.append(add(el("caption"),renderInlineContent(v.caption??v.name,o)));
@@ -170,8 +179,9 @@ function table(v,o,d){
     const body=el("tbody");
     for(const row of v.rows){
         const tr=el("tr"),cells=Array.isArray(row)?row:Array.isArray(row?.row)?row.row:[row];
-        for(const x of cells)tr.append(add(el("td"),renderStructuredContent(x,o,d+1)));
-        if(Array.isArray(row?.row)){const remaining=Object.entries(row).filter(([k])=>!["row","type","style"].includes(k));if(remaining.length)tr.append(add(el("td"),pairs(remaining,o,d+1)));}
+        const rowOptions=scopedOptions(row,o);
+        for(const x of cells)tr.append(add(el("td"),renderStructuredContent(x,rowOptions,d+1)));
+        if(Array.isArray(row?.row)){const remaining=Object.entries(row).filter(([k])=>!["row","type","style"].includes(k));if(remaining.length)tr.append(add(el("td"),pairs(remaining,rowOptions,d+1)));}
         body.append(tr);
     }
     t.append(body);root.append(t);
@@ -187,6 +197,7 @@ export function renderStructuredContent(v,o={},d=0){
         for(const x of v)root.append(add(el(o.sequence==="list"?"li":typeof x==="string"?"p":"div"),renderStructuredContent(x,o,d+1)));
         return root;
     }
+    o=scopedOptions(v,o);
     if(Array.isArray(v.rows)&&(v.type==="table"||v.kind==="table"||Array.isArray(v.colLabels)))return table(v,o,d);
     if(v.type==="list"&&Array.isArray(v.items)){
         const root=el("div"),ordered=v.ordered===true||["ordered","list-ordered","decimal"].includes(v.style);

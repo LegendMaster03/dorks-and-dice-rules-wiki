@@ -64,6 +64,10 @@ assert.equal(renderInlineContent(token,{input,referenceIds:new Map([[token,"spel
 assert.equal(renderStructuredReference("spell.shield",{...input,references:{context:{...context,fingerprint:"stale"}}}).querySelector("a"),null);
 assert.equal(renderStructuredReference("spell.shield",{...input,hrefForRule:()=> "javascript:alert(1)"}).tagName,"SPAN");
 assert.equal(renderStructuredContent({ruleId:"spell.shield",rulesetId:"dnd-5-5e"},{input}).querySelector("a"),null);
+const foreign={rulesetId:"dnd-5-5e",entries:[{ruleId:"spell.shield"},{rulesetId:"dnd-5e",catalogReferences:["spell.shield"]},token],catalogReferences:["spell.shield"]};
+const mixed=renderStructuredContent([foreign,{type:"table",colLabels:["Foreign row"],rows:[{rulesetId:"dnd-5-5e",row:[{ruleId:"spell.shield"},token]}]},{ruleId:"spell.shield"}],{input,referenceIds:new Map([[token,"spell.shield"]])});
+assert.equal(mixed.querySelectorAll("a").length,1,"Foreign subtrees and wrapped rows must not borrow local link authority");
+assert.match(mixed.textContent,/dnd-5-5e/);
 assert.equal(renderStructuredReference("https://evil.example",input).tagName,"SPAN");
 assert.equal(renderInlineContent("{@damage 2d6}").querySelector("button"),null);
 assert.equal(renderInlineContent("{@damage 2d6}",{renderDice:({display})=>{const b=document.createElement("button");b.textContent=display;return b;}}).querySelector("button").textContent,"2d6");
@@ -85,6 +89,9 @@ const resolvedReader=createRulesetReader({getNativeRule:async (set,id)=>{
 }},resolvedContext);
 const resolvedInput=createPresentationInput(resolvedContext,{...resolvedContext,rule:{id:"spell.example",name:"Example",kind:"spell",definition:resolvedRecord}},resolvedReader);
 const ids=await resolveSourceReferenceIds(resolvedInput);
+const beforeForeign=calls.length;
+assert.equal((await resolveSourceReferenceIds(resolvedInput,{rulesetId:"dnd-5-5e",entries:[token]})).size,0);
+assert.equal(calls.length,beforeForeign,"Foreign-only tags must not trigger local reference reads");
 assert.deepEqual([...ids],[[token,"spell.shield"]]);
 assert.deepEqual(calls,[["dnd-5e","spell.shield"]]);
 assert.equal(renderStructuredContent(resolvedRecord.entries,{input:resolvedInput,referenceIds:ids}).querySelectorAll("a").length,1);
