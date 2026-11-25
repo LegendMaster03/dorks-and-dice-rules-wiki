@@ -126,6 +126,11 @@ export async function renderOriginsWorkspace(app, container, route) {
                 nav.append(item);
             }
             page.append(nav);
+            // Ingredients are ordinary native reference categories, not a second Construct ribbon.
+            const related = el("nav", { className: "wiki-origins-sections", ariaLabel: "Related Construct references" });
+            if (app.wikiKinds?.has("crafting-material")) related.append(link("Crafting ingredients", input.hrefForCategory("crafting-material")));
+            related.append(link("Operational characteristics", input.hrefForWorkspace("characteristics")));
+            page.append(related);
         }
         const render = app.originWorkspaceRenderers?.[view];
         // B retains its own overview and methods reader. The other views have
@@ -200,7 +205,6 @@ async function renderFallback(input) {
     const byId = new Map(rows.map(row => [row.id, row]));
     if (view === "biological-origination") body.append(el("p", { text: "Biological sources and their authored lineage. Consult Origination Methods for method support and creation-stage details." }),
         link("Origination Methods", hrefForWorkspace("methods")));
-    if (view === "construct-assembly") body.append(link("Related operational characteristics", hrefForWorkspace("characteristics")));
     // A bounded reference index, not a specialized source or effective-grant
     // renderer. Parent labels come only from the authoritative family projection.
     const kinds = [...new Set(rows.map(row => row.kind))];
