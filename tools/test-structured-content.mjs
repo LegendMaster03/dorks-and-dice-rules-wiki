@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { JSDOM } from "jsdom";
-import { renderStructuredContent, renderMarkdown, renderInlineContent, renderStructuredReference, stripSourceTags } from "../src/RulesWiki.Web/wwwroot/structured-content.js";
+import { renderStructuredContent, renderMarkdown, renderInlineContent, renderStructuredReference, resolveSourceReferenceIds, stripSourceTags } from "../src/RulesWiki.Web/wwwroot/structured-content.js";
 import { createPresentationInput, createRulesetReader, renderGenericNative } from "../src/RulesWiki.Web/wwwroot/native-presentation.js";
 import { renderRuleContent, renderNamedRuleEntry } from "../src/RulesWiki.Web/wwwroot/rule-renderer-support.js";
 
@@ -49,7 +49,7 @@ for(const render of [renderStructuredContent,renderRuleContent,renderNamedRuleEn
     assert.equal(n.querySelector("caption").textContent,"Results");assert.equal(n.querySelector("td").textContent,"10");
     for(const s of ["Header","Footer","Recognized body","Unknown","0","false","unrecognized"])assert.ok(n.textContent.includes(s),s);
 }
-assert.match(stripSourceTags("{@atk mw,rw} {@hit 4} {@h}{@damage 1d6}"),/Melee Weapon Attack or Ranged Weapon Attack: \+4 Hit: 1d6/);
+assert.match(stripSourceTags("{@atk mw,rw} {@hit 4} {@h}{@damage 1d6}"),/Melee Weapon Attack or Ranged Weapon Attack:\s+\+4 Hit: 1d6/);
 assert.equal(stripSourceTags("{@quickref Cover||3||half cover}"),"half cover");
 assert.equal(stripSourceTags("{@dice 1d20|10}"),"10");
 assert.match(stripSourceTags("{@unknown literal}"),/literal/);
@@ -74,4 +74,21 @@ assert.match(md.textContent,/<script>/);
 const malicious=renderStructuredContent({entries:["{@b <img src=x onerror=alert(1)>}"],markdown:"<table>\n<tbody>\n<tr>\n<td>\n<script>alert(1)</script>\n</td>\n</tr>\n</tbody>\n</table>",unknown:"<svg onload=alert(1)>"});
 assert.equal(malicious.querySelector("img,script,svg,[onerror],[onload]"),null);
 assert.match(malicious.textContent,/<script>/);
+
+const resolvedContext={rulesetId:"dnd-5e",fingerprint:"exact"};
+const resolvedRecord={source:{release:"srd-5.1"},catalogReferences:["spell.shield"],entries:["{@spell shield|SRD51} {@spell shield|SRD52} {@spell unknown}"]};
+const calls=[];
+const resolvedReader=createRulesetReader({getNativeRule:async (set,id)=>{
+    calls.push([set,id]);
+    return {...resolvedContext,rule:{id,name:"Shield",kind:"spell",definition:{source:{release:"srd-5.1"}}}};
+}},resolvedContext);
+const resolvedInput=createPresentationInput(resolvedContext,{...resolvedContext,rule:{id:"spell.example",name:"Example",kind:"spell",definition:resolvedRecord}},resolvedReader);
+const ids=await resolveSourceReferenceIds(resolvedInput);
+assert.deepEqual([...ids],[[token,"spell.shield"]]);
+assert.deepEqual(calls,[["dnd-5e","spell.shield"]]);
+assert.equal(renderStructuredContent(resolvedRecord.entries,{input:resolvedInput,referenceIds:ids}).querySelectorAll("a").length,1);
+assert.equal((await resolveSourceReferenceIds({...resolvedInput,lifecycle:{isCurrent:()=>false}})).size,0);
+const missingReader=createRulesetReader({getNativeRule:async()=>{throw Error("Unavailable");}},resolvedContext);
+assert.equal((await resolveSourceReferenceIds({...resolvedInput,references:missingReader})).size,0);
+
 console.log("Shared structured content contracts passed.");
