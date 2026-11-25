@@ -43,10 +43,11 @@ export async function renderRuleDetailPane(
     activeDetails.set(app, lifecycle);
     const wasConnected = container.isConnected;
     const boundContext = app.rulesContext;
+    const boundRulesetReader = app.rulesetReader;
     const indexRuleset = app.wikiIndex?.rulesetId;
     const indexFingerprint = app.wikiIndex?.fingerprint;
     const isCurrent = () => activeDetails.get(app) === lifecycle && requestSerial === getCurrentSerial()
-        && app.rulesContext === boundContext
+        && app.rulesContext === boundContext && app.rulesetReader === boundRulesetReader
         && (boundContext || (app.wikiIndex?.rulesetId === indexRuleset && app.wikiIndex?.fingerprint === indexFingerprint))
         && (!wasConnected || container.isConnected);
     container.replaceChildren(element("div", {
@@ -65,8 +66,15 @@ export async function renderRuleDetailPane(
                 fingerprint: app.wikiIndex.fingerprint }) : null);
         if (requestedContext?.campaignId || (campaignId && app.nativeReferenceOnly))
             throw new Error("Campaign rules are not available in the native Core yet.");
-        const reader = requestedContext && app.api.getNativeRule && app.api.searchNativeRules
-            ? createRulesetReader(app.api, requestedContext) : null;
+        // Reuse the exact authorized reader established by catalog navigation.
+        // This preserves additional descriptor metadata without another discovery
+        // request or a dependency on the package attribution implementation.
+        const boundReader = boundRulesetReader ?? null;
+        if (boundReader && (!boundContext || Object.keys(createRulesContext(requestedContext))
+            .some(key => boundReader.context?.[key] !== requestedContext[key])))
+            throw new Error("Reference reader does not match the active rules context.");
+        const reader = boundReader ?? (requestedContext && app.api.getNativeRule && app.api.searchNativeRules
+            ? createRulesetReader(app.api, requestedContext) : null);
         const detail = app.rulesContext && reader && !campaignId
             ? { native: await reader.resolve(referenceIdentity) }
             : await app.api.getWikiReferenceDetail(referenceIdentity, campaignId);

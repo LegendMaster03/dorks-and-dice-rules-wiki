@@ -108,6 +108,24 @@ assert.equal(app.presented, 1);
 app.rulesContext = b;
 await renderRuleDetailPane(app, container, id, "global", ++serial, () => serial, () => {});
 assert.match(container.textContent, /did not match the requested snapshot/);
+// A future catalog selector must retain the reader returned by discovery, not
+// rebuild it and lose package-level descriptor fields.
+app.rulesContext = a;
+const exactReader = Object.freeze({ ...createRulesetReader(app.api, a), marker: "authorized-reader" });
+app.rulesetReader = exactReader;
+app.nativeRendererRegistry.register({ id: "bound-reader-probe", priority: 100,
+    supports: value => value.rule.kind === "condition",
+    render: value => {
+        assert.equal(value.references, exactReader);
+        const node = document.createElement("p"); node.textContent = "Bound reader preserved";
+        return node;
+    }
+});
+await renderRuleDetailPane(app, container, firstParty.rule.id, "global", ++serial, () => serial, () => {});
+assert.match(container.textContent, /Bound reader preserved/);
+app.rulesContext = b; // The old authorized reader must not be reused.
+await renderRuleDetailPane(app, container, id, "global", ++serial, () => serial, () => {});
+assert.match(container.textContent, /does not match the active rules context/);
 cancelNativeDetailRender(app);
 
 const manifest = JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/manifest.json", import.meta.url)));
