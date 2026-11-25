@@ -28,8 +28,10 @@ function show() {
     if (rulesetId === "synthetic") {
         panel.replaceChildren(renderNativeMonster({ name: record.name ?? "Kaiju Reference Fixture", definition: record }, renderStructuredContent));
     } else {
+        const context = { rulesetId, fingerprint: "fixture-only", campaignId: null, campaignRevisionId: null };
         renderNativeDetail(panel, { rulesetId, fingerprint: "fixture-only",
-            rule: { id: record.id, name: record.name, kind: record.kind, definition: record } }, () => {});
+            rule: { id: record.id, name: record.name, kind: record.kind, definition: record } }, () => {}, null,
+            { reader: { context, packageDescriptor: null } });
     }
 }
 select.addEventListener("change", show);

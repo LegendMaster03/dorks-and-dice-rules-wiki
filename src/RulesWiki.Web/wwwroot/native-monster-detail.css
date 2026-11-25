@@ -164,3 +164,10 @@
 }
 /* Preserve narrow-panel access to authored source-layout text. */
 .rw-stat-source-layout { max-width: 100%; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Shared structured content is rendered within the existing creature layout. */
+.rw-stat-entry > .rules-core-rule-content > p { margin: .25rem 0; }
+.rw-stat-spell-row > .rules-core-rule-content { display: inline; }
+.rw-stat-spell-row > .rules-core-rule-content > p { display: inline; margin: 0; }
+.rw-stat-spell-row > .rules-core-rule-content > p + p::before { content: ", "; }
+.rw-statblock .table-responsive { max-width: 100%; overflow-x: auto; }

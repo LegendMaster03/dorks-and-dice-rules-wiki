@@ -109,27 +109,29 @@ function inlineContent(value, output) {
         if (match.index > previous) output.append(element("span", { text: text.slice(previous, match.index) }));
         const tag = match[1].toLowerCase();
         const raw = match[2].split("|")[0].trim();
-        if ((tag === "damage" || tag === "dice") && rollExpressionSyntax(raw)) {
-            output.append(element("button", {
-                type: "button", className: "rw-stat-roll", text: raw,
-                title: `Roll ${raw}`,
-                ariaLabel: `Roll ${raw}`,
-                onClick: () => announceRoll(output, raw)
-            }));
-        } else if (tag === "hit" && /^[+-]?\d+$/.test(raw)) {
-            const bonus = Number(raw);
-            output.append(element("button", {
-                type: "button", className: "rw-stat-roll", text: signed(bonus),
-                title: `Roll attack d20${signed(bonus)}`,
-                ariaLabel: `Roll attack d20${signed(bonus)}`,
-                onClick: () => announceRoll(output, `1d20${bonus >= 0 ? "+" : ""}${bonus}`)
-            }));
-        } else {
-            output.append(element("span", { text: tagText(tag, match[2]) }));
-        }
+        const dice = renderMonsterDice({ tag, expression: raw });
+        output.append(dice ?? element("span", { text: tagText(tag, match[2]) }));
         previous = match.index + match[0].length;
     }
     if (previous < text.length) output.append(element("span", { text: text.slice(previous) }));
+}
+/** Creature-specific action callback for the shared structured renderer.
+ * Symbolic and unbounded expressions remain text, never executable rolls. */
+export function renderMonsterDice({ tag, expression, display }) {
+    let roll = expression, text = display ?? expression;
+    if (tag === "hit" || tag === "d20") {
+        if (!/^[+-]?\d{1,4}$/.test(expression)) return null;
+        const bonus = Number(expression);
+        roll = "1d20" + signed(bonus);
+        text = display ?? signed(bonus);
+    } else if (tag !== "dice" && tag !== "damage") return null;
+    if (!rollExpressionSyntax(roll)) return null;
+    const button = element("button", {
+        type: "button", className: "rw-stat-roll", text,
+        title: "Roll " + roll, ariaLabel: "Roll " + roll,
+        onClick: () => announceRoll(button, roll)
+    });
+    return button;
 }
 function rollExpressionSyntax(raw) {
     const match = /^(\d{1,2})d(\d{1,4})(?:\s*[+-]\s*\d{1,4})?$/i.exec(raw);

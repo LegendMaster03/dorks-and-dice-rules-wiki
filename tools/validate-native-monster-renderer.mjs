@@ -1,8 +1,8 @@
 // Checks native monster and Kaiju statblock presentation contracts.
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { renderNativeMonster } from "../src/RulesWiki.Web/wwwroot/native-monster-detail.js";
-import { supportsImportedCreature } from "../src/RulesWiki.Web/wwwroot/native-renderers-creature.js";
+import { renderNativeMonster, renderMonsterDice } from "../src/RulesWiki.Web/wwwroot/native-monster-detail.js";
+import { supportsImportedCreature, renderImportedCreature } from "../src/RulesWiki.Web/wwwroot/native-renderers-creature.js";
 import { renderNativeDetail } from "../src/RulesWiki.Web/wwwroot/native-rule-detail.js";
 
 // Local DOM substitute used for renderer regression checks without a browser.
@@ -191,7 +191,9 @@ const view = (rulesetId, id) => {
     assert.equal(supportsImportedCreature({ context: { rulesetId: "fate-condensed" }, record, rule }), false);
     const target = new FakeNode("main");
     const snapshot = JSON.stringify(record);
-    renderNativeDetail(target, { rulesetId, fingerprint: "fixture-only", rule }, () => {});
+    const context = { rulesetId, fingerprint: "fixture-only", campaignId: null, campaignRevisionId: null };
+    renderNativeDetail(target, { rulesetId, fingerprint: "fixture-only", rule }, () => {}, null,
+        { reader: { context, packageDescriptor: null } });
     assert.equal(cls(target, "rw-statblock").length, 1);
     assert.equal(JSON.stringify(record), snapshot);
     assert.doesNotMatch(target.textContent, /NaN|\[object Object\]/);
@@ -254,3 +256,24 @@ assert.match(sparse.textContent, /depends on summoner/);
 
 assert.match(view("dnd-5e", "monster.green-hag").textContent, /Coven CR 5/);
 assert.match(view("dnd-5-5e", "monster.otherworldly-steed").textContent, /Celestial or Fey or Fiend/);
+
+ // Independent seam validation: the structured renderer receives the exact
+ // context and the bounded dice callback, without copying B's implementation.
+const importedRecord = imported.find(x => x.rulesetId === "dnd-5e" && x.record.id === "monster.acolyte").record;
+const context = { rulesetId: "dnd-5e", fingerprint: "fixture-only", campaignId: null, campaignRevisionId: null };
+const adapterInput = { context, record: importedRecord,
+    rule: { id: importedRecord.id, kind: importedRecord.kind, name: importedRecord.name, definition: importedRecord },
+    references: null, hrefForRule: id => "/rulesets/dnd-5e/rules/" + id };
+let structuredCalls = 0;
+const sharedProbe = { renderInlineContent() {}, renderStructuredContent(value, options) {
+    structuredCalls++;
+    assert.equal(options.input, adapterInput);
+    assert.equal(options.renderDice, renderMonsterDice);
+    const node = new FakeNode("span"); node.textContent = JSON.stringify(value); return node;
+}, renderNativeAttribution: () => new FakeNode("aside") };
+const noReader = renderImportedCreature(adapterInput, sharedProbe);
+assert.ok(structuredCalls > 0);
+assert.equal(all(noReader, n => n.tagName === "A").length, 0, "No unbound catalog links.");
+assert.equal(renderMonsterDice({tag:"damage",expression:"1d6 + summonSpellLevel"}), null);
+assert.equal(renderMonsterDice({tag:"dice",expression:"999d9999"}), null);
+assert.equal(renderMonsterDice({tag:"hit",expression:"4"}).textContent, "+4");
