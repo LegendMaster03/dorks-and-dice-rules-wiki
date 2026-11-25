@@ -117,7 +117,10 @@ try {
     const search = root.querySelector("input[type=search]");
     search.value = "delayed"; search.dispatchEvent(new Event("input", {bubbles: true}));
     await wait(() => calls.some(c => c[0] === "searchNativeRules" && c[1] === "fate-condensed" && c[2].q === "delayed"), "in-flight search");
+    const rebound = calls.length;
     await select("dnd-5e");
+    assert.ok(calls.slice(rebound).some(c => c[0] === "getNativeRule" && c[1] === "dnd-5e" && c[2] === "class.warlock"),
+        "recent names must be reauthorized under the new reader even when the fingerprint is unchanged");
     release();
     await new Promise(r => setTimeout(r, 100));
     assert.ok(home("dnd-5e"), "late foreign response must not replace the new home");
