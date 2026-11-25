@@ -62,6 +62,20 @@ try {
         throw new Error('denied');
     } }, context, descriptor);
     await assert.rejects(denied.originHierarchy('biological'), /denied/);
+    let methodCalls = 0;
+    const methodReader = createRulesetReader({ getNativeOriginMethods: async (rulesetId, fingerprint, scope) => {
+        methodCalls++;
+        return { rulesetId, fingerprint, scope, contractVersion: 1, previewOnly: true,
+            methods: [{ reference: { ruleId: 'rule.creature-origination', methodId: 'biological' } }] };
+    } }, context, descriptor);
+    assert.equal((await methodReader.originMethods()).scope, 'all');
+    assert.equal((await methodReader.originMethods('creature-type.dragon')).scope, 'creature-type.dragon');
+    await assert.rejects(methodReader.originMethods('species.elf'), /scope/);
+    assert.equal(methodCalls, 2);
+    const wrongScope = createRulesetReader({ getNativeOriginMethods: async () => ({
+        rulesetId: context.rulesetId, fingerprint: context.fingerprint, contractVersion: 1, scope: 'all'
+    }) }, context, descriptor);
+    await assert.rejects(wrongScope.originMethods('creature-type.dragon'), /projection/);
     console.log('Native reference API request-contract tests passed.');
 } finally {
     globalThis.fetch = original;

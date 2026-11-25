@@ -38,6 +38,9 @@ public sealed class NativeReferenceBoundaryTests
     [InlineData("getNativeOriginSource", "species.elf", "source")]
     [InlineData("getNativeOriginTraitSources", "trait.low-light-vision", "trait-sources")]
     [InlineData("getNativeOriginComponent", "construct-component.locomotion-unit", "component")]
+    [InlineData("getNativeOriginMethods", "all", "methods")]
+    [InlineData("getNativeOriginMethods", "creature-type.dragon", "methods")]
+    [InlineData("getNativeOriginComponentSources", "construct-material.steel", "component-sources")]
     public void OriginReferenceOperationsAreFixedPrivateReads(string operation, string id, string route)
     {
         var args = JsonSerializer.SerializeToElement(new[] { "first-party-001", "snapshot", id }).EnumerateArray().ToArray();

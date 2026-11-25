@@ -1,6 +1,6 @@
 /** First-party reference-only reads. The server retains authorization authority. */
 import { DEFAULT_RULESET_ID, assertSnapshot, nativeRuleIdentity } from "./rules-context.js";
-const families = new Set(["biological", "upbringing", "construct-components"]);
+const families = new Set(["biological", "upbringing", "construct-components", "characteristics", "backgrounds", "construct-options"]);
 export function createOriginReferenceReader(api, context, descriptor) {
     const supported = context.rulesetId === DEFAULT_RULESET_ID &&
         descriptor?.capabilities?.originReferenceContractVersion === 1;
@@ -39,6 +39,25 @@ export function createOriginReferenceReader(api, context, descriptor) {
                     try { nativeRuleIdentity(row.sourceId); } catch { return false; }
                     return typeof row.path === "string" && ["biological-occurrence",
                         "construct-operational-reference"].includes(row.relation);
+                }));
+        },
+        async originMethods(scope = "all") {
+            if (scope !== "all" && (!nativeRuleIdentity(scope).startsWith("creature-type.")))
+                throw new Error("Invalid creature-type reference scope.");
+            return read("getNativeOriginMethods", scope, "scope", r =>
+                r.previewOnly === true && Array.isArray(r.methods) &&
+                r.methods.every(m => m.reference?.ruleId === "rule.creature-origination" &&
+                    typeof m.reference.methodId === "string" && !!m.reference.methodId));
+        },
+        async originComponentSources(id) {
+            nativeRuleIdentity(id);
+            return read("getNativeOriginComponentSources", id, "targetId", r =>
+                r.complete === true && Array.isArray(r.sources) && Array.isArray(r.recipes) &&
+                r.sources.every(row => {
+                    try { nativeRuleIdentity(row.sourceId); } catch { return false; }
+                    return typeof row.path === "string" && ["compatible-design", "compatible-enhancement",
+                        "compatible-power-source", "material-assignment-candidate", "default-recipe",
+                        "variant-recipe"].includes(row.relation);
                 }));
         },
         async originComponent(id) {

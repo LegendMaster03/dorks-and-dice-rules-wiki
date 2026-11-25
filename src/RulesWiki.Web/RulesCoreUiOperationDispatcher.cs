@@ -84,12 +84,23 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
             "getNativeOriginSource" when arguments.Length == 3 => Origin(arguments, "source"),
             "getNativeOriginTraitSources" when arguments.Length == 3 => Origin(arguments, "trait-sources"),
             "getNativeOriginComponent" when arguments.Length == 3 => Origin(arguments, "component"),
+            "getNativeOriginMethods" when arguments.Length == 3 => Origin(arguments, "methods"),
+            "getNativeOriginComponentSources" when arguments.Length == 3 => Origin(arguments, "component-sources"),
             _ => throw new KeyNotFoundException("Unknown or unsupported Rules Wiki operation.")
         };
     }
 
     private static bool OriginFamily(string value) =>
-        value is "biological" or "upbringing" or "construct-components";
+        value is "biological" or "upbringing" or "construct-components" or
+            "characteristics" or "backgrounds" or "construct-options";
+
+    private static bool OriginTarget(string projection, string target) => projection switch
+    {
+        "hierarchy" => OriginFamily(target),
+        "methods" => target == "all" || (IsRuleId(target) && target.StartsWith("creature-type.", StringComparison.Ordinal)),
+        "source" or "trait-sources" or "component" or "component-sources" => IsRuleId(target),
+        _ => false
+    };
 
     private static bool ValidFingerprint(string? value) =>
         !string.IsNullOrWhiteSpace(value) && value.Length <= 160 &&
@@ -103,7 +114,7 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
         var fingerprint = arguments[1].GetString();
         var target = arguments[2].GetString();
         if (!ValidFingerprint(fingerprint) || target is null ||
-            !(projection == "hierarchy" ? OriginFamily(target) : IsRuleId(target)))
+            !OriginTarget(projection, target))
             throw new InvalidDataException();
         return Get($"/api/private/rulesets/{Escape(ruleset)}/origins/{projection}/{Escape(target)}?fingerprint={Escape(fingerprint!)}");
     }
@@ -160,12 +171,7 @@ public sealed class RulesCoreUiOperationDispatcher(IRulesCorePrivateClient rules
             var encoded = parts[1]["fingerprint=".Length..];
             var fingerprint = Uri.UnescapeDataString(encoded);
             if (!ValidFingerprint(fingerprint) || Escape(fingerprint) != encoded) return false;
-            return path[6] switch
-            {
-                "hierarchy" => OriginFamily(path[7]),
-                "source" or "trait-sources" or "component" => IsRuleId(path[7]),
-                _ => false
-            };
+            return OriginTarget(path[6], path[7]);
         }
         if (path.Length is not (6 or 7) || !IsRulesetId(path[4]) || path[5] != "rules") return false;
         return path.Length == 6 || (parts.Length == 1 && IsRuleId(path[6]));

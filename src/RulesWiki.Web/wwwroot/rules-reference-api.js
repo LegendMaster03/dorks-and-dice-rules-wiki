@@ -13,6 +13,8 @@ export function installNativeReferenceApi(api) {
     api.getNativeOriginSource = (rulesetId, fingerprint, id) => api.operation("getNativeOriginSource", [rulesetId, fingerprint, id]);
     api.getNativeOriginTraitSources = (rulesetId, fingerprint, id) => api.operation("getNativeOriginTraitSources", [rulesetId, fingerprint, id]);
     api.getNativeOriginComponent = (rulesetId, fingerprint, id) => api.operation("getNativeOriginComponent", [rulesetId, fingerprint, id]);
+    api.getNativeOriginMethods = (rulesetId, fingerprint, scope) => api.operation("getNativeOriginMethods", [rulesetId, fingerprint, scope]);
+    api.getNativeOriginComponentSources = (rulesetId, fingerprint, id) => api.operation("getNativeOriginComponentSources", [rulesetId, fingerprint, id]);
     return api;
 }
 export function installWikiReferenceApi(api) {
