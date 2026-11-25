@@ -102,7 +102,7 @@ function progressionTable(value, render) {
     return render(value);
 }
 export function importedClassSections(input, model) {
-    const record = model.record, render = value => renderStructuredContent(value, input);
+    const record = model.record, render = value => renderStructuredContent(value, { input });
     const sections = [];
     const overview = section("overview", "Overview, equipment and prerequisites");
     field(overview, "Class rules", record.entries, render);
