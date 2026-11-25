@@ -3,7 +3,7 @@
  * workspace. Reading history is presentation state, not ruleset state.
  */
 import { element as el, clear } from "./ui.js";
-import { currentToolRoute } from "./rules-browser-routing.js";
+import { currentToolRoute, parseToolRoute } from "./rules-browser-routing.js";
 
 export const WIKI_GROUPS = [
     { name: "Characters", description: "Classes, choices, skills, and competencies", types: [
@@ -129,6 +129,16 @@ export function installWikiExperience(app) {
     app.renderActiveView = async container => {
         fitHost();
         container.classList.add("rules-core-main");
+        // The active browser is still first-party only. An explicit foreign
+        // or malformed qualified route must never render the default catalog.
+        if (parseToolRoute(currentToolRoute(app)).unsupportedRulesContext) {
+            container.dataset.rulesView = "unavailable";
+            container.replaceChildren(el("section", { className: "card card-body" },
+                el("h2", { text: "Ruleset unavailable" }),
+                el("p", { text: "This ruleset is not available in the active reference browser." }),
+                el("button", { type: "button", text: "Return to Wiki home", onClick: app.navigateWikiHome })));
+            return;
+        }
         const home = currentToolRoute(app) === "/" && !new URLSearchParams(window.location.search).get("q");
         if (home) { container.dataset.rulesView = "home"; renderHome(container); }
         else {

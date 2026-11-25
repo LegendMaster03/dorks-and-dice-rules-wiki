@@ -8,6 +8,8 @@ import { installWikiReferenceBrowserEnhancements, installWikiReferenceNavigation
 import { installRulesCoreUx } from "./ux-shell.js";
 import { alertNode, clear, describeError, element } from "./ui.js";
 import { installWikiExperience } from "./wiki-experience.js";
+import { discoverRulesContext } from "./rules-context.js";
+import { createRulesetReader } from "./native-presentation.js";
 
 const root = document.getElementById("tool-root");
 if (!root) throw new Error("Rules Wiki could not find the Dorks & Dice tool root.");
@@ -23,6 +25,7 @@ root.append(element("div", { className: "card card-body text-body-secondary", te
 try {
     const hostContext = await loadToolHostContext(root);
     const api = installWikiReferenceApi(new RulesCoreApi(hostContext));
+    api.openRulesetReader = async rulesetId => createRulesetReader(api, await discoverRulesContext(api, rulesetId));
     const session = await api.getOptionalSession();
     // The Site supplies identity; the native Core currently exposes no authoring
     // or campaign capabilities. Never infer those capabilities from Site roles.

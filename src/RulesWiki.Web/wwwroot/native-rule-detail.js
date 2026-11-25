@@ -6,6 +6,8 @@ import { browserHref } from "./rules-browser-routing.js";
 import { element, definitionList, badge } from "./ui.js";
 import { classReturnLink } from "./native-class-view-state.js";
 import { rememberRule } from "./wiki-experience.js";
+import { DEFAULT_RULESET_ID, createRulesContext } from "./rules-context.js";
+import { createPresentationInput, renderGenericNative } from "./native-presentation.js";
 const label = name => String(name).replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]/g, " ").replace(/^./, value => value.toUpperCase());
 
@@ -24,6 +26,12 @@ export function renderNativeValue(value) {
 export function renderNativeDetail(container, detail, onBack, app = null) {
     const payload = detail.rule;
     if (!payload || !payload.definition) throw new Error("Native rule detail is unavailable.");
+    // Foreign records must not enter first-party specialized dispatch.
+    if (detail.rulesetId !== DEFAULT_RULESET_ID) {
+        const context = createRulesContext(detail);
+        container.replaceChildren(renderGenericNative(createPresentationInput(context, detail, null)));
+        return;
+    }
     // Preserve the existing monster/condition detail contracts. Only the
     // class reader needs the inner gameplay definition in a wrapped record.
     const source = payload.definition;

@@ -6,6 +6,7 @@ import {
     getEntityBrowserConfig,
     getEntityBrowserConfigForRoute
 } from "./rules-browser-config.js";
+import { DEFAULT_RULESET_ID, parseQualifiedRoute } from "./rules-context.js";
 import { normalizeBrowserFieldFilters } from "./rules-browser-filters.js";
 
 /** Unknown or unsupported paths intentionally yield no selection. */
@@ -14,9 +15,13 @@ export function parseToolRoute(toolRoute) {
     const path = String(toolRoute).split(/[?#]/, 1)[0];
     const segments = path.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
     if (segments.length === 1 && segments[0] === "all") return { entityType: "" };
-    if (segments[0] === "rulesets" && segments[1] === "first-party-001") {
-        if (segments.length === 2) return {};
-        if (segments.length === 4 && segments[2] === "rules") return { conceptKey: decodeURIComponent(segments[3]) };
+    const qualified = parseQualifiedRoute(path);
+    if (qualified) {
+        if (qualified.status !== "valid") return { unsupportedRulesContext: true };
+        return { rulesetId: qualified.rulesetId,
+            ...(qualified.rulesetId !== DEFAULT_RULESET_ID ? { unsupportedRulesContext: true } : {}),
+            ...(qualified.kind === "rule" ? { conceptKey: qualified.ruleId } : {}),
+            ...(qualified.kind === "category" ? { entityType: qualified.category } : {}) };
     }
     const known = getEntityBrowserConfigForRoute(segments[0]);
     if (segments.length === 1 && known) {
