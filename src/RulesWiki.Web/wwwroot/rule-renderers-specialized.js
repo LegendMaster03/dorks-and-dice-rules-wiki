@@ -390,7 +390,7 @@ function renderStructuredDetails(items, renderContent = renderRuleContent) {
 
 function renderStructuredTextSection(title, entries, renderContent = null) {
     const section = element("section", { className: "rules-core-structured-section" });
-    section.append(element("h4", {
+    section.append(element(renderContent ? "h3" : "h4", {
         className: "rules-core-structured-section-title",
         text: title
     }));

@@ -68,8 +68,8 @@ function content(input, value) {
 const referenceFields = new Set(["catalogReferences", "parentId", "baseItemId", "variantOf", "traitId",
     "parentSkill", "childSkills", "family", "competencyIds", "skillId", "skill", "actionId",
     "craftingRecipeId", "producesDefinitionId", "speciesId", "subspeciesId", "parentSpecies", "parentAncestry",
-    "parent", "defaultUpbringing", "ruleId"]);
-function explicitReferences(record) {
+    "parent", "defaultUpbringing", "ruleId", "groupIds", "requiresTraitDefinitionId"]);
+function explicitReferences(record, rulesetId) {
     const ids = new Set();
     const add = value => {
         if (Array.isArray(value)) { value.forEach(add); return; }
@@ -79,6 +79,8 @@ function explicitReferences(record) {
     const walk = value => {
         if (Array.isArray(value)) { value.forEach(walk); return; }
         if (!object(value)) return;
+        // A source object explicitly scoped to a different catalog is not a local reference.
+        if (typeof value.rulesetId === "string" && value.rulesetId !== rulesetId) return;
         for (const [key, entry] of Object.entries(value)) {
             if (["source", "sourcePackage", "officialTextLayout", "markdown"].includes(key)) continue;
             if (referenceFields.has(key)) add(entry);
@@ -89,7 +91,7 @@ function explicitReferences(record) {
     return [...ids];
 }
 function references(input) {
-    const ids = explicitReferences(input.record).filter(id => id !== input.rule.id);
+    const ids = explicitReferences(input.record, input.context.rulesetId).filter(id => id !== input.rule.id);
     if (!ids.length) return null;
     const list = element("ul");
     for (const id of ids) list.append(element("li", {}, input.references
@@ -184,6 +186,13 @@ function equipment(input) {
     return frame(input, { summary, sections: [["Rules", r.entries ?? r.description], ...fieldSections(r, fields)],
         disclose: true, consumed: [...fields, "entries", ...(r.entries === undefined ? ["description"] : [])] });
 }
+function nativeEquipment(input) {
+    const r = payload(input);
+    return frame(input, { summary: [["Reference type", nameOf(input.rule.kind)],
+        ["Equipment category", format(r.equipmentCategory)]],
+        sections: [["Description", r.description], ["Qualification groups", r.groupIds]],
+        consumed: ["description", "groupIds"] });
+}
 function importedOrigin(input) {
     const r = payload(input);
     return frame(input, { summary: [
@@ -268,6 +277,8 @@ export function registerNativeRenderers(registry) {
         has(payload(i), ["level", "school", "header", "castingTime", "time"]), spell);
     add("equipment", i => imported(i) && EQUIPMENT.has(i.rule.kind) &&
         has(payload(i), ["type", "entries", "rarity", "requires", "inherits", "items", "abbreviation", "template", "baseItemId"]), equipment);
+    add("native-equipment", i => first(i) && ["equipment-group", "equipment-type"].includes(i.rule.kind) &&
+        has(payload(i), ["equipmentCategory", "groupIds"]), nativeEquipment);
     add("imported-origin", i => imported(i) && IMPORTED_ORIGINS.has(i.rule.kind) &&
         has(payload(i), ["entries", "size", "raceName", "startingEquipment", "skillProficiencies"]), importedOrigin);
     add("native-origin", i => first(i) && NATIVE_ORIGINS.has(i.rule.kind) &&
@@ -280,7 +291,8 @@ export function registerNativeRenderers(registry) {
         (fate(i) && i.rule.kind === "skill" && own(payload(i), "defaultRating"))), skill);
     add("feat", i => imported(i) && i.rule.kind === "feat" && has(payload(i), ["entries", "prerequisite", "category"]), feat);
     add("table", i => (imported(i) || fate(i)) && i.rule.kind === "table" &&
-        Array.isArray(payload(i).rows) && payload(i).rows.every(Array.isArray) && Array.isArray(payload(i).colLabels), table);
+        Array.isArray(payload(i).rows) && payload(i).rows.every(row => Array.isArray(row) ||
+            (object(row) && Array.isArray(row.row))) && Array.isArray(payload(i).colLabels), table);
     add("fate-ratings", i => fate(i) && i.rule.kind === "rule" &&
         has(payload(i), ["ratings", "allocations", "thresholds"]), fateRule);
     add("text", i => (imported(i) || fate(i)) && TEXTUAL.has(i.rule.kind) &&

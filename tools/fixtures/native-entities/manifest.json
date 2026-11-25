@@ -219,6 +219,20 @@
       "nativeEntityId": "rule.stress-capacity",
       "sourceFile": "data/rulesets/fate-condensed/native/structured.json",
       "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--skill.athletics.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "skill.athletics",
+      "sourceFile": "data/rulesets/dnd-5e/native/skills.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--baseitem.plate-armor.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "baseitem.plate-armor",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/items/structured-12.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
     }
   ]
 }

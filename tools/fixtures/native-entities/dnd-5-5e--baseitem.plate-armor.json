@@ -1,0 +1,31 @@
+{
+  "id": "baseitem.plate-armor",
+  "kind": "baseitem",
+  "name": "Plate Armor",
+  "edition": "one",
+  "type": "HA|SRD52",
+  "rarity": "none",
+  "weight": 65,
+  "value": 150000,
+  "ac": 18,
+  "strength": "15",
+  "armor": true,
+  "stealth": true,
+  "catalogReferences": [],
+  "source": {
+    "release": "srd-5.2.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+    "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [],
+    "candidatePage": 92,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "items-base.json",
+      "pointer": "/baseitem/125"
+    },
+    "structuredStatus": "source-tagged structured item; official body and inventory review pending"
+  }
+}
