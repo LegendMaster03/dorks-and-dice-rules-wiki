@@ -169,17 +169,17 @@ export function renderNamedRuleEntry(entry, options = {}) {
     return renderStructuredContent(entry, options);
 }
 
+/** The unknown resolved-rule path uses the same structured renderer.
+ * Keep the raw document available when the caller requests disclosure. */
 export function renderGeneric(document, options = {}) {
-    const entries = firstDefined(document?.entries, document?.rules, document?.text);
-    if (hasSectionContent(entries)) {
-        return renderStructuredRule(document, options, {
-            sections: [["Rules", entries]],
-            consumed: ["entries", "rules", "text"]
-        });
+    const root = element("article", { className: "rules-core-rule-renderer rules-core-structured-rule" },
+        renderStructuredContent(document, options));
+    if (options.showDocument !== false) {
+        root.append(element("details", { className: "rules-core-secondary-details" },
+            element("summary", { text: options.documentLabel ?? "Resolved rule" }),
+            element("div", { className: "rules-core-secondary-details-body" }, codeBlock(document))));
     }
-    return renderDocumentDisclosure(
-        document,
-        options.documentLabel ?? "Resolved rule");
+    return root;
 }
 
 export function renderAbilityGrid(document) {
