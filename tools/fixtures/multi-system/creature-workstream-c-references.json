@@ -266,5 +266,80 @@
         "rulebook.page-182"
       ]
     }
+  },
+  {
+    "rulesetId": "dnd-5e",
+    "sourceFile": "data/rulesets/dnd-5e/native/spells/spells-176-200.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "spell.mage-armor",
+      "kind": "spell",
+      "name": "Mage Armor",
+      "level": 1,
+      "school": "A",
+      "officialTextLayout": "Mage Armor\n1st---level abjuration\nCasting Time: 1 action\nRange: Touch\nComponents: V, S, M (a piece of cured leather)\nDuration: 8 hours\nYou touch a willing creature who isn’t wearing\narmor, and a protective magical force surrounds it\nuntil the spell ends. The target’s base AC becomes 13\n+ its Dexterity modifier. The spell ends if the target\ndons armor or if you dismiss the spell as an action.",
+      "header": {
+        "Casting Time": "1 action",
+        "Range": "Touch",
+        "Components": "V, S, M (a piece of cured leather)",
+        "Duration": "8 hours"
+      },
+      "catalogReferences": [
+        "rulebook.page-160"
+      ],
+      "source": {
+        "release": "srd-5.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+        "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+        "pages": [
+          160
+        ],
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "adaptation": "direct publisher column extraction; layout text, not executable mechanics",
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "spells/spells-srd51.json",
+          "pointer": "/spell/179"
+        },
+        "structuredStatus": "publisher-name-level-school-verified; structured body review pending"
+      },
+      "time": [
+        {
+          "number": 1,
+          "unit": "action"
+        }
+      ],
+      "range": {
+        "type": "point",
+        "distance": {
+          "type": "touch"
+        }
+      },
+      "components": {
+        "v": true,
+        "s": true,
+        "m": "a piece of cured leather"
+      },
+      "duration": [
+        {
+          "type": "timed",
+          "duration": {
+            "type": "hour",
+            "amount": 8
+          }
+        }
+      ],
+      "entries": [
+        "You touch a willing creature who isn't wearing armor, and a protective magical force surrounds it until the spell ends. The target's base AC becomes 13 + its Dexterity modifier. The spell ends if the target dons armor or if you dismiss the spell as an action."
+      ],
+      "miscTags": [
+        "MAC"
+      ],
+      "areaTags": [
+        "ST"
+      ]
+    }
   }
 ]

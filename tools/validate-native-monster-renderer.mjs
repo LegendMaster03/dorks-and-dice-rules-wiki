@@ -299,6 +299,7 @@ assert.ok(prepared);
 if (typeof sharedPresentation.resolveSourceReferenceIds === "function" && typeof sharedPresentation.renderInlineContent === "function") {
     for (const [rulesetId, creatureId, referenceId] of [
         ["dnd-5e", "monster.acolyte", "spell.bless"],
+        ["dnd-5e", "monster.archmage", "spell.mage-armor"],
         ["dnd-5-5e", "monster.priest-acolyte", "spell.bless"],
         ["dnd-5e", "monster.adult-red-dragon", "condition.frightened"],
         ["dnd-5-5e", "monster.tarrasque", "condition.frightened"]
@@ -317,6 +318,9 @@ if (typeof sharedPresentation.resolveSourceReferenceIds === "function" && typeof
         const links = all(target, node => node.tagName === "A" && node.attrs.href?.endsWith("/rules/" + referenceId));
         assert.ok(links.some(node => node.textContent !== referenceId), "Expected an embedded reference, not only catalog list");
         assert.ok(links.every(node => node.attrs.href.includes("/rulesets/" + rulesetId + "/rules/")));
+        if (creatureId === "monster.archmage") assert.ok(cls(target, "rw-stat-tile").some(tile => all(tile, n => n.tagName === "A" && n.attrs.href?.endsWith("/rules/spell.mage-armor")).length), "Conditional AC preserves its embedded reference.");
     }
     console.log("Shared creature inline reference integration checks passed.");
 }
+
+assert.match(view("dnd-5e", "monster.archmage").textContent, /15 \(with mage armor\)/i);

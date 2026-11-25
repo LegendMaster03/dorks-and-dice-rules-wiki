@@ -183,7 +183,9 @@ function renderContent(value, renderRaw) {
 function renderEntry(item, renderRaw) {
     if (typeof item !== "object" || !item || Array.isArray(item)) return element("div", { className: "rw-stat-entry" }, renderContent(item, renderRaw));
     const body = element("div", { className: "rw-stat-entry" });
-    if (item.name) body.append(element("strong", { className: "rw-stat-entry-name", text: valueText(item.name) }));
+    if (item.name) body.append(element("strong", renderRaw.renderStructured ? { className: "rw-stat-entry-name" }
+        : { className: "rw-stat-entry-name", text: valueText(item.name) },
+        renderRaw.renderStructured ? renderRaw.renderStructured(item.name) : null));
     // The original Kaiju statblock marks attacks and traits that are gained,
     // lost, or available only while a Vulnerable Area has been exploited.
     // Display only explicit source conditions; never derive combat state here.
@@ -204,7 +206,9 @@ function renderEntry(item, renderRaw) {
 }
 function renderSpellcasting(item, renderRaw) {
     const body = element("div", { className: "rw-stat-entry" });
-    if (item.name) body.append(element("strong", { className: "rw-stat-entry-name", text: valueText(item.name) }));
+    if (item.name) body.append(element("strong", renderRaw.renderStructured ? { className: "rw-stat-entry-name" }
+        : { className: "rw-stat-entry-name", text: valueText(item.name) },
+        renderRaw.renderStructured ? renderRaw.renderStructured(item.name) : null));
     if (item.headerEntries) body.append(renderContent(item.headerEntries, renderRaw));
     if (!empty(item.ability)) {
         const abilityNames = { str: "Strength", dex: "Dexterity", con: "Constitution",
@@ -249,13 +253,13 @@ function section(title, children) {
 }
 const displayValue = (value, formatter = valueText) => empty(value) ? null : formatter(value);
 // Keep source alternatives and symbolic quantities rather than coercing them to numbers.
-const armorValue = value => Array.isArray(value) ? value.map(armorValue).filter(Boolean).join(", ")
+const armorValue = (value, formatText = valueText) => Array.isArray(value) ? value.map(entry => armorValue(entry, formatText)).filter(Boolean).join(", ")
     : value && typeof value === "object" ? (() => {
         const base = field(value, ["ac", "value", "special"]);
-        if (empty(base)) return valueText(value);
-        const notes = [value.from, value.condition].filter(v => !empty(v)).map(valueText);
-        return valueText(base) + (notes.length ? " (" + notes.join("; ") + ")" : "");
-    })() : valueText(value);
+        if (empty(base)) return formatText(value);
+        const notes = [value.from, value.condition].filter(v => !empty(v)).map(formatText);
+        return formatText(base) + (notes.length ? " (" + notes.join("; ") + ")" : "");
+    })() : formatText(value);
 const movementDistance = value => {
     if (typeof value === "number") return value + " ft.";
     if (value && typeof value === "object" && !Array.isArray(value)) {
@@ -324,10 +328,15 @@ function defenseText(value) {
     }
     return valueText(value);
 }
-function tile(label, content, note = "") {
+// Retain authored inline tags until the shared renderer processes the summary.
+const taggedValueText = value => empty(value) ? "" : Array.isArray(value)
+    ? value.map(taggedValueText).filter(Boolean).join(", ")
+    : typeof value === "object" ? Object.entries(value).map(([key, item]) => pretty(key) + " " + taggedValueText(item)).join(", ") : String(value);
+function tile(label, content, note = "", renderText = null) {
     return element("div", { className: "rw-stat-tile" },
         element("span", { className: "rw-stat-tile-label", text: label }),
-        element("strong", { className: "rw-stat-tile-value", text: content }),
+        element("strong", renderText ? { className: "rw-stat-tile-value" } : { className: "rw-stat-tile-value", text: content },
+            renderText ? renderText(content) : null),
         note ? element("span", { className: "rw-stat-tile-note", text: note }) : null);
 }
 function abilityGrid(definition, { explicitSavesOnly = false } = {}) {
@@ -549,7 +558,7 @@ export function renderNativeMonster(rule, renderRaw, options = {}) {
     const identification = kaijuProfile ? field(kaijuProfile,
         ["vulnerabilityIdentificationDc", "vulnerabilityIdentificationDC", "identificationDc", "weakPointIdentificationDc"]) : null;
     const defenseTiles = [
-        ["Armor Class", field(d, ["ac", "armorClass"]), armorValue],
+        ["Armor Class", field(d, ["ac", "armorClass"]), value => armorValue(value, renderRaw.renderStructured ? taggedValueText : valueText)],
         ["Hit Points", kaijuLayout && kaijuProfile && !empty(field(kaijuProfile, ["chaosThreshold", "chaosMax"]))
             ? null : field(d, ["hp", "hitPoints"]), valueText],
         ["Speed", d.speed, speedValue],
@@ -561,7 +570,7 @@ export function renderNativeMonster(rule, renderRaw, options = {}) {
         ] : [])
     ].filter(([, value]) => !empty(value));
     if (defenseTiles.length) {
-        const tiles = element("div", { className: "rw-stat-tiles" }, defenseTiles.map(([name, value, format]) => tile(name, format(value))));
+        const tiles = element("div", { className: "rw-stat-tiles" }, defenseTiles.map(([name, value, format]) => tile(name, format(value), "", renderRaw.renderStructured ?? null)));
         const extraAc = [["Touch AC", ["touchAc", "touchAC", "acTouch", "touch"]],
             ["Flat-Footed AC", ["flatFootedAc", "flatFootedAC", "acFlatFooted", "flatFooted"]]]
             .map(([name, keys]) => [name, field(d, keys)]).filter(([, value]) => !empty(value));

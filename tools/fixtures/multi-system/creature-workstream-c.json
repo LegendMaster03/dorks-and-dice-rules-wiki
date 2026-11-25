@@ -1975,5 +1975,240 @@
         "adaptation": "Pinned edition-specific stat block; external media, fluff, derived metadata and generated variants excluded."
       }
     }
+  },
+  {
+    "rulesetId": "dnd-5e",
+    "sourceFile": "data/rulesets/dnd-5e/native/bestiary/structured-02.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "monster.archmage",
+      "kind": "monster",
+      "name": "Archmage",
+      "size": [
+        "M"
+      ],
+      "type": {
+        "type": "humanoid",
+        "tags": [
+          "any race"
+        ]
+      },
+      "alignment": [
+        "A"
+      ],
+      "ac": [
+        12,
+        {
+          "ac": 15,
+          "condition": "with {@spell mage armor}",
+          "braces": true
+        }
+      ],
+      "hp": {
+        "average": 99,
+        "formula": "18d8 + 18"
+      },
+      "speed": {
+        "walk": 30
+      },
+      "str": 10,
+      "dex": 14,
+      "con": 12,
+      "int": 20,
+      "wis": 15,
+      "cha": 16,
+      "save": {
+        "int": "+9",
+        "wis": "+6"
+      },
+      "skill": {
+        "arcana": "+13",
+        "history": "+13"
+      },
+      "passive": 12,
+      "languages": [
+        "any six languages"
+      ],
+      "cr": "12",
+      "trait": [
+        {
+          "name": "Magic Resistance",
+          "entries": [
+            "The archmage has advantage on saving throws against spells and other magical effects."
+          ]
+        }
+      ],
+      "action": [
+        {
+          "name": "Dagger",
+          "entries": [
+            "{@atk mw,rw} {@hit 6} to hit, reach 5 ft. or range 20/60 ft., one target. {@h}4 ({@damage 1d4 + 2}) piercing damage."
+          ]
+        }
+      ],
+      "spellcasting": [
+        {
+          "name": "Spellcasting",
+          "type": "spellcasting",
+          "headerEntries": [
+            "The archmage is an 18th-level spellcaster. Its spellcasting ability is Intelligence (spell save {@dc 17}, {@hit 9} to hit with spell attacks). The archmage can cast {@spell disguise self} and {@spell invisibility} at will and has the following wizard spells prepared:"
+          ],
+          "will": [
+            "{@spell disguise self}",
+            "{@spell invisibility}"
+          ],
+          "spells": {
+            "0": {
+              "spells": [
+                "{@spell fire bolt}",
+                "{@spell light}",
+                "{@spell mage hand}",
+                "{@spell prestidigitation}",
+                "{@spell shocking grasp}"
+              ]
+            },
+            "1": {
+              "slots": 4,
+              "spells": [
+                "{@spell detect magic}",
+                "{@spell identify}",
+                "{@spell mage armor}*",
+                "{@spell magic missile}"
+              ]
+            },
+            "2": {
+              "slots": 3,
+              "spells": [
+                "{@spell detect thoughts}",
+                "{@spell mirror image}",
+                "{@spell misty step}"
+              ]
+            },
+            "3": {
+              "slots": 3,
+              "spells": [
+                "{@spell counterspell}",
+                "{@spell fly}",
+                "{@spell lightning bolt}"
+              ]
+            },
+            "4": {
+              "slots": 3,
+              "spells": [
+                "{@spell banishment}",
+                "{@spell fire shield}",
+                "{@spell stoneskin}*"
+              ]
+            },
+            "5": {
+              "slots": 3,
+              "spells": [
+                "{@spell cone of cold}",
+                "{@spell scrying}",
+                "{@spell wall of force}"
+              ]
+            },
+            "6": {
+              "slots": 1,
+              "spells": [
+                "{@spell globe of invulnerability}"
+              ]
+            },
+            "7": {
+              "slots": 1,
+              "spells": [
+                "{@spell teleport}"
+              ]
+            },
+            "8": {
+              "slots": 1,
+              "spells": [
+                "{@spell mind blank}*"
+              ]
+            },
+            "9": {
+              "slots": 1,
+              "spells": [
+                "{@spell time stop}"
+              ]
+            }
+          },
+          "footerEntries": [
+            "*The archmage casts these spells on itself before combat."
+          ],
+          "ability": "int",
+          "hidden": [
+            "will"
+          ]
+        }
+      ],
+      "resist": [
+        {
+          "special": "damage from spells"
+        },
+        {
+          "resist": [
+            "bludgeoning",
+            "piercing",
+            "slashing"
+          ],
+          "note": "(from stoneskin)",
+          "cond": true,
+          "preNote": "nonmagical"
+        }
+      ],
+      "attachedItems": [
+        "dagger|srd51"
+      ],
+      "catalogReferences": [
+        "rulebook.page-395",
+        "spell.banishment",
+        "spell.cone-of-cold",
+        "spell.counterspell",
+        "spell.detect-magic",
+        "spell.detect-thoughts",
+        "spell.disguise-self",
+        "spell.fire-bolt",
+        "spell.fire-shield",
+        "spell.fly",
+        "spell.globe-of-invulnerability",
+        "spell.identify",
+        "spell.invisibility",
+        "spell.light",
+        "spell.lightning-bolt",
+        "spell.mage-armor",
+        "spell.mage-hand",
+        "spell.magic-missile",
+        "spell.mind-blank",
+        "spell.mirror-image",
+        "spell.misty-step",
+        "spell.prestidigitation",
+        "spell.scrying",
+        "spell.shocking-grasp",
+        "spell.stoneskin",
+        "spell.teleport",
+        "spell.time-stop",
+        "spell.wall-of-force"
+      ],
+      "source": {
+        "release": "srd-5.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+        "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "pages": [
+          395
+        ],
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "bestiary/bestiary-srd51.json",
+          "pointer": "/monster/28"
+        },
+        "candidatePage": 395,
+        "structuredStatus": "publisher-name-locator-matched; stat-block body review pending",
+        "adaptation": "Pinned edition-specific stat block; external media, fluff, derived metadata and generated variants excluded."
+      }
+    }
   }
 ]
