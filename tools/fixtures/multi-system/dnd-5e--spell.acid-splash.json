@@ -1,0 +1,83 @@
+{
+  "id": "spell.acid-splash",
+  "kind": "spell",
+  "name": "Acid Splash",
+  "level": 0,
+  "school": "C",
+  "officialTextLayout": "Acid Splash\nConjuration cantrip\nCasting Time: 1 action\nRange: 60 feet\nComponents: V, S\nDuration: Instantaneous\nYou hurl a bubble of acid. Choose one creature\nwithin range, or choose two creatures within range\nthat are within 5 feet of each other. A target must\nsucceed on a Dexterity saving throw or take 1d6 acid\ndamage.\n  This spell’s damage increases by 1d6 when you\nreach 5th level (2d6), 11th level (3d6), and 17th\nlevel (4d6).",
+  "header": {
+    "Casting Time": "1 action",
+    "Range": "60 feet",
+    "Components": "V, S",
+    "Duration": "Instantaneous"
+  },
+  "catalogReferences": [
+    "rulebook.page-114"
+  ],
+  "source": {
+    "release": "srd-5.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+    "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+    "pages": [
+      114
+    ],
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "adaptation": "direct publisher column extraction; layout text, not executable mechanics",
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "spells/spells-srd51.json",
+      "pointer": "/spell/0"
+    },
+    "structuredStatus": "publisher-name-level-school-verified; structured body review pending"
+  },
+  "time": [
+    {
+      "number": 1,
+      "unit": "action"
+    }
+  ],
+  "range": {
+    "type": "point",
+    "distance": {
+      "type": "feet",
+      "amount": 60
+    }
+  },
+  "components": {
+    "v": true,
+    "s": true
+  },
+  "duration": [
+    {
+      "type": "instant"
+    }
+  ],
+  "entries": [
+    "You hurl a bubble of acid. Choose one creature within range, or choose two creatures within range that are within 5 feet of each other. A target must succeed on a Dexterity saving throw or take {@damage 1d6} acid damage.",
+    "This spell's damage increases by {@damage 1d6} when you reach 5th level ({@damage 2d6}), 11th level ({@damage 3d6}), and 17th level ({@damage 4d6})."
+  ],
+  "scalingLevelDice": {
+    "label": "acid damage",
+    "scaling": {
+      "1": "1d6",
+      "5": "2d6",
+      "11": "3d6",
+      "17": "4d6"
+    }
+  },
+  "damageInflict": [
+    "acid"
+  ],
+  "savingThrow": [
+    "dexterity"
+  ],
+  "miscTags": [
+    "SCL"
+  ],
+  "areaTags": [
+    "MT",
+    "ST"
+  ]
+}

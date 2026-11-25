@@ -1,0 +1,648 @@
+{
+  "id": "class.warlock",
+  "kind": "class",
+  "name": "Warlock",
+  "primaryAbility": [
+    {
+      "cha": true
+    }
+  ],
+  "hd": {
+    "number": 1,
+    "faces": 8
+  },
+  "proficiency": [
+    "wis",
+    "cha"
+  ],
+  "spellcastingAbility": "cha",
+  "casterProgression": "pact",
+  "preparedSpellsProgression": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    10,
+    11,
+    11,
+    12,
+    12,
+    13,
+    13,
+    14,
+    14,
+    15,
+    15
+  ],
+  "preparedSpellsChange": "level",
+  "cantripProgression": [
+    2,
+    2,
+    2,
+    3,
+    3,
+    3,
+    3,
+    3,
+    3,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4,
+    4
+  ],
+  "spellsKnownProgressionFixedByLevel": {
+    "11": {
+      "6": 1
+    },
+    "13": {
+      "7": 1
+    },
+    "15": {
+      "8": 1
+    },
+    "17": {
+      "9": 1
+    }
+  },
+  "additionalSpells": [
+    {
+      "prepared": {
+        "9": [
+          "contact other plane|srd52"
+        ]
+      }
+    }
+  ],
+  "featProgression": [
+    {
+      "name": "Epic Boon",
+      "category": [
+        "EB"
+      ],
+      "progression": {
+        "19": 1
+      }
+    }
+  ],
+  "optionalfeatureProgression": [
+    {
+      "name": "Eldritch Invocations",
+      "featureType": [
+        "EI"
+      ],
+      "progression": [
+        1,
+        3,
+        3,
+        3,
+        5,
+        5,
+        6,
+        6,
+        7,
+        7,
+        7,
+        8,
+        8,
+        8,
+        9,
+        9,
+        9,
+        10,
+        10,
+        10
+      ]
+    }
+  ],
+  "startingProficiencies": {
+    "armor": [
+      "light"
+    ],
+    "weapons": [
+      "simple"
+    ],
+    "skills": [
+      {
+        "choose": {
+          "from": [
+            "arcana",
+            "deception",
+            "history",
+            "intimidation",
+            "investigation",
+            "nature",
+            "religion"
+          ],
+          "count": 2
+        }
+      }
+    ]
+  },
+  "startingEquipment": {
+    "additionalFromBackground": true,
+    "defaultData": [
+      {
+        "A": [
+          {
+            "item": "leather armor|srd52"
+          },
+          {
+            "item": "sickle|srd52"
+          },
+          {
+            "item": "dagger|srd52",
+            "quantity": 2
+          },
+          {
+            "item": "orb|srd52"
+          },
+          {
+            "item": "book|srd52"
+          },
+          {
+            "item": "scholar's pack|srd52"
+          },
+          {
+            "value": 1500
+          }
+        ],
+        "B": [
+          {
+            "value": 10000
+          }
+        ]
+      }
+    ],
+    "entries": [
+      "{@i Choose A or B:} (A) {@item Leather Armor|SRD52}, {@item Sickle|SRD52}, 2 {@item Dagger|SRD52|Daggers}, {@item Arcane Focus|SRD52} ({@item orb|SRD52}), {@item Book|SRD52} (occult lore), {@item Scholar's Pack|SRD52}, and 15 GP; or (B) 100 GP"
+    ]
+  },
+  "multiclassing": {
+    "proficienciesGained": {
+      "armor": [
+        "light"
+      ]
+    }
+  },
+  "classTableGroups": [
+    {
+      "colLabels": [
+        "{@filter Invocations|optionalfeatures|feature type=ei}",
+        "{@filter Cantrips|spells|level=0|class=Warlock}",
+        "{@filter Prepared Spells|spells|level=!0|class=Warlock}",
+        "Spell Slots",
+        "Slot Level"
+      ],
+      "rows": [
+        [
+          1,
+          2,
+          2,
+          1,
+          1
+        ],
+        [
+          3,
+          2,
+          3,
+          2,
+          1
+        ],
+        [
+          3,
+          2,
+          4,
+          2,
+          2
+        ],
+        [
+          3,
+          3,
+          5,
+          2,
+          2
+        ],
+        [
+          5,
+          3,
+          6,
+          2,
+          3
+        ],
+        [
+          5,
+          3,
+          7,
+          2,
+          3
+        ],
+        [
+          6,
+          3,
+          8,
+          2,
+          4
+        ],
+        [
+          6,
+          3,
+          9,
+          2,
+          4
+        ],
+        [
+          7,
+          3,
+          10,
+          2,
+          5
+        ],
+        [
+          7,
+          4,
+          10,
+          2,
+          5
+        ],
+        [
+          7,
+          4,
+          11,
+          3,
+          5
+        ],
+        [
+          8,
+          4,
+          11,
+          3,
+          5
+        ],
+        [
+          8,
+          4,
+          12,
+          3,
+          5
+        ],
+        [
+          8,
+          4,
+          12,
+          3,
+          5
+        ],
+        [
+          9,
+          4,
+          13,
+          3,
+          5
+        ],
+        [
+          9,
+          4,
+          13,
+          3,
+          5
+        ],
+        [
+          9,
+          4,
+          14,
+          4,
+          5
+        ],
+        [
+          10,
+          4,
+          14,
+          4,
+          5
+        ],
+        [
+          10,
+          4,
+          15,
+          4,
+          5
+        ],
+        [
+          10,
+          4,
+          15,
+          4,
+          5
+        ]
+      ]
+    }
+  ],
+  "classFeatures": [
+    "Eldritch Invocations|Warlock|SRD52|1",
+    "Pact Magic|Warlock|SRD52|1",
+    "Eldritch Invocation Options|Warlock|SRD52|1",
+    "Magical Cunning|Warlock|SRD52|2",
+    {
+      "classFeature": "Warlock Subclass|Warlock|SRD52|3",
+      "gainSubclassFeature": true
+    },
+    "Ability Score Improvement|Warlock|SRD52|4",
+    {
+      "classFeature": "Subclass Feature|Warlock|SRD52|6",
+      "gainSubclassFeature": true
+    },
+    "Ability Score Improvement|Warlock|SRD52|8",
+    "Contact Patron|Warlock|SRD52|9",
+    {
+      "classFeature": "Subclass Feature|Warlock|SRD52|10",
+      "gainSubclassFeature": true
+    },
+    "Mystic Arcanum|Warlock|SRD52|11",
+    "Ability Score Improvement|Warlock|SRD52|12",
+    "Mystic Arcanum|Warlock|SRD52|13",
+    {
+      "classFeature": "Subclass Feature|Warlock|SRD52|14",
+      "gainSubclassFeature": true
+    },
+    "Mystic Arcanum|Warlock|SRD52|15",
+    "Ability Score Improvement|Warlock|SRD52|16",
+    "Mystic Arcanum|Warlock|SRD52|17",
+    "Epic Boon|Warlock|SRD52|19",
+    "Eldritch Master|Warlock|SRD52|20"
+  ],
+  "subclassTitle": "Warlock Subclass",
+  "catalogReferences": [
+    "baseitem.dagger",
+    "baseitem.leather-armor",
+    "baseitem.orb",
+    "baseitem.sickle",
+    "class-feature.warlock.ability-score-improvement.12",
+    "class-feature.warlock.ability-score-improvement.16",
+    "class-feature.warlock.ability-score-improvement.4",
+    "class-feature.warlock.ability-score-improvement.8",
+    "class-feature.warlock.contact-patron.9",
+    "class-feature.warlock.eldritch-invocation-options.1",
+    "class-feature.warlock.eldritch-invocations.1",
+    "class-feature.warlock.eldritch-master.20",
+    "class-feature.warlock.epic-boon.19",
+    "class-feature.warlock.magical-cunning.2",
+    "class-feature.warlock.mystic-arcanum.11",
+    "class-feature.warlock.mystic-arcanum.13",
+    "class-feature.warlock.mystic-arcanum.15",
+    "class-feature.warlock.mystic-arcanum.17",
+    "class-feature.warlock.pact-magic.1",
+    "class-feature.warlock.subclass-feature.10",
+    "class-feature.warlock.subclass-feature.14",
+    "class-feature.warlock.subclass-feature.6",
+    "class-feature.warlock.warlock-subclass.3",
+    "item.book",
+    "item.scholar-s-pack",
+    "rulebook.page-070",
+    "rulebook.page-075",
+    "rulebook.page-076",
+    "skill.arcana",
+    "skill.deception",
+    "skill.history",
+    "skill.intimidation",
+    "skill.investigation",
+    "skill.nature",
+    "skill.religion",
+    "spell.astral-projection",
+    "spell.bane",
+    "spell.banishment",
+    "spell.befuddlement",
+    "spell.blight",
+    "spell.charm-monster",
+    "spell.charm-person",
+    "spell.chill-touch",
+    "spell.circle-of-death",
+    "spell.comprehend-languages",
+    "spell.contact-other-plane",
+    "spell.counterspell",
+    "spell.create-undead",
+    "spell.darkness",
+    "spell.demiplane",
+    "spell.detect-magic",
+    "spell.dimension-door",
+    "spell.dispel-magic",
+    "spell.dominate-monster",
+    "spell.dream",
+    "spell.eldritch-blast",
+    "spell.enthrall",
+    "spell.etherealness",
+    "spell.expeditious-retreat",
+    "spell.eyebite",
+    "spell.fear",
+    "spell.finger-of-death",
+    "spell.fly",
+    "spell.forcecage",
+    "spell.foresight",
+    "spell.gaseous-form",
+    "spell.gate",
+    "spell.glibness",
+    "spell.hallucinatory-terrain",
+    "spell.hellish-rebuke",
+    "spell.hex",
+    "spell.hideous-laughter",
+    "spell.hold-monster",
+    "spell.hold-person",
+    "spell.hypnotic-pattern",
+    "spell.illusory-script",
+    "spell.imprisonment",
+    "spell.invisibility",
+    "spell.mage-hand",
+    "spell.magic-circle",
+    "spell.major-image",
+    "spell.mind-spike",
+    "spell.minor-illusion",
+    "spell.mirror-image",
+    "spell.mislead",
+    "spell.misty-step",
+    "spell.planar-binding",
+    "spell.plane-shift",
+    "spell.poison-spray",
+    "spell.power-word-kill",
+    "spell.power-word-stun",
+    "spell.prestidigitation",
+    "spell.protection-from-evil-and-good",
+    "spell.ray-of-enfeeblement",
+    "spell.remove-curse",
+    "spell.scrying",
+    "spell.speak-with-animals",
+    "spell.spider-climb",
+    "spell.suggestion",
+    "spell.teleportation-circle",
+    "spell.tongues",
+    "spell.true-polymorph",
+    "spell.true-seeing",
+    "spell.true-strike",
+    "spell.unseen-servant",
+    "spell.vampiric-touch",
+    "spell.weird"
+  ],
+  "source": {
+    "release": "srd-5.2.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+    "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [
+      70
+    ],
+    "candidatePage": 70,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "class/class-warlock.json",
+      "pointer": "/class/1"
+    },
+    "structuredStatus": "pinned edition-specific class projection; publisher name locator where available; progression links checked; full body review pending",
+    "spellList": {
+      "pages": [
+        75,
+        76
+      ],
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "spells/sources.json",
+      "pointer": "/SRD52",
+      "verification": "publisher class-list membership verified; not a feature grant or executable spellcasting policy"
+    }
+  },
+  "spellList": [
+    {
+      "level": 0,
+      "spellIds": [
+        "spell.chill-touch",
+        "spell.eldritch-blast",
+        "spell.mage-hand",
+        "spell.minor-illusion",
+        "spell.poison-spray",
+        "spell.prestidigitation",
+        "spell.true-strike"
+      ]
+    },
+    {
+      "level": 1,
+      "spellIds": [
+        "spell.bane",
+        "spell.charm-person",
+        "spell.comprehend-languages",
+        "spell.detect-magic",
+        "spell.expeditious-retreat",
+        "spell.hellish-rebuke",
+        "spell.hex",
+        "spell.hideous-laughter",
+        "spell.illusory-script",
+        "spell.protection-from-evil-and-good",
+        "spell.speak-with-animals",
+        "spell.unseen-servant"
+      ]
+    },
+    {
+      "level": 2,
+      "spellIds": [
+        "spell.darkness",
+        "spell.enthrall",
+        "spell.hold-person",
+        "spell.invisibility",
+        "spell.mind-spike",
+        "spell.mirror-image",
+        "spell.misty-step",
+        "spell.ray-of-enfeeblement",
+        "spell.spider-climb",
+        "spell.suggestion"
+      ]
+    },
+    {
+      "level": 3,
+      "spellIds": [
+        "spell.counterspell",
+        "spell.dispel-magic",
+        "spell.fear",
+        "spell.fly",
+        "spell.gaseous-form",
+        "spell.hypnotic-pattern",
+        "spell.magic-circle",
+        "spell.major-image",
+        "spell.remove-curse",
+        "spell.tongues",
+        "spell.vampiric-touch"
+      ]
+    },
+    {
+      "level": 4,
+      "spellIds": [
+        "spell.banishment",
+        "spell.blight",
+        "spell.charm-monster",
+        "spell.dimension-door",
+        "spell.hallucinatory-terrain"
+      ]
+    },
+    {
+      "level": 5,
+      "spellIds": [
+        "spell.contact-other-plane",
+        "spell.dream",
+        "spell.hold-monster",
+        "spell.mislead",
+        "spell.planar-binding",
+        "spell.scrying",
+        "spell.teleportation-circle"
+      ]
+    },
+    {
+      "level": 6,
+      "spellIds": [
+        "spell.circle-of-death",
+        "spell.create-undead",
+        "spell.eyebite",
+        "spell.true-seeing"
+      ]
+    },
+    {
+      "level": 7,
+      "spellIds": [
+        "spell.etherealness",
+        "spell.finger-of-death",
+        "spell.forcecage",
+        "spell.plane-shift"
+      ]
+    },
+    {
+      "level": 8,
+      "spellIds": [
+        "spell.befuddlement",
+        "spell.demiplane",
+        "spell.dominate-monster",
+        "spell.glibness",
+        "spell.power-word-stun"
+      ]
+    },
+    {
+      "level": 9,
+      "spellIds": [
+        "spell.astral-projection",
+        "spell.foresight",
+        "spell.gate",
+        "spell.imprisonment",
+        "spell.power-word-kill",
+        "spell.true-polymorph",
+        "spell.weird"
+      ]
+    }
+  ]
+}

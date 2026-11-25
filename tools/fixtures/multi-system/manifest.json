@@ -1,0 +1,63 @@
+{
+  "sourceRepository": "LegendMaster03/dorks-and-dice-rules-core",
+  "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+  "representation": "Authored native record; not necessarily the loader-expanded API projection. No catalog fingerprint is fabricated.",
+  "fixtures": [
+    {
+      "file": "first-party-001--class.warlock.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "class.warlock",
+      "sourceFile": "data/rulesets/first-party-001/native/classes/base/warlock/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--class.warlock.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "class.warlock",
+      "sourceFile": "data/rulesets/dnd-5e/native/classes/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--class.warlock.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "class.warlock",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/classes/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--monster.goblin-warrior.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "monster.goblin-warrior",
+      "sourceFile": "data/rulesets/first-party-001/native/bestiary/goblin-warrior.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--monster.tarrasque.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "monster.tarrasque",
+      "sourceFile": "data/rulesets/first-party-001/native/bestiary/tarrasque.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--monster.avatar-of-death.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "monster.avatar-of-death",
+      "sourceFile": "data/rulesets/dnd-5e/native/bestiary/reviewed-initial.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--spell.acid-splash.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "spell.acid-splash",
+      "sourceFile": "data/rulesets/dnd-5e/native/spells/spells-001-025.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--spell.acid-splash.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "spell.acid-splash",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/spells/spells-001-025.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    }
+  ]
+}
