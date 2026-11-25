@@ -34,6 +34,33 @@ public sealed class NativeReferenceBoundaryTests
     }
 
     [Theory]
+    [InlineData("getNativeOriginHierarchy", "biological", "hierarchy")]
+    [InlineData("getNativeOriginSource", "species.elf", "source")]
+    [InlineData("getNativeOriginTraitSources", "trait.low-light-vision", "trait-sources")]
+    [InlineData("getNativeOriginComponent", "construct-component.locomotion-unit", "component")]
+    [InlineData("getNativeOriginMethods", "all", "methods")]
+    [InlineData("getNativeOriginMethods", "creature-type.dragon", "methods")]
+    [InlineData("getNativeOriginComponentSources", "construct-material.steel", "component-sources")]
+    public void OriginReferenceOperationsAreFixedPrivateReads(string operation, string id, string route)
+    {
+        var args = JsonSerializer.SerializeToElement(new[] { "first-party-001", "snapshot", id }).EnumerateArray().ToArray();
+        var request = RulesCoreUiOperationDispatcher.BuildRequest(operation, args);
+        Assert.Equal(HttpMethod.Get, request.Method);
+        Assert.Equal($"/api/private/rulesets/first-party-001/origins/{route}/{id}?fingerprint=snapshot", request.PathAndQuery);
+    }
+
+    [Theory]
+    [InlineData("dnd-5e", "snapshot", "species.elf")]
+    [InlineData("first-party-001", "", "species.elf")]
+    [InlineData("first-party-001", "snapshot", "../species.elf")]
+    public void OriginReferenceRejectsInvalidContext(string ruleset, string fingerprint, string id)
+    {
+        var args = JsonSerializer.SerializeToElement(new[] { ruleset, fingerprint, id }).EnumerateArray().ToArray();
+        Assert.Throws<InvalidDataException>(() =>
+            RulesCoreUiOperationDispatcher.BuildRequest("getNativeOriginSource", args));
+    }
+
+    [Theory]
     [InlineData("""["first-party-001",{"arbitraryPath":"/api/source-admin/import"}]""")]
     [InlineData("""["first-party-001",{"limit":{}}]""")]
     [InlineData("""["first-party-001",{"q":null}]""")]
@@ -56,6 +83,10 @@ public sealed class NativeReferenceBoundaryTests
 
     [Theory]
     [InlineData("/api/private/rulesets/../rules/..")]
+    [InlineData("/api/private/rulesets/first-party-001/origins/source/species.elf")]
+    [InlineData("/api/private/rulesets/first-party-001/origins/source/species.elf?fingerprint=x&other=y")]
+    [InlineData("/api/private/rulesets/dnd-5e/origins/source/species.elf?fingerprint=x")]
+    [InlineData("/api/private/rulesets/first-party-001/origins/unknown/species.elf?fingerprint=x")]
     [InlineData("/api/private/rulesets-other")]
     [InlineData("/api/private/rulesets/first-party-001/rules/condition.blinded/extra")]
     [InlineData("/api/private/rulesets/first-party-001/rules/condition.blinded?q=other")]
