@@ -73,10 +73,12 @@ const firstParty = { rulesetId: a.rulesetId, fingerprint: a.fingerprint,
     rule: { id: "condition.blinded", name: "Blinded", kind: "condition", definition: { description: "Cannot see." } } };
 assert.equal(renderNativeDetail(container, firstParty, () => {}), true);
 assert.ok(container.querySelector(".rules-core-detail-context-card"), "First-party compatibility layout is unchanged.");
+assert.equal(container.querySelectorAll(".ruleset-package-attribution").length, 1);
 assert.equal(renderNativeDetail(container, response, () => {}), true);
 assert.match(container.textContent, /Generic native reference/);
 assert.ok(container.querySelector(".rules-core-library-mobile-back"));
 assert.ok(container.querySelector(".rules-core-library-detail-body"));
+assert.equal(container.querySelectorAll(".ruleset-package-attribution").length, 1);
 const app = {
     api, rulesContext: b, hostContext: { toolBasePath: "/tools/rules-wiki" },
     presentRenderedFragment() { this.presented = (this.presented ?? 0) + 1; }
@@ -111,7 +113,9 @@ assert.match(container.textContent, /did not match the requested snapshot/);
 // A future catalog selector must retain the reader returned by discovery, not
 // rebuild it and lose package-level descriptor fields.
 app.rulesContext = a;
-const exactReader = Object.freeze({ ...createRulesetReader(app.api, a), marker: "authorized-reader" });
+const descriptor = { id: a.rulesetId, fingerprint: a.fingerprint, capabilities: { read: true },
+    metadata: { rulesetId: a.rulesetId, displayName: "Exact authorized package" } };
+const exactReader = Object.freeze({ ...createRulesetReader(app.api, a, descriptor), marker: "authorized-reader" });
 app.rulesetReader = exactReader;
 app.nativeRendererRegistry.register({ id: "bound-reader-probe", priority: 100,
     supports: value => value.rule.kind === "condition",
@@ -123,6 +127,8 @@ app.nativeRendererRegistry.register({ id: "bound-reader-probe", priority: 100,
 });
 await renderRuleDetailPane(app, container, firstParty.rule.id, "global", ++serial, () => serial, () => {});
 assert.match(container.textContent, /Bound reader preserved/);
+assert.equal(container.querySelectorAll(".ruleset-package-attribution").length, 1);
+assert.match(container.querySelector(".ruleset-package-attribution").textContent, /Exact authorized package/);
 app.rulesContext = b; // The old authorized reader must not be reused.
 await renderRuleDetailPane(app, container, id, "global", ++serial, () => serial, () => {});
 assert.match(container.textContent, /does not match the active rules context/);

@@ -67,13 +67,16 @@ export function assertSnapshot(context, response) {
     return response;
 }
 /** Only Core's exact permitted descriptor establishes a context. */
-export async function discoverRulesContext(api, rulesetId) {
+export async function discoverAuthorizedRuleset(api, rulesetId) {
     rulesetIdentity(rulesetId);
     const response = await api.getNativeRulesets();
-    const matches = response.rulesets?.filter(entry => entry.id === rulesetId) ?? [];
+    const matches = Array.isArray(response?.rulesets) ? response.rulesets.filter(entry => entry?.id === rulesetId) : [];
     if (matches.length !== 1 || matches[0].capabilities?.read !== true)
         throw new Error("The requested ruleset is unavailable or unauthorized.");
-    return createRulesContext({ rulesetId, fingerprint: matches[0].fingerprint });
+    return Object.freeze({ context: createRulesContext({ rulesetId, fingerprint: matches[0].fingerprint }), descriptor: matches[0] });
+}
+export async function discoverRulesContext(api, rulesetId) {
+    return (await discoverAuthorizedRuleset(api, rulesetId)).context;
 }
 export function validateNativeEnvelope(context, ruleId, response) {
     assertSnapshot(requireBaseContext(context), response);

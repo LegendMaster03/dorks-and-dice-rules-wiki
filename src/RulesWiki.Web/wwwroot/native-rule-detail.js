@@ -8,6 +8,7 @@ import { classReturnLink } from "./native-class-view-state.js";
 import { rememberRule } from "./wiki-experience.js";
 import { DEFAULT_RULESET_ID, createRulesContext, createRenderLifecycle, validateNativeEnvelope } from "./rules-context.js";
 import { createPresentationInput, createRulesetReader, mountNativePresentation } from "./native-presentation.js";
+import { renderPackageAttribution } from "./package-attribution.js";
 import { createRegisteredNativeRenderers, LEGACY_NATIVE_RENDERER } from "./native-renderer-registration.js";
 const label = name => String(name).replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]/g, " ").replace(/^./, value => value.toUpperCase());
@@ -32,6 +33,8 @@ export function createWikiNativeRendererRegistry(app = null) {
         renderLegacyNativeDetail(staging, {
             rulesetId: input.context.rulesetId, fingerprint: input.context.fingerprint, rule: input.rule
         }, input.onBack, app, input.references);
+        staging.querySelector(".rules-core-library-detail-body")?.append(
+            renderPackageAttribution(input.context, input.packageDescriptor));
         return [...staging.childNodes];
     });
 }
@@ -48,7 +51,7 @@ export function renderNativeDetail(container, detail, onBack, app = null, option
         lifecycle = directLifecycles.get(container).begin(context, detail.rule.id);
     }
     const reader = options.reader ?? (app?.api?.getNativeRule && app?.api?.searchNativeRules
-        ? createRulesetReader(app.api, context) : null);
+        ? createRulesetReader(app.api, context, context.rulesetId === DEFAULT_RULESET_ID ? app.wikiIndex?.packageDescriptor : null) : null);
     const input = createPresentationInput(context, detail, reader, {
         toolBasePath: app?.hostContext?.toolBasePath ?? "", onBack, lifecycle,
         renderSource: app?.renderNativeSource ? value => app.renderNativeSource(value) : null
@@ -67,6 +70,10 @@ export function renderNativeDetail(container, detail, onBack, app = null, option
                 element("span", { className: "rules-core-version-tabs-context" }, badge(label(input.rule.kind), "secondary")));
             const body = element("div", { className: "rules-core-library-detail-body" });
             body.append(...(Array.isArray(content) ? content : [content]));
+            // Generic fallback owns its notice for standalone use. Specialized
+            // renderers receive the same notice here, within the render lease.
+            if (selected.id !== "generic")
+                body.append(renderPackageAttribution(input.context, input.packageDescriptor));
             return [tabs, body];
         }
     });
