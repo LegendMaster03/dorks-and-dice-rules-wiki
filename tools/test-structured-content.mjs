@@ -7,6 +7,7 @@ import { renderRuleContent, renderNamedRuleEntry } from "../src/RulesWiki.Web/ww
 
 const dom = new JSDOM("<main></main>");
 globalThis.document = dom.window.document;
+globalThis.Node = dom.window.Node;
 const load = name => JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/"+name+".json",import.meta.url),"utf8"));
 const fixtures=[
     ["first-party-001","monster.goblin-warrior"],
