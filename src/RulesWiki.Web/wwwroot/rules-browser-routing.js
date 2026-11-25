@@ -8,6 +8,7 @@ import {
 } from "./rules-browser-config.js";
 import { DEFAULT_RULESET_ID, parseQualifiedRoute, catalogRoute, categoryRoute, ruleRoute } from "./rules-context.js";
 import { normalizeBrowserFieldFilters } from "./rules-browser-filters.js";
+import { parseOriginsRoute } from "./origins-navigation.js";
 
 /** Unknown or unsupported paths intentionally yield no selection. */
 export function parseToolRoute(toolRoute) {
@@ -15,6 +16,8 @@ export function parseToolRoute(toolRoute) {
     const path = String(toolRoute).split(/[?#]/, 1)[0];
     const segments = path.replace(/^\/+|\/+$/g, "").split("/").filter(Boolean);
     if (segments.length === 1 && segments[0] === "all") return { entityType: "" };
+    const origins = parseOriginsRoute(path);
+    if (origins) return origins;
     const qualified = parseQualifiedRoute(path);
     if (qualified) {
         if (qualified.status !== "valid") return { unsupportedRulesContext: true };
@@ -24,7 +27,7 @@ export function parseToolRoute(toolRoute) {
     }
     const known = getEntityBrowserConfigForRoute(segments[0]);
     if (segments.length === 1 && known) {
-        return { entityType: known.entityType };
+        return { entityType: known.entityType === "subspecies" ? "ancestry" : known.entityType };
     }
     if (segments.length === 2 && known) {
         return {
@@ -33,7 +36,8 @@ export function parseToolRoute(toolRoute) {
         };
     }
     if (segments.length === 2 && segments[0] === "types") {
-        return { entityType: decodeURIComponent(segments[1]) };
+        const kind = decodeURIComponent(segments[1]);
+        return { entityType: kind === "subspecies" ? "ancestry" : kind };
     }
     if (segments.length === 2 && segments[0] === "rules") {
         return { conceptKey: decodeURIComponent(segments[1]) };
