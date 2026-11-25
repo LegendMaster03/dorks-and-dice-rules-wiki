@@ -251,3 +251,6 @@ const sparse = show({name:"Sparse source", challenge:"2", str:"variable", ac:[{s
 assert.match(sparse.textContent, /CR 2/);
 assert.match(sparse.textContent, /variable/);
 assert.match(sparse.textContent, /depends on summoner/);
+
+assert.match(view("dnd-5e", "monster.green-hag").textContent, /Coven CR 5/);
+assert.match(view("dnd-5-5e", "monster.otherworldly-steed").textContent, /Celestial or Fey or Fiend/);

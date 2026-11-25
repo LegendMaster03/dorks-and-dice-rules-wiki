@@ -1540,5 +1540,254 @@
         }
       ]
     }
+  },
+  {
+    "rulesetId": "dnd-5e",
+    "sourceFile": "data/rulesets/dnd-5e/native/bestiary/structured-06.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "monster.green-hag",
+      "kind": "monster",
+      "name": "Green Hag",
+      "size": [
+        "M"
+      ],
+      "type": "fey",
+      "alignment": [
+        "N",
+        "E"
+      ],
+      "ac": [
+        {
+          "ac": 17,
+          "from": [
+            "natural armor"
+          ]
+        }
+      ],
+      "hp": {
+        "average": 82,
+        "formula": "11d8 + 33"
+      },
+      "speed": {
+        "walk": 30
+      },
+      "str": 18,
+      "dex": 12,
+      "con": 16,
+      "int": 13,
+      "wis": 14,
+      "cha": 14,
+      "skill": {
+        "arcana": "+3",
+        "deception": "+4",
+        "perception": "+4",
+        "stealth": "+3"
+      },
+      "senses": [
+        "darkvision 60 ft."
+      ],
+      "passive": 14,
+      "languages": [
+        "Common",
+        "Draconic",
+        "Sylvan"
+      ],
+      "cr": {
+        "cr": "3",
+        "coven": "5"
+      },
+      "trait": [
+        {
+          "name": "Amphibious",
+          "entries": [
+            "The hag can breathe air and water."
+          ]
+        },
+        {
+          "name": "Mimicry",
+          "entries": [
+            "The hag can mimic animal sounds and humanoid voices. A creature that hears the sounds can tell they are imitations with a successful {@dc 14} Wisdom ({@skill Insight}) check."
+          ]
+        }
+      ],
+      "action": [
+        {
+          "name": "Claws",
+          "entries": [
+            "{@atk mw} {@hit 6} to hit, reach 5 ft., one target. {@h}13 ({@damage 2d8 + 4}) slashing damage."
+          ]
+        },
+        {
+          "name": "Illusory Appearance",
+          "entries": [
+            "The hag covers herself and anything she is wearing or carrying with a magical illusion that makes her look like another creature of her general size and humanoid shape. The illusion ends if the hag takes a bonus action to end it or if she dies.",
+            "The changes wrought by this effect fail to hold up to physical inspection. For example, the hag could appear to have smooth skin, but someone touching her would feel her rough flesh. Otherwise, a creature must take an action to visually inspect the illusion and succeed on a {@dc 20} Intelligence ({@skill Investigation}) check to discern that the hag is disguised."
+          ]
+        },
+        {
+          "name": "Invisible Passage",
+          "entries": [
+            "The hag magically turns {@condition invisible} until she attacks or casts a spell, or until her {@status concentration} ends (as if {@status concentration||concentrating} on a spell). While {@condition invisible}, she leaves no physical evidence of her passage, so she can be tracked only by magic. Any equipment she wears or carries is {@condition invisible} with her."
+          ]
+        }
+      ],
+      "spellcasting": [
+        {
+          "name": "Innate Spellcasting",
+          "type": "spellcasting",
+          "headerEntries": [
+            "The hag's innate spellcasting ability is Charisma (spell save {@dc 12}). She can innately cast the following spells, requiring no material components:"
+          ],
+          "will": [
+            "{@spell dancing lights}",
+            "{@spell minor illusion}",
+            "{@spell vicious mockery}"
+          ],
+          "ability": "cha"
+        }
+      ],
+      "catalogReferences": [
+        "condition.invisible",
+        "rulebook.page-319",
+        "skill.insight",
+        "skill.investigation",
+        "spell.dancing-lights",
+        "spell.minor-illusion",
+        "spell.vicious-mockery"
+      ],
+      "source": {
+        "release": "srd-5.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+        "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "pages": [
+          319
+        ],
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "bestiary/bestiary-srd51.json",
+          "pointer": "/monster/151"
+        },
+        "candidatePage": 319,
+        "structuredStatus": "publisher-name-locator-matched; stat-block body review pending",
+        "adaptation": "Pinned edition-specific stat block; external media, fluff, derived metadata and generated variants excluded."
+      }
+    }
+  },
+  {
+    "rulesetId": "dnd-5-5e",
+    "sourceFile": "data/rulesets/dnd-5-5e/native/bestiary/structured-10.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "monster.otherworldly-steed",
+      "kind": "monster",
+      "name": "Otherworldly Steed",
+      "size": [
+        "L"
+      ],
+      "type": {
+        "type": {
+          "choose": [
+            "celestial",
+            "fey",
+            "fiend"
+          ]
+        }
+      },
+      "alignment": [
+        "N"
+      ],
+      "ac": [
+        {
+          "special": "10 + 1 per spell level"
+        }
+      ],
+      "hp": {
+        "special": "5 + 10 per spell level (the steed has a number of Hit Dice [d10s] equal to the spell's level)"
+      },
+      "speed": {
+        "walk": 60,
+        "fly": {
+          "number": 60,
+          "condition": "(requires level 4+ spell)"
+        }
+      },
+      "str": 18,
+      "dex": 12,
+      "con": 14,
+      "int": 6,
+      "wis": 12,
+      "cha": 8,
+      "passive": 11,
+      "languages": [
+        "telepathy 1 mile (works only with you)"
+      ],
+      "trait": [
+        {
+          "name": "Life Bond",
+          "entries": [
+            "When you regain {@variantrule Hit Points|SRD52} from a level 1+ spell, the steed regains the same number of {@variantrule Hit Points|SRD52} if you're within 5 feet of it."
+          ]
+        }
+      ],
+      "action": [
+        {
+          "name": "Otherworldly Slam",
+          "entries": [
+            "{@atkr m} {@hitYourSpellAttack Bonus equals your spell attack modifier}, reach 5 ft. {@h}{@damage 1d8 + summonSpellLevel} of Radiant (Celestial), Psychic (Fey), or Necrotic (Fiend) damage."
+          ]
+        }
+      ],
+      "bonus": [
+        {
+          "name": "Fell Glare (Fiend Only; Recharges after a Long Rest)",
+          "entries": [
+            "{@actSave wis} DC equals your spell save DC, one creature within 60 feet the steed can see. {@actSaveFail} The target has the {@condition Frightened|SRD52} condition until the end of your next turn."
+          ]
+        },
+        {
+          "name": "Fey Step (Fey Only; Recharges after a Long Rest)",
+          "entries": [
+            "The steed teleports, along with its rider, to an unoccupied space of your choice up to 60 feet away from itself."
+          ]
+        },
+        {
+          "name": "Healing Touch (Celestial Only; Recharges after a Long Rest)",
+          "entries": [
+            "One creature within 5 feet of the steed regains a number of {@variantrule Hit Points|SRD52} equal to {@dice 2d8 + summonSpellLevel}."
+          ]
+        }
+      ],
+      "summonedBySpell": "Find Steed|SRD52",
+      "summonedBySpellLevel": 2,
+      "pbNote": "equals your Proficiency Bonus",
+      "catalogReferences": [
+        "condition.frightened",
+        "rulebook.page-131",
+        "spell.find-steed"
+      ],
+      "source": {
+        "release": "srd-5.2.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+        "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "pages": [
+          131
+        ],
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "bestiary/bestiary-srd52.json",
+          "pointer": "/monster/333"
+        },
+        "candidatePage": 131,
+        "structuredStatus": "publisher-name-locator-matched; stat-block body review pending",
+        "adaptation": "Pinned edition-specific stat block; external media, fluff, derived metadata and generated variants excluded."
+      }
+    }
   }
 ]

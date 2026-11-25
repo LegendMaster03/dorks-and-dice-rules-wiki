@@ -202,7 +202,7 @@ function renderEntry(item, renderRaw) {
 }
 function renderSpellcasting(item, renderRaw) {
     const body = element("div", { className: "rw-stat-entry" });
-    if (item.name) body.append(element("strong", { className: "rw-stat-entry-name", text: item.name }));
+    if (item.name) body.append(element("strong", { className: "rw-stat-entry-name", text: valueText(item.name) }));
     if (item.headerEntries) body.append(renderContent(item.headerEntries, renderRaw));
     if (!empty(item.ability)) {
         const abilityNames = { str: "Strength", dex: "Dexterity", con: "Constitution",
@@ -286,7 +286,8 @@ function challengeSummary(d) {
     const rating = raw && typeof raw === "object" ? field(raw, ["cr", "rating", "value"]) ?? valueText(raw)
         : raw ?? field(challenge, ["rating", "cr", "value"]);
     return { rating, xp: d.xp ?? challenge.xp ?? raw?.xp,
-        lairXp: raw?.xpLair ?? challenge.xpLair, lairRating: raw?.lair ?? challenge.lair };
+        lairXp: raw?.xpLair ?? challenge.xpLair, lairRating: raw?.lair ?? challenge.lair,
+        covenRating: raw?.coven ?? challenge.coven };
 }
 function sizeText(value) {
     if (Array.isArray(value)) return value.map(sizeText).join("/");
@@ -295,6 +296,7 @@ function sizeText(value) {
 function creatureTypeText(value) {
     if (Array.isArray(value)) return value.map(creatureTypeText).join(" or ");
     if (!value || typeof value !== "object") return pretty(value);
+    if (Array.isArray(value.choose)) return value.choose.map(creatureTypeText).join(" or ");
     const base = creatureTypeText(value.type ?? value.name ?? "");
     const type = empty(value.swarmSize) ? base : "Swarm of " + sizeText(value.swarmSize) + " " + base;
     const tags = Array.isArray(value.tags) ? value.tags.map(tag => typeof tag === "object"
@@ -532,6 +534,7 @@ export function renderNativeMonster(rule, renderRaw, options = {}) {
             !empty(challenge.rating) ? element("strong", { text: "CR " + valueText(challenge.rating) }) : null,
             !empty(challenge.xp) ? element("small", { text: valueText(challenge.xp) + " XP" }) : null,
             !empty(challenge.lairRating) ? element("small", { text: "Lair CR " + valueText(challenge.lairRating) }) : null,
+            !empty(challenge.covenRating) ? element("small", { text: "Coven CR " + valueText(challenge.covenRating) }) : null,
             !empty(challenge.lairXp) ? element("small", { text: "Lair XP " + valueText(challenge.lairXp) }) : null) : null);
     root.append(header, element("div", { className: "rw-stat-accent" }));
     // A Kaiju inherits ordinary statblock components. Only their layout and

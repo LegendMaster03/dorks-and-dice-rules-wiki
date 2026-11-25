@@ -24,3 +24,9 @@ Use the pinned actual record fixtures in `tools/fixtures/multi-system/creature-w
 B's finalized structured-content contract and scoped inline links, browser acceptance at desktop/mobile widths, runtime private foreign access under approved test-only policy, and confirmation of regression CI are required before acceptance. No policy, deployment, dispatcher, global CSS or shared fixture manifest changes.
 
 Self-review added swarm classification, source movement choices, slot labels, nonnumeric ability values, and actual first-party fixture coverage. The missing-save dash denotes an unsupplied field, not a claim that a saving throw is unavailable. Existing first-party inference behavior remains unchanged.
+
+## Local visual fixture preview
+
+From repository root, run `python3 -m http.server 8765 --bind 127.0.0.1` and open `http://127.0.0.1:8765/tools/visual/creature-preview.html`. Select any imported fixture, actual first-party Goblin Warrior or Tarrasque, or the separately labeled synthetic Kaiju, at full width, 1024, 760, 420 and 320 pixels. This uses the actual renderer and production creature stylesheet with a minimal offline theme; it is not a substitute for integrated host/theme acceptance. Check conditional stat wrapping, spell slots/actions, symbolic values, and Kaiju stacking. The preview makes no Core requests. No browser screenshot acceptance has been performed from this environment.
+
+Additional shape review includes SRD 5.1 Green Hag coven CR and SRD 5.2.1 Otherworldly Steed selectable type; both are pinned fixtures and tested. Approved first-party design data does not itself establish a concrete resistance map field in authored creatures; no speculative field name or runtime mechanic is introduced.
