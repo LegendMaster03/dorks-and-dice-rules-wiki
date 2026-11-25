@@ -18,8 +18,10 @@ export function parseToolRoute(toolRoute) {
     const qualified = parseQualifiedRoute(path);
     if (qualified) {
         if (qualified.status !== "valid") return { unsupportedRulesContext: true };
+        // Keep unsupported routes out of legacy selection and fragment history.
+        if (qualified.rulesetId !== DEFAULT_RULESET_ID)
+            return { rulesetId: qualified.rulesetId, unsupportedRulesContext: true };
         return { rulesetId: qualified.rulesetId,
-            ...(qualified.rulesetId !== DEFAULT_RULESET_ID ? { unsupportedRulesContext: true } : {}),
             ...(qualified.kind === "rule" ? { conceptKey: qualified.ruleId } : {}),
             ...(qualified.kind === "category" ? { entityType: qualified.category } : {}) };
     }

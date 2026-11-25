@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { JSDOM } from "jsdom";
 import { installWikiExperience, installPaneDivider } from "../src/RulesWiki.Web/wwwroot/wiki-experience.js";
-import { scrollNativeClassTarget } from "../src/RulesWiki.Web/wwwroot/native-class-navigation.js";
+import { restoreMountedClassFragment, scrollNativeClassTarget } from "../src/RulesWiki.Web/wwwroot/native-class-navigation.js";
 import { classReturnLink } from "../src/RulesWiki.Web/wwwroot/native-class-view-state.js";
 
 const dom = new JSDOM('<main id="tool-root"></main>', { url: "https://site.test/tools/rules-wiki/", pretendToBeVisual: true });
@@ -54,6 +54,21 @@ root.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, ca
 await new Promise(resolve => setImmediate(resolve));
 assert.equal(window.location.pathname, "/tools/rules-wiki/all");
 assert.equal(new URLSearchParams(window.location.search).get("q"), "Blinded");
+assert.match(root.textContent, /Existing reader/);
+
+// An explicit foreign or malformed qualified route must never display the
+// existing first-party reader, even when the native ID is identical.
+for (const path of ["/rulesets/dnd-5e/rules/class.warlock", "/rulesets/unknown", "/rulesets/dnd-5e/rules/%ZZ"]) {
+    window.history.pushState({}, "", "/tools/rules-wiki" + path);
+    await app.render();
+    assert.match(root.textContent, /Ruleset unavailable/);
+    assert.doesNotMatch(root.textContent, /Existing reader/);
+}
+assert.equal(restoreMountedClassFragment({ browserSelectedConceptKey: "class.warlock",
+    root: { querySelector: () => { throw Error("Unsupported context reached first-party reader"); } } },
+    { rulesWikiClassView: "class.warlock" }, { unsupportedRulesContext: true, conceptKey: "class.warlock" }, ""), false);
+window.history.pushState({}, "", "/tools/rules-wiki/rulesets/first-party-001/rules/class.warlock");
+await app.render();
 assert.match(root.textContent, /Existing reader/);
 
 const workspace = document.createElement("div");
