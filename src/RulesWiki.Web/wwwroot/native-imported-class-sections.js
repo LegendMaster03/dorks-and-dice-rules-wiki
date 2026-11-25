@@ -2,7 +2,7 @@
  * catalog identities. No option eligibility or character choices are executed. */
 import { nativeClassReferences } from "./native-class-presentation-model.js";
 import { validateNativeEnvelope, nativeRuleIdentity } from "./rules-context.js";
-import { renderStructuredContent } from "./native-presentation.js";
+import { renderStructuredContent, renderStructuredReference } from "./native-presentation.js";
 import { classReturnLink } from "./native-class-view-state.js";
 
 const n = (tag, text, cls) => {
@@ -20,9 +20,9 @@ const section = (id, title) => {
 const array = value => Array.isArray(value) ? value : [];
 const displayId = id => id.split(".").at(-1).replace(/-/g, " ");
 export function classRuleLink(input, id, label = displayId(id)) {
-    const a = n("a", label, "native-class-rule-link");
-    a.setAttribute("href", input.hrefForRule(id));
-    return a;
+    const link = renderStructuredReference(id, input, label);
+    link.classList.add("native-class-rule-link");
+    return link;
 }
 const field = (root, title, value, render) => {
     if (value === undefined || value === null) return;
@@ -38,7 +38,8 @@ async function catalogRecords(input, category, current) {
         const page = await reader.search({ category, offset, limit: 100 });
         if (page.rulesetId !== input.context.rulesetId || page.fingerprint !== input.context.fingerprint ||
             !Array.isArray(page.rules) || !Number.isInteger(page.total) || page.total < 0 ||
-            (total !== null && total !== page.total) || (!page.rules.length && offset < page.total))
+            (total !== null && total !== page.total) ||
+            page.rules.length !== Math.min(100, Math.max(0, page.total - offset)))
             throw new Error("Related catalog changed.");
         total = page.total;
         summaries.push(...page.rules.filter(rule => rule.kind === category));
@@ -56,7 +57,7 @@ async function catalogRecords(input, category, current) {
     }
     return results;
 }
-function lazyCatalog(input, title, category, predicate, render, key) {
+function lazyCatalog(input, title, category, predicate, render, key, readCatalog) {
     const details = n("details", undefined, "native-class-disclosure");
     details.id = "native-class-catalog-" + key;
     details.setAttribute("data-class-lazy", "true");
@@ -74,7 +75,7 @@ function lazyCatalog(input, title, category, predicate, render, key) {
         if (!details.open || loaded || !current()) return;
         loaded = true;
         try {
-            const matches = (await catalogRecords(input, category, current)).filter(predicate);
+            const matches = (await readCatalog(category, current)).filter(predicate);
             if (!current()) return;
             body.replaceChildren();
             if (!matches.length) body.append(n("p", "No matching records are available in this catalog."));
@@ -103,6 +104,17 @@ function progressionTable(value, render) {
 }
 export function importedClassSections(input, model) {
     const record = model.record, render = value => renderStructuredContent(value, { input });
+    // A class view may contain multiple option groups from the same category.
+    // Share one lazy read per category for this mounted snapshot, never globally.
+    const categoryReads = new Map();
+    const readCatalog = (category, current) => {
+        if (!categoryReads.has(category)) {
+            const pending = catalogRecords(input, category, current);
+            categoryReads.set(category, pending);
+            pending.catch(() => { if (categoryReads.get(category) === pending) categoryReads.delete(category); });
+        }
+        return categoryReads.get(category);
+    };
     const sections = [];
     const overview = section("overview", "Overview, equipment and prerequisites");
     field(overview, "Class rules", record.entries, render);
@@ -129,7 +141,7 @@ export function importedClassSections(input, model) {
     if (model.kind === "class" && record.subclassTitle) {
         specialization.append(n("h4", record.subclassTitle));
         if (input.references) specialization.append(lazyCatalog(input, "Browse subclasses", "subclass", rule =>
-            nativeClassReferences(rule.definition, "class").includes(input.rule.id) && rule.definition.className === record.name, render, "subclasses"));
+            nativeClassReferences(rule.definition, "class").includes(input.rule.id) && rule.definition.className === record.name, render, "subclasses", readCatalog));
     }
     if (model.kind === "subclass") {
         for (const id of model.parentIds) {
@@ -149,14 +161,14 @@ export function importedClassSections(input, model) {
             return array(option.featureType).some(type => group.featureType.includes(type)) &&
                 (!owners.length || owners.some(id => classIds.includes(id))) &&
                 (!subclasses.length || subclasses.includes(input.rule.id));
-        }, render, "optional-" + index));
+        }, render, "optional-" + index, readCatalog));
         specialization.append(panel);
     }
     for (const [index, group] of array(record.featProgression).entries()) {
         const panel = n("section");
         panel.append(n("h4", group.name || "Feat progression"), progressionTable(group.progression ?? group, render));
         if (input.references && array(group.category).length) panel.append(lazyCatalog(input, "Browse " + (group.name || "feats"), "feat", rule =>
-            group.category.includes(rule.definition.category), render, "feat-" + index));
+            group.category.includes(rule.definition.category), render, "feat-" + index, readCatalog));
         specialization.append(panel);
     }
     if (specialization.children.length > 1) sections.push(specialization);

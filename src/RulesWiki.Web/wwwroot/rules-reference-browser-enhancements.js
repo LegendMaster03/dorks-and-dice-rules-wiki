@@ -37,8 +37,9 @@ export function installWikiReferenceBrowserEnhancements(app) {
     const renderActiveView = app.renderActiveView.bind(app);
     app.renderActiveView = async container => {
         app.refreshWikiReferenceFacetControls = null;
+        const context = app.rulesContext;
         await renderActiveView(container);
-        if (app.activeView !== "library") return;
+        if (!container.isConnected || app.rulesContext !== context || app.activeView !== "library") return;
         installServerReferenceFacetControls(app, container);
         if (!app.nativeReferenceOnly) installCategoryModeControl(app, container);
         relocateBrowserContextControls(container);
@@ -51,6 +52,7 @@ export function installWikiReferenceNavigation(app) {
     const renderNavigation = app.renderNavigation.bind(app);
     app.renderNavigation = () => {
         const navigation = renderNavigation();
+        if (app.nativeReferenceOnly) return navigation;
         const buttons = [...navigation.querySelectorAll(".rules-core-nav-menu-item")];
         for (const button of buttons) {
             if (button.textContent?.trim() === "Races") button.remove();
@@ -128,7 +130,7 @@ function installServerReferenceFacetControls(app, container) {
     // Package and Edition are server-authoritative in the Wiki reference API.
     // The Phase 2 note only applies to the remaining type-specific client filters.
     const availability = container.querySelector(".rules-core-library-filter-note");
-    if (availability) availability.style.display = "none";
+    if (availability && !app.nativeReferenceOnly) availability.style.display = "none";
 }
 
 function createReferenceFacetSelect(label) {

@@ -42,6 +42,7 @@ const lookup = (context, id) => {
     return record;
 };
 const reads = [];
+const searches = [];
 const readerFor = (context, overrides = {}) => createRulesetReader({
     async getNativeRule(rulesetId, id) {
         assert.equal(rulesetId, context.rulesetId);
@@ -50,6 +51,7 @@ const readerFor = (context, overrides = {}) => createRulesetReader({
     },
     async searchNativeRules(rulesetId, { category, offset = 0, limit = 100 }) {
         assert.equal(rulesetId, context.rulesetId);
+        searches.push([rulesetId, category, offset, limit]);
         const rows = [...recordsByRuleset.get(rulesetId).values()].filter(row => row.kind === category);
         return { rulesetId, fingerprint: context.fingerprint, total: rows.length,
             rules: rows.slice(offset, offset + limit).map(({ id, name, kind }) => ({ id, name, kind })) };
@@ -175,6 +177,15 @@ for (const context of [legacy, modern]) {
     open(invocations);
     await waitFor(() => invocations.querySelector('a[href="' + ruleRoute(context.rulesetId, "optional-feature.agonizing-blast") + '"]'), "invocation option relationship");
     assert.match(invocations.textContent, /Prerequisites/);
+    if (context === legacy) {
+        const readsBefore = reads.length, searchesBefore = searches.length;
+        const pacts = namedDetails(root, "Browse Pact Boon");
+        open(pacts);
+        await waitFor(() => pacts.getAttribute("data-options-ready") === "true", "shared Pact Boon catalog");
+        assert.ok(pacts.querySelector("a"), "Pact Boon records remain readable.");
+        assert.equal(reads.length, readsBefore, "Another option group must reuse the mounted category reads.");
+        assert.equal(searches.length, searchesBefore, "Another option group must not repeat category pagination.");
+    }
     root = mount(context, "subclass.warlock.fiend");
     assert.ok(root.querySelector("#native-class-specializations a"));
     assert.ok(root.querySelector(".native-class-feature"));

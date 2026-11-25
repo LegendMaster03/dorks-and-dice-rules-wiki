@@ -80,3 +80,7 @@ Automated DOM tests cover structure, relationships, reading state and lifecycle.
 ## Workstream validation record
 
 The implementation candidate `55a9631f71a234d3422422add052cb4d349c78cf` passed the complete Validate Rules Wiki workflow ([run 45691181203](https://github.com/LegendMaster03/dorks-and-dice-rules-wiki/actions/runs/45691181203)): 11 C# tests, browser syntax and native-first contracts, the existing first-party class reading tests, the new 140-relationship fixture regression, deployment guards, Compose validation, container build and stateless host smoke test. The preceding run detected a disclosure syntax error, corrected at this candidate. Visual acceptance on actual browser viewports remains open pending integrated A/B; this run does not grant foreign runtime access or authorize deployment.
+
+## Integration reconciliation
+
+All class content passes `{ input }` to the shared structured renderer; explicit related links use its scoped reference helper. Each mounted class view shares one lazy catalog read per related category across its option groups, with retry after failure and no global cache. The 5e Warlock Pact Boon regression verifies that opening a second group does not repeat the optional-feature catalog requests. Reverse category lookups still require native Core relationship projections to avoid full category scans; no new API or policy is introduced here.

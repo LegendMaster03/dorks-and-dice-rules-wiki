@@ -80,8 +80,10 @@ export function renderNativeDetail(container, detail, onBack, app = null, option
     // Only a committed first-party view can update the legacy unqualified history.
     // Foreign history will use the qualified keys in the catalog workstream.
     const finish = mounted => {
-        if (mounted && lifecycle.isCurrent() && app && context.rulesetId === DEFAULT_RULESET_ID)
-            rememberRule(detail.rule);
+        if (mounted && lifecycle.isCurrent() && app) {
+            if (app.rememberNativeReference) app.rememberNativeReference(context, detail.rule);
+            else if (context.rulesetId === DEFAULT_RULESET_ID) rememberRule(detail.rule);
+        }
         return mounted;
     };
     return result && typeof result.then === "function" ? result.then(finish) : finish(result);

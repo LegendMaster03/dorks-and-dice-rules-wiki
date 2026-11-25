@@ -83,7 +83,7 @@ export function renderIndexHeader(
     onSort = null,
     { canSort = false, hideSource = false } = {})
 {
-    const columns = getBrowserColumns(entityType).filter(column => !hideSource || column.key !== "source");
+    const columns = getBrowserColumns(entityType).filter(column => !hideSource || ["name", "entityType"].includes(column.key));
     const normalizedSort = normalizeBrowserSort(entityType, sort);
     container.replaceChildren();
     container.style.gridTemplateColumns = columns.map(value => value.width).join(" ");
@@ -113,7 +113,7 @@ export function renderIndexHeader(
         const disabled = !canSort;
         const button = element("button", {
             type: "button",
-            className: `rules-core-library-column-sort${selected ? " is-active" : ""}`,
+            className: `rules-core-library-column-sort${selected && canSort ? " is-active" : ""}`,
             disabled,
             title: disabled
                 ? "Load all results before sorting. Incremental catalogs remain in authoritative server order."
@@ -123,7 +123,7 @@ export function renderIndexHeader(
                 : `Sort by ${value.label}${selected ? `, currently ${ariaSort}` : ""}`
         },
         element("span", { text: value.label }),
-        selected
+        selected && canSort
             ? element("span", {
                 className: "rules-core-library-sort-indicator",
                 text: normalizedSort.direction === "desc" ? "▼" : "▲",
@@ -156,7 +156,7 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
     }
 
     const configuration = getEntityBrowserConfig(entityType);
-    const columns = configuration.columns.filter(column => !hideSource || column.key !== "source");
+    const columns = configuration.columns.filter(column => !hideSource || ["name", "entityType"].includes(column.key));
     const template = columns.map(value => value.width).join(" ");
     for (const rule of rules) {
         const row = element("button", {
