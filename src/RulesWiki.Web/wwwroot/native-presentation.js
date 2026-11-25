@@ -61,7 +61,8 @@ const node = (tag, text) => {
     if (text !== undefined) value.textContent = String(text);
     return value;
 };
-export { renderStructuredContent } from "./structured-content.js";
+// Expose the shared inline and reference hooks for the creature and other native adapters.
+export { renderStructuredContent, renderInlineContent, renderStructuredReference, resolveSourceReferenceIds } from "./structured-content.js";
 export function renderNativeAttribution(input) {
     const section = node("section");
     section.append(node("h3", "Source and attribution"));
