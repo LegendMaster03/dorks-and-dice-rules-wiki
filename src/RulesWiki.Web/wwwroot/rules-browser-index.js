@@ -113,7 +113,7 @@ export function renderIndexHeader(
         const disabled = !canSort;
         const button = element("button", {
             type: "button",
-            className: `rules-core-library-column-sort${selected ? " is-active" : ""}`,
+            className: `rules-core-library-column-sort${selected && canSort ? " is-active" : ""}`,
             disabled,
             title: disabled
                 ? "Load all results before sorting. Incremental catalogs remain in authoritative server order."
@@ -123,7 +123,7 @@ export function renderIndexHeader(
                 : `Sort by ${value.label}${selected ? `, currently ${ariaSort}` : ""}`
         },
         element("span", { text: value.label }),
-        selected
+        selected && canSort
             ? element("span", {
                 className: "rules-core-library-sort-indicator",
                 text: normalizedSort.direction === "desc" ? "▼" : "▲",

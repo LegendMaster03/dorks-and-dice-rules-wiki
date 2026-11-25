@@ -3,7 +3,7 @@
  * workspace. Reading history is presentation state, not ruleset state.
  */
 import { element as el, clear } from "./ui.js";
-import { currentToolRoute, parseToolRoute, parseBrowserViewStateFromLocation } from "./rules-browser-routing.js";
+import { currentToolRoute, parseToolRoute, browserEntityType, parseBrowserViewStateFromLocation } from "./rules-browser-routing.js";
 import { DEFAULT_RULESET_ID, catalogRoute, ruleRoute, referenceKey, snapshotKey } from "./rules-context.js";
 import { authorizedRulesetDescriptors } from "./rules-reference-api.js";
 import { cancelNativeDetailRender } from "./rules-browser-detail.js";
@@ -86,6 +86,7 @@ export function installWikiExperience(app) {
         app.rulesContext = null;
         app.rulesetReader = null;
         app.wikiIndex = null;
+        app.wikiDescriptors = [];
         app.wikiKinds = new Set();
         app.wikiPlaytests = [];
         app.wikiPlaytestsPartial = false;
@@ -102,7 +103,8 @@ export function installWikiExperience(app) {
         if (!unavailable && app.rulesContext?.rulesetId === id && app.rulesetReader && app.wikiIndex) return true;
         clearContext();
         bindingRoute = path;
-        resetSelection(route, parseBrowserViewStateFromLocation(route.entityType ?? ""));
+        const entityType = browserEntityType(route, window.location.search);
+        resetSelection({ ...route, entityType }, parseBrowserViewStateFromLocation(entityType));
         app.catalogError = null;
         const acceptInventory = response => {
             if (serial === generation) app.wikiDescriptors = authorizedRulesetDescriptors(response);
@@ -315,7 +317,9 @@ export function installWikiExperience(app) {
         clear(container);
         const home = el("section", { className: "wiki-home" },
             el("header", {}, el("p", { className: "wiki-eyebrow", text: packageDisplayName(app.rulesContext, app.rulesetReader.packageDescriptor) }),
-                el("h1", { text: "Rules Wiki" }), el("p", { text: "Find a rule. Explore a class. Return to your game." })));
+                el("h1", { text: "Rules Wiki" }), el("p", { text: app.wikiKinds.has("class")
+                    ? "Find a rule. Explore a class. Return to your game."
+                    : "Find a rule. Explore the reference. Return to your game." })));
         const search = el("input", { type: "search", placeholder: "Search all rules…", ariaLabel: "Search all rules", attributes: { autocomplete: "off" } });
         const form = el("form", { className: "wiki-home-search" }, search, el("button", { type: "submit", text: "Search" }));
         form.addEventListener("submit", event => { event.preventDefault(); go("/all", search.value.trim()); });

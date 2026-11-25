@@ -77,7 +77,20 @@ try {
     await wait(() => home("first-party-001"), "first-party home");
     assert.equal([...selector().options].filter(o => o.value).length, 4);
     await browse("Bestiary", "first-party-001", "monster");
+    // Synthetic rows exercise scale only; not authored gameplay or policy changes.
+    const first = catalogs.get("first-party-001");
+    for (let i = 0; i < 150; i++) first.push({id: "rule.scale-" + i, name: "Scale " + i, kind: "rule", definition: {}});
+    button("Search all rules").click();
+    await wait(() => root.querySelectorAll(".rules-core-library-row").length === 100, "paged index");
     let start = calls.length;
+    const pendingSearch = root.querySelector("input[type=search]");
+    pendingSearch.value = "Scale"; pendingSearch.dispatchEvent(new Event("input", {bubbles: true}));
+    root.querySelector(".rules-core-library-index-list").dispatchEvent(new Event("scroll"));
+    await wait(() => calls.slice(start).some(c => c[0] === "searchNativeRules" && c[2].q === "Scale"), "new search");
+    assert.ok(calls.slice(start).filter(c => c[0] === "searchNativeRules").every(c => c[2].offset === 0),
+        "paging cannot continue the preceding result stream during debounce");
+    await wait(() => root.querySelectorAll(".rules-core-library-row").length === 100, "new search page");
+    start = calls.length;
     await select("dnd-5e");
     assert.equal(calls.length - start, 2, "fresh foreign home: discovery plus bounded facet read");
     assert.ok(button("Races")); assert.equal(button("Species"), undefined);
@@ -85,6 +98,13 @@ try {
     await browse("Classes", "dnd-5e", "class");
     root.querySelector(".rules-core-library-row").click();
     await wait(() => window.location.pathname === base + "/rulesets/dnd-5e/rules/class.warlock", "qualified Warlock route");
+    assert.equal(new URLSearchParams(window.location.search).get("category"), "class");
+    start = calls.length;
+    window.dispatchEvent(new Event("popstate"));
+    await wait(() => root.querySelector(".rules-core-library-detail-body") &&
+        calls.slice(start).some(c => c[0] === "searchNativeRules" && c[1] === "dnd-5e"), "restore record category");
+    assert.ok(calls.slice(start).some(c => c[0] === "searchNativeRules" && c[2].category === "class"));
+    assert.equal(root.querySelectorAll(".rules-core-library-row").length, 1);
     await select("dnd-5-5e");
     assert.ok(button("Species")); assert.equal(button("Races"), undefined);
     await browse("Species", "dnd-5-5e", "species");

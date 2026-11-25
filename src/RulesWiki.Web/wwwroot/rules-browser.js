@@ -15,6 +15,7 @@ import { DEFAULT_RULESET_ID } from "./rules-context.js";
 import { packageDisplayName } from "./package-attribution.js";
 import {
     catalogRouteForEntity,
+    browserEntityType,
     currentToolRoute,
     parseBrowserScopeFromLocation,
     parseBrowserViewStateFromLocation,
@@ -76,7 +77,7 @@ export function installResolvedRulesBrowser(app) {
 
     const route = parseToolRoute(app.hostContext.toolRoute);
     app.browserRouteRequested = Boolean(route.entityType || route.conceptKey);
-    if (route.entityType) app.browserFilters.entityType = route.entityType;
+    app.browserFilters.entityType = browserEntityType(route, window.location.search);
     const routeViewState = parseBrowserViewStateFromLocation(app.browserFilters.entityType);
     app.browserFilters.query = routeViewState.query;
     app.browserFilters.sourceCode = routeViewState.sourceCode;
@@ -179,7 +180,7 @@ export function installResolvedRulesBrowser(app) {
         const next = parseToolRoute(toolRoute);
         if ((next.rulesetId ?? DEFAULT_RULESET_ID) === (app.rulesContext?.rulesetId ?? DEFAULT_RULESET_ID)
             && restoreMountedClassFragment(app, event.state, next, window.location.hash)) return;
-        const nextEntityType = next.entityType ?? "";
+        const nextEntityType = browserEntityType(next, window.location.search);
         const nextViewState = parseBrowserViewStateFromLocation(nextEntityType);
         app.browserScope = parseBrowserScopeFromLocation(app) ?? "global";
         app.browserFilters.entityType = nextEntityType;
@@ -402,6 +403,8 @@ async function renderRulesBrowser(app, container) {
     let isLoadingMore = false;
     let loadMoreError = null;
     let searchTimer = null;
+    let searchPending = false;
+    let ignoredNativeFilters = false;
     let preserveDeepLink = Boolean(app.browserDeepLink);
     let loadMore = async () => [];
     let load = async () => {};
@@ -413,7 +416,7 @@ async function renderRulesBrowser(app, container) {
         && canSortBrowserDataset(currentRules.length, totalCount);
 
     const canSortCurrentDataset = () =>
-        hasCompleteDataset() && currentRules.length > 0;
+        !searchPending && hasCompleteDataset() && currentRules.length > 0;
 
     const currentDisplayRules = () => {
         const application = resolveBrowserFilterApplication(
@@ -458,7 +461,7 @@ async function renderRulesBrowser(app, container) {
     };
 
     const selectRule = async rule => {
-        if (!rule || !currentSurface()) return;
+        if (!rule || !currentSurface() || searchPending) return;
         preserveDeepLink = false;
         pushToolRoute(app, rule.browserLink?.toolRelativePath);
         await renderSelection(rule.conceptKey);
@@ -604,7 +607,9 @@ async function renderRulesBrowser(app, container) {
             .filter(definition => definition.mode === "client-complete");
         if (app.nativeReferenceOnly) {
             filterAvailability.hidden = false;
-            filterAvailability.textContent = "Type-specific filters require server-projected fields; the native catalog currently supplies names and categories only.";
+            filterAvailability.textContent = (ignoredNativeFilters
+                ? "Unsupported URL filters were removed. " : "")
+                + "The native catalog supplies names and categories only. Source, package, edition, and type-specific filters require server support.";
             syncFilterControls();
             return;
         }
@@ -670,7 +675,7 @@ async function renderRulesBrowser(app, container) {
         search.select();
     };
     app.browserKeyboard.selectRelative = async direction => {
-        if (!currentSurface()) return;
+        if (!currentSurface() || searchPending) return;
         const displayRules = currentDisplayRules();
         if (!displayRules.length) return;
 
@@ -759,7 +764,10 @@ async function renderRulesBrowser(app, container) {
         if (!hasPublishedRuleset) {
             indexStatus.textContent = "Nothing published";
         } else if (hasMore) {
-            indexStatus.textContent = `${currentRules.length} of ${totalCount} · ${app.nativeReferenceOnly ? "server order" : "load all to sort/filter"}`;
+            const order = app.nativeReferenceOnly
+                ? (app.browserSort.key ? "server order · requested sort pending" : "server order")
+                : "load all to sort/filter";
+            indexStatus.textContent = `${currentRules.length} of ${totalCount} · ${order}`;
         } else if (clientFiltered) {
             indexStatus.textContent = `${displayedCount} matching · ${totalCount} total`;
         } else {
@@ -779,7 +787,7 @@ async function renderRulesBrowser(app, container) {
 
     // Reject page responses that belong to a superseded filter generation.
     loadMore = async () => {
-        if (!currentSurface() || !hasMore || isLoadingMore) return [];
+        if (!currentSurface() || searchPending || !hasMore || isLoadingMore) return [];
         const serial = loadSerial;
         isLoadingMore = true;
         loadMoreError = null;
@@ -854,6 +862,9 @@ async function renderRulesBrowser(app, container) {
     // update the browser only if no newer filter/scope request superseded them.
     load = async ({ keepSelection = false } = {}) => {
         if (!currentSurface()) return;
+        if (searchTimer) clearTimeout(searchTimer);
+        searchTimer = null;
+        searchPending = false;
         const serial = ++loadSerial;
         app.browserPage = 0;
         isLoadingMore = false;
@@ -874,6 +885,14 @@ async function renderRulesBrowser(app, container) {
                 app.browserFilters.fieldFilters)
         };
         if (app.nativeReferenceOnly) {
+            const params = new URLSearchParams(window.location.search);
+            ignoredNativeFilters ||= Boolean(params.get("source") || params.get("overrides") === "1"
+                || [...params.keys()].some(key => key.startsWith("f."))
+                || (params.get("sort") && !["name", "entityType"].includes(params.get("sort"))));
+            if (ignoredNativeFilters) {
+                filterBar.hidden = false;
+                filterToggle.setAttribute("aria-expanded", "true");
+            }
             sourceFilter.value = "";
             if (!["name", "entityType"].includes(app.browserSort?.key)) app.browserSort = { key: null, direction: "asc" };
             replaceToolRoute(app, currentToolRoute(app), app.browserScope);
@@ -1043,7 +1062,7 @@ async function renderRulesBrowser(app, container) {
     };
 
     list.addEventListener("scroll", () => {
-        if (!hasMore || isLoadingMore) return;
+        if (!currentSurface() || searchPending || !hasMore || isLoadingMore) return;
         const remaining = list.scrollHeight - list.scrollTop - list.clientHeight;
         if (remaining <= 180) void loadMore();
     });
@@ -1113,6 +1132,15 @@ async function renderRulesBrowser(app, container) {
     search.addEventListener("input", () => {
         if (!currentSurface()) return;
         ++loadSerial;
+        // A changed query is not a continuation of the previous page stream.
+        searchPending = true;
+        hasMore = false;
+        isLoadingMore = false;
+        rowByConceptKey.clear();
+        list.replaceChildren(renderIndexState("Searching rules…"));
+        indexFooter.replaceChildren();
+        indexStatus.textContent = "Searching…";
+        refreshIndexHeader();
         preserveDeepLink = false;
         clearSearch.disabled = !search.value;
         app.browserFilters.query = search.value.trim();

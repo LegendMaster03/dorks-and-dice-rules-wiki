@@ -87,6 +87,14 @@ export function parseBrowserViewState(search = "", entityType = "") {
     };
 }
 
+/** Retain the originating index category on a qualified record URL. */
+export function browserEntityType(route, search = "") {
+    if (route.entityType !== undefined) return route.entityType;
+    if (!route.qualified || !route.conceptKey) return "";
+    const category = new URLSearchParams(search).get("category") ?? "";
+    return /^[a-zA-Z][a-zA-Z0-9-]{0,79}$/.test(category) ? category : "";
+}
+
 export function parseBrowserViewStateFromLocation(entityType = "") {
     return parseBrowserViewState(window.location.search, entityType);
 }
@@ -106,6 +114,12 @@ export function browserHref(app, toolRelativePath, scopeValue = app.browserScope
     const path = `${base.replace(/\/$/, "")}${relative}`;
     const parameters = new URLSearchParams(window.location.search);
     parameters.delete("browse");
+    parameters.delete("category");
+    const destination = parseToolRoute(relative);
+    if (destination.qualified && destination.conceptKey && destination.rulesetId === id) {
+        const category = app.browserFilters?.entityType ?? "";
+        if (/^[a-zA-Z][a-zA-Z0-9-]{0,79}$/.test(category)) parameters.set("category", category);
+    }
     if (id && relative === catalogRoute(id)) parameters.set("browse", "1");
     parameters.delete("scope");
     parameters.delete("q");
@@ -157,8 +171,10 @@ export function replaceToolRoute(app, toolRelativePath, scopeValue = app.browser
 }
 
 function updateToolRoute(app, toolRelativePath, scopeValue, replace) {
-    const href = browserHref(app, toolRelativePath || "/", scopeValue);
-    const current = `${window.location.pathname}${window.location.search}`;
+    let href = browserHref(app, toolRelativePath || "/", scopeValue);
+    // Same-record query normalization must not discard a reading fragment.
+    if (replace && href.split("?")[0] === window.location.pathname) href += window.location.hash;
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     if (current === href) return;
     if (replace) {
         window.history.replaceState({}, "", href);
