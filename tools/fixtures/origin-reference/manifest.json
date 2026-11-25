@@ -1,0 +1,33 @@
+{
+  "contractVersion": 1,
+  "coreCommit": "a68df0e28187c09044d3c5d666d17fea5ca7aa4c",
+  "rulesetId": "first-party-001",
+  "fingerprint": "319e88eaa691a9b59f76e4d66fd7bacc6c5757bd07a0b486761f50cd8034c478",
+  "workflowRun": 45715249368,
+  "artifactId": 15069986077,
+  "artifactSha256": "4e511fc2f7f40d44b3145765458b1c0ea823dd46a3c9bb61f4bc23087668c938",
+  "responsePackSha256": "2330ef21b123da7575f9846c10e959bc690e3ea9a2435dbf696c4abd51a07a23",
+  "format": "gzip JSON object; keys are original captured response filenames, values are complete HTTP JSON envelopes",
+  "fixtureCount": 10,
+  "inventory": {
+    "biological": {
+      "species": 9,
+      "ancestry": 34
+    },
+    "characteristics": {
+      "biological": 97,
+      "construct": 8
+    },
+    "upbringing": 13,
+    "backgrounds": 16,
+    "construct-components": 46,
+    "construct-options": {
+      "construct-design": 12,
+      "construct-enhancement": 22,
+      "construct-material": 18,
+      "construct-power-source": 4,
+      "crafting-recipe": 90
+    }
+  },
+  "source": "Isolated authenticated HTTP test OriginReferenceReadsUseActualExpandedSnapshotAndExactFingerprint. No synthetic responses, character data, or deployed reads in this pack."
+}
