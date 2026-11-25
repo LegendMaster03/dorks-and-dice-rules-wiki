@@ -51,10 +51,15 @@ assert.equal(new Set(red.occurrences.map(x => x.occurrenceKey)).size, red.occurr
 const root = await controller.select("species.dragonborn");
 assert.equal(root.selected.selectable, false);
 assert.equal(root.direct, null);
+assert.equal(red.selected.defaultUpbringingId, null);
+assert.equal(root.selected.defaultUpbringingId, null);
 const wood = await controller.select("ancestry.elf.wood");
 assert.equal(wood.direct.fixedValues.find(x => x.slot === "walkingSpeedFeet").value, 35);
 assert.match(wood.direct.candidates.find(x => x.sourceId === "species.elf" && x.slot === "walkingSpeedFeet").sourceRestriction, /override/);
 assert.equal(calls.length, 4);
+const common = red.occurrences.filter(x => wood.occurrences.some(y => y.canonicalTraitId && y.canonicalTraitId === x.canonicalTraitId));
+assert.ok(common.length > 0, "Actual sources share canonical characteristic identities");
+for (const x of common) assert.ok(wood.occurrences.some(y => y.canonicalTraitId === x.canonicalTraitId && y.occurrenceKey !== x.occurrenceKey));
 
 // Deliberately synthetic duplicate occurrence identity and malformed parent cases.
 // No synthetic data is asserted as authored gameplay.
@@ -117,6 +122,8 @@ assert.match(view.textContent, /Reference only/);
 assert.match(view.textContent, /Inherited reference occurrence/);
 assert.match(view.textContent, /fire/i);
 assert.match(view.textContent, /Configured source bindings/);
+assert.match(view.textContent, /No suggested Upbringing is authored for this record/);
+assert.ok(view.querySelector('a[href="' + ruleRoute(context.rulesetId, "rule.creature-origination") + '"]'));
 assert.match(renderBiologicalDetail(root, input).textContent, /Not directly selectable/);
 assert.match(renderBiologicalDetail(wood, input).textContent, /35/);
 assert.throws(() => renderBiologicalDetail(red, { ...input, context: staleContext }), /context mismatch/);
