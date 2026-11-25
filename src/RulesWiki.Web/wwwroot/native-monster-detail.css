@@ -162,3 +162,5 @@
     .rw-statblock-kaiju .rw-stat-ability:nth-child(n + 5) { border-top: 1px solid var(--rw-stat-border); }
     .rw-statblock-kaiju .rw-stat-ability:nth-child(5), .rw-statblock-kaiju .rw-stat-ability:nth-child(6) { border-top: 1px solid var(--rw-stat-border); }
 }
+/* Preserve narrow-panel access to authored source-layout text. */
+.rw-stat-source-layout { max-width: 100%; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }

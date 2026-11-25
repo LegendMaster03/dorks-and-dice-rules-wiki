@@ -1289,5 +1289,256 @@
         "variantPointer": "/monster/331/_versions/0/_implementations/0"
       }
     }
+  },
+  {
+    "rulesetId": "dnd-5e",
+    "sourceFile": "data/rulesets/dnd-5e/native/bestiary/structured-11.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "monster.swarm-of-bats",
+      "kind": "monster",
+      "name": "Swarm of Bats",
+      "size": [
+        "M"
+      ],
+      "type": {
+        "type": "beast",
+        "swarmSize": "T"
+      },
+      "alignment": [
+        "U"
+      ],
+      "ac": [
+        12
+      ],
+      "hp": {
+        "average": 22,
+        "formula": "5d8"
+      },
+      "speed": {
+        "walk": 0,
+        "fly": 30
+      },
+      "str": 5,
+      "dex": 15,
+      "con": 10,
+      "int": 2,
+      "wis": 12,
+      "cha": 4,
+      "senses": [
+        "blindsight 60 ft."
+      ],
+      "passive": 11,
+      "cr": "1/4",
+      "trait": [
+        {
+          "name": "Echolocation",
+          "entries": [
+            "The swarm can't use its blindsight while {@condition deafened}."
+          ]
+        },
+        {
+          "name": "Keen Hearing",
+          "entries": [
+            "The swarm has advantage on Wisdom ({@skill Perception}) checks that rely on hearing."
+          ]
+        },
+        {
+          "name": "Swarm",
+          "entries": [
+            "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny bat. The swarm can't regain hit points or gain temporary hit points."
+          ]
+        }
+      ],
+      "action": [
+        {
+          "name": "Bites",
+          "entries": [
+            "{@atk mw} {@hit 4} to hit, reach 0 ft., one creature in the swarm's space. {@h}5 ({@damage 2d4}) piercing damage, or 2 ({@damage 1d4}) piercing damage if the swarm has half of its hit points or fewer."
+          ]
+        }
+      ],
+      "resist": [
+        "bludgeoning",
+        "piercing",
+        "slashing"
+      ],
+      "conditionImmune": [
+        "charmed",
+        "frightened",
+        "grappled",
+        "paralyzed",
+        "petrified",
+        "prone",
+        "restrained",
+        "stunned"
+      ],
+      "catalogReferences": [
+        "condition.charmed",
+        "condition.deafened",
+        "condition.frightened",
+        "condition.grappled",
+        "condition.paralyzed",
+        "condition.petrified",
+        "condition.prone",
+        "condition.restrained",
+        "condition.stunned",
+        "rulebook.page-389",
+        "skill.perception"
+      ],
+      "source": {
+        "release": "srd-5.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+        "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "pages": [
+          389
+        ],
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "bestiary/bestiary-srd51.json",
+          "pointer": "/monster/269"
+        },
+        "candidatePage": 389,
+        "structuredStatus": "publisher-name-locator-matched; stat-block body review pending",
+        "adaptation": "Pinned edition-specific stat block; external media, fluff, derived metadata and generated variants excluded."
+      }
+    }
+  },
+  {
+    "rulesetId": "dnd-5-5e",
+    "sourceFile": "data/rulesets/dnd-5-5e/native/bestiary/animals-05.json",
+    "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+    "record": {
+      "id": "monster.swarm-of-insects",
+      "kind": "monster",
+      "name": "Swarm of Insects",
+      "size": [
+        "M"
+      ],
+      "type": {
+        "type": "beast",
+        "swarmSize": "T"
+      },
+      "alignment": [
+        "U"
+      ],
+      "ac": [
+        11
+      ],
+      "hp": {
+        "average": 19,
+        "formula": "3d8 + 6"
+      },
+      "speed": {
+        "walk": 20,
+        "choose": {
+          "from": [
+            "climb",
+            "fly"
+          ],
+          "amount": 20,
+          "note": "(GM's choice)"
+        }
+      },
+      "str": 3,
+      "dex": 13,
+      "con": 14,
+      "int": 1,
+      "wis": 7,
+      "cha": 1,
+      "save": {
+        "str": "-4",
+        "dex": "+1",
+        "con": "+2",
+        "int": "-5",
+        "wis": "-2",
+        "cha": "-5"
+      },
+      "initiative": {
+        "modifier": 1,
+        "score": 11
+      },
+      "proficiencyBonus": 2,
+      "cr": "1/2",
+      "challenge": {
+        "rating": "1/2",
+        "xp": 100
+      },
+      "senses": [
+        "Blindsight 30 ft."
+      ],
+      "passive": 8,
+      "resist": [
+        "bludgeoning",
+        "piercing",
+        "slashing"
+      ],
+      "conditionImmune": [
+        "charmed",
+        "frightened",
+        "grappled",
+        "paralyzed",
+        "petrified",
+        "prone",
+        "restrained",
+        "stunned"
+      ],
+      "officialTextLayout": "Swarm of Insects\nMedium Swarm of Tiny Beasts, Unaligned\nAC 11                Initiative +1 (11)\nHP 19 (3d8 + 6)\nSpeed 20 ft., Climb or Fly 20 ft. (GM’s choice)\nMOD SAVE            MOD SAVE            MOD SAVE\nStr 3 −4 −4          Dex 13 +1 +1        Con 14 +2 +2\nInt 1 −5 −5          Wis 7 −2 −2         Cha 1 −5 −5\nResistances Bludgeoning, Piercing, Slashing\nImmunities Charmed, Frightened, Grappled, Paralyzed,\nPetrified, Prone, Restrained, Stunned\nSenses Blindsight 30 ft.; Passive Perception 8\nLanguages None\nCR 1/2 (XP 100; PB +2)\nTraits\nSpider Climb. If the swarm has a Climb Speed, the\nswarm can climb difficult surfaces, including along ceil-\nings, without needing to make an ability check.\nSwarm. The swarm can occupy another creature’s\nspace and vice versa, and the swarm can move through\nany opening large enough for a Tiny insect. The swarm\ncan’t regain Hit Points or gain Temporary Hit Points.\nActions\nBites. Melee Attack Roll: +3, reach 5 ft. Hit: 6 (2d4 + 1)\nPoison damage, or 3 (1d4 + 1) Poison damage if the\nswarm is Bloodied.",
+      "catalogReferences": [
+        "rulebook.page-361",
+        "condition.charmed",
+        "condition.frightened",
+        "condition.grappled",
+        "condition.paralyzed",
+        "condition.petrified",
+        "condition.prone",
+        "condition.restrained",
+        "condition.stunned"
+      ],
+      "source": {
+        "release": "srd-5.2.1",
+        "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+        "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+        "pages": [
+          361
+        ],
+        "section": "Animals",
+        "license": "CC-BY-4.0",
+        "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+        "structuredSource": {
+          "provider": "CoolFireGiant/hewnhero-srd",
+          "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+          "path": "bestiary/bestiary-srd52.json",
+          "pointer": "/monster/277"
+        },
+        "adaptation": "Direct publisher page-layout stat block; source candidate used for heading and section-entry identity comparison, not rule text.",
+        "structuredStatus": "publisher-stat-block-headers-and-core-fields-verified; structured entry body review pending"
+      },
+      "trait": [
+        {
+          "name": "Spider Climb",
+          "entries": [
+            "If the swarm has a {@variantrule Climb Speed|SRD52}, the swarm can climb difficult surfaces, including along ceilings, without needing to make an ability check."
+          ]
+        },
+        {
+          "name": "Swarm",
+          "entries": [
+            "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny insect. The swarm can't regain {@variantrule Hit Points|SRD52} or gain {@variantrule Temporary Hit Points|SRD52}."
+          ]
+        }
+      ],
+      "action": [
+        {
+          "name": "Bites",
+          "entries": [
+            "{@atkr m} {@hit 3}, reach 5 ft. {@h}6 ({@damage 2d4 + 1}) Poison damage, or 3 ({@damage 1d4 + 1}) Poison damage if the swarm is {@status Bloodied|SRD52}."
+          ]
+        }
+      ]
+    }
   }
 ]

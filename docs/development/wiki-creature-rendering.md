@@ -22,3 +22,5 @@ Use the pinned actual record fixtures in `tools/fixtures/multi-system/creature-w
 ## Remaining integration
 
 B's finalized structured-content contract and scoped inline links, browser acceptance at desktop/mobile widths, runtime private foreign access under approved test-only policy, and confirmation of regression CI are required before acceptance. No policy, deployment, dispatcher, global CSS or shared fixture manifest changes.
+
+Self-review added swarm classification, source movement choices, slot labels, nonnumeric ability values, and actual first-party fixture coverage. The missing-save dash denotes an unsupplied field, not a claim that a saving throw is unavailable. Existing first-party inference behavior remains unchanged.

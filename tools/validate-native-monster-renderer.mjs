@@ -229,3 +229,25 @@ assert.match(spirit.textContent, /50 \+ 10 for each spell level above 5/);
 assert.match(spirit.textContent, /equals your Proficiency Bonus/);
 assert.match(view("dnd-5-5e", "monster.animated-object-huge").textContent, /Animate Objects/);
 console.log("Imported native creature fixture checks passed.");
+
+const oldSwarm = view("dnd-5e", "monster.swarm-of-bats");
+assert.match(oldSwarm.textContent, /Medium · Swarm of Tiny Beast/);
+assert.match(oldSwarm.textContent, /0 ft\./);
+const newSwarm = view("dnd-5-5e", "monster.swarm-of-insects");
+assert.match(newSwarm.textContent, /20 ft\. \(Climb or Fly\) \(GM's choice\)/);
+assert.match(view("dnd-5e", "monster.acolyte").textContent, /Level 1 \(3 slots\)/);
+const firstPartyRecords = ["monster.goblin-warrior", "monster.tarrasque"].map(id => JSON.parse(fs.readFileSync(
+    new URL("./fixtures/multi-system/first-party-001--" + id + ".json", import.meta.url))));
+for (const record of firstPartyRecords) {
+    const target = new FakeNode("main");
+    renderNativeDetail(target, { rulesetId: "first-party-001", fingerprint: "fixture-only",
+        rule: { id: record.id, name: record.name, kind: record.kind, definition: record } }, () => {});
+    assert.equal(cls(target, "rw-statblock").length, 1);
+    assert.match(target.textContent, /Armor Class/);
+    assert.match(target.textContent, /Actions/);
+    assert.equal(cls(target, "rw-statblock-kaiju").length, 0);
+}
+const sparse = show({name:"Sparse source", challenge:"2", str:"variable", ac:[{special:"depends on summoner"}]});
+assert.match(sparse.textContent, /CR 2/);
+assert.match(sparse.textContent, /variable/);
+assert.match(sparse.textContent, /depends on summoner/);

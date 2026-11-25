@@ -56,8 +56,10 @@ const pretty = key => String(key).replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]/g, " ").replace(/^./, char => char.toUpperCase());
 const signed = value => {
     if (empty(value)) return null;
-    const number = Number(value);
-    return Number.isFinite(number) ? (number >= 0 ? `+${number}` : String(number)) : String(value);
+    if (typeof value === "object") return valueText(value);
+    const numeric = typeof value === "number" || typeof value === "string" && /^[+-]?\d+(?:\.\d+)?$/.test(value.trim());
+    const number = numeric ? Number(value) : NaN;
+    return Number.isFinite(number) ? (number >= 0 ? "+" + number : String(number)) : String(value);
 };
 const valueText = value => {
     if (empty(value)) return "";
@@ -212,16 +214,24 @@ function renderSpellcasting(item, renderRaw) {
     const labels = { will: "At Will", daily: "Per Day", rest: "Per Rest", weekly: "Per Week",
         spells: "Spells", constant: "Constant", legendary: "Legendary", ritual: "Rituals" };
     for (const [key, value] of Object.entries(item)) {
-        if (["name", "type", "headerEntries", "ability", "displayAs", "hidden"].includes(key)
+        if (["name", "type", "headerEntries", "footerEntries", "ability", "displayAs", "hidden"].includes(key)
             || (Array.isArray(item.hidden) && item.hidden.includes(key)) || empty(value)) continue;
         if (key in labels && value && typeof value === "object" && !Array.isArray(value)) {
             for (const [frequency, spellList] of Object.entries(value)) {
-                const frequencyLabel = key === "daily" && /^(\d+)e?$/.test(frequency)
-                    ? `${frequency.match(/^\d+/)[0]}/day${frequency.endsWith("e") ? " each" : ""}`
-                    : pretty(frequency);
+                const frequencyLabel = key === "spells" && /^\d+$/.test(frequency)
+                    ? (frequency === "0" ? "Cantrips" : "Level " + frequency)
+                    : /^(\d+)e?$/.test(frequency) && ["daily", "rest", "weekly"].includes(key)
+                        ? frequency.match(/^\d+/)[0] + "/" + ({ daily: "day", rest: "rest", weekly: "week" })[key] + (frequency.endsWith("e") ? " each" : "")
+                        : pretty(frequency);
+                const slots = key === "spells" && spellList && !empty(spellList.slots)
+                    ? " (" + valueText(spellList.slots) + " slots)" : "";
+                const spells = key === "spells" && Array.isArray(spellList?.spells) ? spellList.spells : spellList;
+                const extras = key === "spells" && spells !== spellList
+                    ? Object.fromEntries(Object.entries(spellList).filter(([k]) => !["slots", "spells"].includes(k))) : null;
                 body.append(element("div", { className: "rw-stat-spell-row" },
-                    element("b", { text: `${frequencyLabel}: ` }),
-                    renderContent(spellList, renderRaw)));
+                    element("b", { text: frequencyLabel + slots + ": " }),
+                    renderContent(spells, renderRaw),
+                    extras && Object.keys(extras).length ? renderRaw(extras) : null));
             }
         } else {
             body.append(element("div", { className: "rw-stat-spell-row" },
@@ -252,9 +262,14 @@ const movementDistance = value => {
     }
     return valueText(value);
 };
+function movementChoice(value) {
+    if (!value || typeof value !== "object" || !Array.isArray(value.from)) return valueText(value);
+    const amount = empty(value.amount) ? "" : movementDistance(value.amount) + " ";
+    return amount + "(" + value.from.map(pretty).join(" or ") + ")" + (empty(value.note) ? "" : " " + valueText(value.note));
+}
 const speedValue = value => value && typeof value === "object" && !Array.isArray(value)
     ? Object.entries(value).filter(([key, amount]) => key !== "canHover" && !empty(amount))
-        .map(([key, amount]) => (key === "walk" ? "" : pretty(key) + " ") + movementDistance(amount))
+        .map(([key, amount]) => key === "choose" ? movementChoice(amount) : (key === "walk" ? "" : pretty(key) + " ") + movementDistance(amount))
         .concat(value.canHover === true && !/hover/i.test(valueText(value.fly)) ? ["Can hover"] : []).join(", ")
     : movementDistance(value);
 const initValue = value => {
@@ -266,12 +281,36 @@ const initValue = value => {
     return valueText(value);
 };
 function challengeSummary(d) {
-    const raw = field(d, ["cr", "challengeRating"]);
+    const raw = field(d, ["cr", "challengeRating"]) ?? (typeof d.challenge !== "object" ? d.challenge : undefined);
     const challenge = d.challenge && typeof d.challenge === "object" ? d.challenge : {};
     const rating = raw && typeof raw === "object" ? field(raw, ["cr", "rating", "value"]) ?? valueText(raw)
-        : raw ?? challenge.rating;
+        : raw ?? field(challenge, ["rating", "cr", "value"]);
     return { rating, xp: d.xp ?? challenge.xp ?? raw?.xp,
         lairXp: raw?.xpLair ?? challenge.xpLair, lairRating: raw?.lair ?? challenge.lair };
+}
+function sizeText(value) {
+    if (Array.isArray(value)) return value.map(sizeText).join("/");
+    return SIZE[String(value).toUpperCase()] ?? pretty(value);
+}
+function creatureTypeText(value) {
+    if (Array.isArray(value)) return value.map(creatureTypeText).join(" or ");
+    if (!value || typeof value !== "object") return pretty(value);
+    const base = creatureTypeText(value.type ?? value.name ?? "");
+    const type = empty(value.swarmSize) ? base : "Swarm of " + sizeText(value.swarmSize) + " " + base;
+    const tags = Array.isArray(value.tags) ? value.tags.map(tag => typeof tag === "object"
+        ? [tag.prefix, tag.tag].filter(v => !empty(v)).join(" ") || valueText(tag) : pretty(tag)) : [];
+    const additional = Object.fromEntries(Object.entries(value).filter(([k]) => !["type", "name", "swarmSize", "tags"].includes(k)));
+    if (Object.keys(additional).length) tags.push(valueText(additional));
+    return (type || valueText(value)) + (tags.length ? " (" + tags.join(", ") + ")" : "");
+}
+function alignmentText(value) {
+    if (Array.isArray(value)) return value.map(alignmentText).join(value.some(v => typeof v === "object") ? " or " : " ");
+    if (value && typeof value === "object") {
+        const base = field(value, ["alignment", "value", "special"]);
+        const text = empty(base) ? valueText(value) : alignmentText(base);
+        return text + (empty(value.chance) ? "" : " (" + valueText(value.chance) + "%)");
+    }
+    return ALIGNMENT[String(value).toUpperCase()] ?? pretty(value);
 }
 function defenseText(value) {
     if (Array.isArray(value)) return value.map(defenseText).filter(Boolean).join(", ");
@@ -295,7 +334,7 @@ function abilityGrid(definition, { explicitSavesOnly = false } = {}) {
     const explicit = supplied && typeof supplied === "object" && !Array.isArray(supplied) ? supplied : {};
     const scores = element("div", { className: "rw-stat-abilities" }, ABILITIES.map(([label, key]) => {
         const score = Number(definition[key]);
-        const valid = !empty(definition[key]) && Number.isFinite(score);
+        const valid = (typeof definition[key] === "number" || typeof definition[key] === "string" && /^\d+$/.test(definition[key].trim())) && Number.isFinite(score);
         const modifier = valid ? Math.floor((score - 10) / 2) : null;
         const save = explicit[key] ?? explicit[pretty(key).toLowerCase()];
         // 5.x unproficient ability saves equal the ability modifier. Do not
@@ -307,7 +346,7 @@ function abilityGrid(definition, { explicitSavesOnly = false } = {}) {
                 element("strong", { text: valid ? String(score) : empty(definition[key]) ? "—" : valueText(definition[key]) }),
                 element("small", { text: modifier === null ? "" : ` (${signed(modifier)})` })),
             element("span", { className: "rw-stat-ability-save" },
-                element("span", { text: "Save " }), element("b", { text: saveText ?? "—" })));
+                element("span", { text: "Save " }), element("b", { text: saveText ?? "—", title: explicitSavesOnly && empty(save) ? "No explicit save supplied in this record" : undefined })));
     }));
     const saves = [["Fortitude", ["fortitude", "fort"]], ["Reflex", ["reflex", "ref"]],
         ["Will", ["will"]]].map(([label, keys]) =>
@@ -479,15 +518,8 @@ export function renderNativeMonster(rule, renderRaw, options = {}) {
     if (kaijuLayout) { seen.add("blockType"); seen.add("statblockType"); }
     if (kaijuProfile) seen.add("kaiju");
     const consume = keys => keys.forEach(key => seen.add(key));
-    const titleParts = [displayValue(d.size, value => Array.isArray(value) ? value.map(v => SIZE[String(v).toUpperCase()] ?? pretty(v)).join("/") : SIZE[String(value).toUpperCase()] ?? pretty(value)),
-        displayValue(d.type, value => {
-            if (typeof value !== "object") return pretty(value);
-            const type = pretty(value.type ?? value.name ?? "");
-            const tags = Array.isArray(value.tags) ? value.tags.map(pretty).join(", ") : "";
-            return tags ? `${type} (${tags})` : type;
-        }),
-        displayValue(d.alignment, value => Array.isArray(value)
-            ? value.map(v => ALIGNMENT[String(v).toUpperCase()] ?? pretty(v)).join(" ") : ALIGNMENT[String(value).toUpperCase()] ?? pretty(value)),
+    const titleParts = [displayValue(d.size, sizeText), displayValue(d.type, creatureTypeText),
+        displayValue(d.alignment, alignmentText),
         kaijuLayout ? "Kaiju" : null].filter(Boolean);
     const challenge = challengeSummary(d);
     consume(["size", "type", "alignment", "cr", "challenge", "challengeRating", "xp", "initiative", "init", "ac", "armorClass", "hp", "hitPoints", "speed", "touchAc", "touchAC", "acTouch", "flatFootedAc", "flatFootedAC", "acFlatFooted", "flatFooted", "touch", "save", "saves", "savingThrows", "legendaryActionsLair"]);
@@ -579,16 +611,15 @@ export function renderNativeMonster(rule, renderRaw, options = {}) {
 
     // Unknown native mechanics remain inspectable. Presentation fields and
     // lore are secondary to the combat block, but never silently discarded.
-    const additional = Object.entries(d).filter(([key, v]) => !seen.has(key) && !key.startsWith("_") && !empty(v));
     if (options.imported) { seen.add("catalogReferences"); seen.add("officialTextLayout"); }
-    const visibleAdditional = additional.filter(([key]) => !options.imported || !["catalogReferences", "officialTextLayout"].includes(key));
-    if (visibleAdditional.length) root.append(section("Additional Mechanics", element("dl", { className: "rw-stat-detail-grid" },
-        visibleAdditional.flatMap(([key, value]) => [element("dt", { text: pretty(key) }),
+    const additional = Object.entries(d).filter(([key, v]) => !seen.has(key) && !key.startsWith("_") && !empty(v));
+    if (additional.length) root.append(section("Additional Mechanics", element("dl", { className: "rw-stat-detail-grid" },
+        additional.flatMap(([key, value]) => [element("dt", { text: pretty(key) }),
             element("dd", {}, renderRaw(value))]))));
     const sources = Object.entries(d).filter(([key, v]) => SOURCE_FIELDS.has(key)
         && !["id", "name", "kind", "description", ...(options.imported ? ["source"] : [])].includes(key) && !empty(v));
     if (options.imported && !empty(d.officialTextLayout)) root.append(element("details", { className: "rw-stat-source" },
-        element("summary", { text: "Source stat-block layout" }), element("pre", { text: valueText(d.officialTextLayout) })));
+        element("summary", { text: "Source stat-block layout" }), element("pre", { className: "rw-stat-source-layout", text: d.officialTextLayout })));
     if (sources.length) root.append(element("details", { className: "rw-stat-source" },
         element("summary", { text: "Supplementary creature information" }),
         element("dl", { className: "rw-stat-detail-grid" }, sources.flatMap(([key, value]) =>
