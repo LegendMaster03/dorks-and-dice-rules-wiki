@@ -36,7 +36,14 @@ const STAT_DETAILS = [
     ["Grapple", ["grapple", "grappleModifier"]],
     ["Feats", ["feats"]],
     ["Proficiency Bonus", ["pb", "proficiencyBonus"]],
-    ["Gear", ["gear"]]
+    ["Gear", ["gear"]],
+    ["Attached Items", ["attachedItems"]],
+    ["Summoned By Spell", ["summonedBySpell"]],
+    ["Summoning Spell Level", ["summonedBySpellLevel"]],
+    ["Proficiency Bonus Note", ["pbNote"]],
+    ["Variant Of", ["variantOf"]],
+    ["Variant Selection", ["variantSelection"]],
+    ["Barding", ["barding"]]
 ];
 const SOURCE_FIELDS = new Set(["id", "name", "kind", "description", "lore", "environment",
     "treasure", "soundClip", "hasToken", "tokenUrl", "group", "statBlockFoundationId",
@@ -57,6 +64,7 @@ const valueText = value => {
     if (Array.isArray(value)) return value.map(valueText).filter(Boolean).join(", ");
     if (typeof value !== "object") return String(value).replace(/\{@([\w]+)\s*([^{}]*)\}/g,
         (_, tag, payload) => tagText(tag, payload));
+    if ("special" in value && Object.keys(value).length === 1) return valueText(value.special);
     if ("average" in value && "formula" in value) return `${value.average} (${value.formula})`;
     if ("ac" in value) return [value.ac, value.from ? `(${valueText(value.from)})` : ""].filter(Boolean).join(" ");
     return Object.entries(value).filter(([, v]) => !empty(v))
@@ -133,7 +141,10 @@ function announceRoll(origin, expression) {
     if (region) region.textContent = `${expression}: ${result}`;
 }
 function renderContent(value, renderRaw) {
+    // Optional shared structured-content hook; the existing creature parser remains
+    // the compatibility path until Workstream B finalizes its contract.
     if (value === null || value === undefined) return null;
+    if (renderRaw.renderStructured) return renderRaw.renderStructured(value);
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
         const output = element("span", { className: "rw-stat-inline" });
         inlineContent(value, output);
@@ -225,28 +236,63 @@ function section(title, children) {
         element("h3", { className: "rw-stat-section-title", text: title }), children);
 }
 const displayValue = (value, formatter = valueText) => empty(value) ? null : formatter(value);
-const armorValue = value => Array.isArray(value) ? value.map(armorValue).join(", ")
-    : value && typeof value === "object" ? `${value.ac ?? value.value ?? ""}${value.from ? ` (${valueText(value.from)})` : ""}${value.condition ? `; ${valueText(value.condition)}` : ""}`
-        : String(value);
+// Keep source alternatives and symbolic quantities rather than coercing them to numbers.
+const armorValue = value => Array.isArray(value) ? value.map(armorValue).filter(Boolean).join(", ")
+    : value && typeof value === "object" ? (() => {
+        const base = field(value, ["ac", "value", "special"]);
+        if (empty(base)) return valueText(value);
+        const notes = [value.from, value.condition].filter(v => !empty(v)).map(valueText);
+        return valueText(base) + (notes.length ? " (" + notes.join("; ") + ")" : "");
+    })() : valueText(value);
+const movementDistance = value => {
+    if (typeof value === "number") return value + " ft.";
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+        const distance = field(value, ["number", "amount", "value"]);
+        if (!empty(distance)) return movementDistance(distance) + (empty(value.condition) ? "" : " " + valueText(value.condition));
+    }
+    return valueText(value);
+};
 const speedValue = value => value && typeof value === "object" && !Array.isArray(value)
-    ? Object.entries(value).map(([key, amount]) => `${key === "walk" ? "" : `${pretty(key)} `}${typeof amount === "number" ? `${amount} ft.` : valueText(amount)}`).join(", ")
-    : typeof value === "number" ? `${value} ft.` : valueText(value);
-const initValue = value => value && typeof value === "object"
-    ? [value.mod, value.bonus, value.value, value.initiative].find(v => !empty(v)) === undefined
-        ? valueText(value) : signed([value.mod, value.bonus, value.value, value.initiative].find(v => !empty(v)))
-    : signed(value);
+    ? Object.entries(value).filter(([key, amount]) => key !== "canHover" && !empty(amount))
+        .map(([key, amount]) => (key === "walk" ? "" : pretty(key) + " ") + movementDistance(amount))
+        .concat(value.canHover === true && !/hover/i.test(valueText(value.fly)) ? ["Can hover"] : []).join(", ")
+    : movementDistance(value);
+const initValue = value => {
+    if (!value || typeof value !== "object") return signed(value);
+    const modifier = field(value, ["modifier", "mod", "bonus", "value", "initiative"]);
+    const score = field(value, ["score", "passive"]);
+    if (!empty(modifier)) return signed(modifier) + (empty(score) ? "" : " (" + valueText(score) + ")");
+    // A proficiency multiplier is an authored descriptor, not a resolved bonus.
+    return valueText(value);
+};
+function challengeSummary(d) {
+    const raw = field(d, ["cr", "challengeRating"]);
+    const challenge = d.challenge && typeof d.challenge === "object" ? d.challenge : {};
+    const rating = raw && typeof raw === "object" ? field(raw, ["cr", "rating", "value"]) ?? valueText(raw)
+        : raw ?? challenge.rating;
+    return { rating, xp: d.xp ?? challenge.xp ?? raw?.xp,
+        lairXp: raw?.xpLair ?? challenge.xpLair, lairRating: raw?.lair ?? challenge.lair };
+}
+function defenseText(value) {
+    if (Array.isArray(value)) return value.map(defenseText).filter(Boolean).join(", ");
+    if (value && typeof value === "object") {
+        const group = field(value, ["immune", "resist", "vulnerable", "conditionImmune"]);
+        if (!empty(group)) return [value.preNote, defenseText(group), value.note].filter(v => !empty(v)).join(" ");
+    }
+    return valueText(value);
+}
 function tile(label, content, note = "") {
     return element("div", { className: "rw-stat-tile" },
         element("span", { className: "rw-stat-tile-label", text: label }),
         element("strong", { className: "rw-stat-tile-value", text: content }),
         note ? element("span", { className: "rw-stat-tile-note", text: note }) : null);
 }
-function abilityGrid(definition) {
+function abilityGrid(definition, { explicitSavesOnly = false } = {}) {
     const historical = { ...definition, ...(definition.saves ?? {}), ...(definition.save ?? {}) };
     const hasHistoricalSaves = ["fort", "fortitude", "ref", "reflex", "will"]
         .some(key => !empty(historical[key]));
-    const explicit = (definition.save ?? definition.saves) && typeof (definition.save ?? definition.saves) === "object"
-        ? definition.save ?? definition.saves : {};
+    const supplied = definition.save ?? definition.saves ?? definition.savingThrows;
+    const explicit = supplied && typeof supplied === "object" && !Array.isArray(supplied) ? supplied : {};
     const scores = element("div", { className: "rw-stat-abilities" }, ABILITIES.map(([label, key]) => {
         const score = Number(definition[key]);
         const valid = !empty(definition[key]) && Number.isFinite(score);
@@ -254,11 +300,11 @@ function abilityGrid(definition) {
         const save = explicit[key] ?? explicit[pretty(key).toLowerCase()];
         // 5.x unproficient ability saves equal the ability modifier. Do not
         // invent these saves for a historical stat block with three defenses.
-        const saveText = !empty(save) ? signed(save) : !hasHistoricalSaves ? signed(modifier) : "—";
+        const saveText = !empty(save) ? signed(save) : !hasHistoricalSaves && !explicitSavesOnly ? signed(modifier) : "—";
         return element("div", { className: "rw-stat-ability" },
             element("span", { className: "rw-stat-ability-key", text: label }),
             element("span", { className: "rw-stat-ability-value" },
-                element("strong", { text: valid ? String(score) : "—" }),
+                element("strong", { text: valid ? String(score) : empty(definition[key]) ? "—" : valueText(definition[key]) }),
                 element("small", { text: modifier === null ? "" : ` (${signed(modifier)})` })),
             element("span", { className: "rw-stat-ability-save" },
                 element("span", { text: "Save " }), element("b", { text: saveText ?? "—" })));
@@ -424,7 +470,7 @@ function renderKaijuProfile(profile, renderRaw, kaijuLayout) {
 }
 
 /** Base statblock is shared; explicit Kaiju block types extend its presentation. */
-export function renderNativeMonster(rule, renderRaw) {
+export function renderNativeMonster(rule, renderRaw, options = {}) {
     const d = monsterDefinition(rule.definition);
     const kaijuLayout = isKaijuStatblock(d);
     const kaijuProfile = d.kaiju && typeof d.kaiju === "object" && !Array.isArray(d.kaiju)
@@ -443,18 +489,18 @@ export function renderNativeMonster(rule, renderRaw) {
         displayValue(d.alignment, value => Array.isArray(value)
             ? value.map(v => ALIGNMENT[String(v).toUpperCase()] ?? pretty(v)).join(" ") : ALIGNMENT[String(value).toUpperCase()] ?? pretty(value)),
         kaijuLayout ? "Kaiju" : null].filter(Boolean);
-    const cr = field(d, ["cr", "challenge", "challengeRating"]);
+    const challenge = challengeSummary(d);
     consume(["size", "type", "alignment", "cr", "challenge", "challengeRating", "xp", "initiative", "init", "ac", "armorClass", "hp", "hitPoints", "speed", "touchAc", "touchAC", "acTouch", "flatFootedAc", "flatFootedAC", "acFlatFooted", "flatFooted", "touch", "save", "saves", "savingThrows", "legendaryActionsLair"]);
     for (const [, key] of ABILITIES) seen.add(key);
     const root = element("div", { className: `rw-statblock${kaijuLayout ? " rw-statblock-kaiju" : ""}` });
     const header = element("header", { className: "rw-stat-header" },
         element("div", {}, element("h2", { className: "rw-stat-name", text: rule.name }),
             element("p", { className: "rw-stat-subtitle", text: titleParts.join(" · ") })),
-        !empty(cr) ? element("div", { className: "rw-stat-cr" },
-            element("strong", { text: `CR ${typeof cr === "object" ? cr.cr ?? cr.value ?? valueText(cr) : cr}` }),
-            !empty(d.xp) ? element("small", { text: `${d.xp} XP` }) : null,
-            cr && typeof cr === "object" && !empty(cr.xpLair)
-                ? element("small", { text: `Lair XP ${Number(cr.xpLair).toLocaleString("en-US")}` }) : null) : null);
+        Object.values(challenge).some(v => !empty(v)) ? element("div", { className: "rw-stat-cr" },
+            !empty(challenge.rating) ? element("strong", { text: "CR " + valueText(challenge.rating) }) : null,
+            !empty(challenge.xp) ? element("small", { text: valueText(challenge.xp) + " XP" }) : null,
+            !empty(challenge.lairRating) ? element("small", { text: "Lair CR " + valueText(challenge.lairRating) }) : null,
+            !empty(challenge.lairXp) ? element("small", { text: "Lair XP " + valueText(challenge.lairXp) }) : null) : null);
     root.append(header, element("div", { className: "rw-stat-accent" }));
     // A Kaiju inherits ordinary statblock components. Only their layout and
     // source-backed combat summary values change; actions retain shared rolls.
@@ -486,7 +532,7 @@ export function renderNativeMonster(rule, renderRaw) {
             extraAc.length ? element("div", { className: "rw-stat-defense-variants" }, extraAc.map(([name, value]) =>
                 element("div", {}, element("span", { text: name }), element("strong", { text: armorValue(value) })))) : null]));
     }
-    kaijuLeft.append(abilityGrid(d));
+    kaijuLeft.append(abilityGrid(d, options));
     consume(["fort", "fortitude", "ref", "reflex", "will"]);
     const kaijuReference = renderKaijuProfile(kaijuProfile, renderRaw, kaijuLayout);
     const details = [];
@@ -500,7 +546,7 @@ export function renderNativeMonster(rule, renderRaw) {
     for (const [label, keys] of STAT_DETAILS) {
         consume(keys);
         const value = field(d, keys);
-        if (!empty(value)) details.push([label, value]);
+        if (!empty(value)) details.push([label, options.imported && /^(Damage (Vulnerabilities|Resistances|Immunities)|Condition Immunities)$/.test(label) ? defenseText(value) : value]);
     }
     if (details.length) kaijuLeft.append(section("Combat & Reference", element("dl", { className: "rw-stat-detail-grid" },
         details.flatMap(([label, value]) => [element("dt", { text: label }), element("dd", {}, renderContent(value, renderRaw))]))));
@@ -534,11 +580,15 @@ export function renderNativeMonster(rule, renderRaw) {
     // Unknown native mechanics remain inspectable. Presentation fields and
     // lore are secondary to the combat block, but never silently discarded.
     const additional = Object.entries(d).filter(([key, v]) => !seen.has(key) && !key.startsWith("_") && !empty(v));
-    if (additional.length) root.append(section("Additional Mechanics", element("dl", { className: "rw-stat-detail-grid" },
-        additional.flatMap(([key, value]) => [element("dt", { text: pretty(key) }),
+    if (options.imported) { seen.add("catalogReferences"); seen.add("officialTextLayout"); }
+    const visibleAdditional = additional.filter(([key]) => !options.imported || !["catalogReferences", "officialTextLayout"].includes(key));
+    if (visibleAdditional.length) root.append(section("Additional Mechanics", element("dl", { className: "rw-stat-detail-grid" },
+        visibleAdditional.flatMap(([key, value]) => [element("dt", { text: pretty(key) }),
             element("dd", {}, renderRaw(value))]))));
     const sources = Object.entries(d).filter(([key, v]) => SOURCE_FIELDS.has(key)
-        && !["id", "name", "kind", "description"].includes(key) && !empty(v));
+        && !["id", "name", "kind", "description", ...(options.imported ? ["source"] : [])].includes(key) && !empty(v));
+    if (options.imported && !empty(d.officialTextLayout)) root.append(element("details", { className: "rw-stat-source" },
+        element("summary", { text: "Source stat-block layout" }), element("pre", { text: valueText(d.officialTextLayout) })));
     if (sources.length) root.append(element("details", { className: "rw-stat-source" },
         element("summary", { text: "Supplementary creature information" }),
         element("dl", { className: "rw-stat-detail-grid" }, sources.flatMap(([key, value]) =>

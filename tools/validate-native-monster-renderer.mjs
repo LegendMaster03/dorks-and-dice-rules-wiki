@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import { renderNativeMonster } from "../src/RulesWiki.Web/wwwroot/native-monster-detail.js";
+import { supportsImportedCreature } from "../src/RulesWiki.Web/wwwroot/native-renderers-creature.js";
 import { renderNativeDetail } from "../src/RulesWiki.Web/wwwroot/native-rule-detail.js";
 
 // Local DOM substitute used for renderer regression checks without a browser.
@@ -181,3 +182,50 @@ assert.equal(cls(integrated, "rw-stat-ability").length, 6);
 assert.match(integrated.textContent, /Bite attack/);
 assert.doesNotMatch(integrated.textContent, /Undefined/);
 console.log("Native monster statblock renderer checks passed.");
+ // Actual source records from both editions, pinned to the Core foundation revision.
+const imported = JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/creature-workstream-c.json", import.meta.url)));
+const view = (rulesetId, id) => {
+    const { record } = imported.find(x => x.rulesetId === rulesetId && x.record.id === id);
+    const rule = { id, name: record.name, kind: record.kind, definition: record };
+    assert.ok(supportsImportedCreature({ context: { rulesetId }, record, rule }));
+    assert.equal(supportsImportedCreature({ context: { rulesetId: "fate-condensed" }, record, rule }), false);
+    const target = new FakeNode("main");
+    const snapshot = JSON.stringify(record);
+    renderNativeDetail(target, { rulesetId, fingerprint: "fixture-only", rule }, () => {});
+    assert.equal(cls(target, "rw-statblock").length, 1);
+    assert.equal(JSON.stringify(record), snapshot);
+    assert.doesNotMatch(target.textContent, /NaN|\[object Object\]/);
+    return target;
+};
+const oldWerewolf = view("dnd-5e", "monster.werewolf");
+assert.match(oldWerewolf.textContent, /11 \(in humanoid form\), 12 \(natural armor; in wolf or hybrid form\)/);
+assert.match(oldWerewolf.textContent, /30 ft\. \(40 ft\. in wolf form\)/);
+assert.match(oldWerewolf.textContent, /from nonmagical attacks that aren't silvered/);
+const newWerewolf = view("dnd-5-5e", "monster.werewolf");
+assert.match(newWerewolf.textContent, /71 \(11d8 \+ 22\)/);
+assert.doesNotMatch(newWerewolf.textContent, /11 \(in humanoid form\)/);
+for (const id of ["dnd-5e", "dnd-5-5e"]) {
+    const avatar = view(id, "monster.avatar-of-death");
+    assert.match(avatar.textContent, /Half the hit point maximum of its summoner/);
+    assert.match(avatar.textContent, /0 XP/);
+    assert.doesNotMatch(avatar.textContent, /CR null/);
+    assert.match(avatar.textContent, /60 ft\. \(hover\)/);
+    const condition = all(avatar, node => node.tagName === "A" && node.textContent === "condition.charmed")[0];
+    assert.ok(condition);
+    assert.ok(condition.attrs.href.includes("/rulesets/" + id + "/rules/condition.charmed"));
+    const dragon = view(id, "monster.adult-red-dragon");
+    assert.match(dragon.textContent, /Legendary Actions/);
+}
+assert.match(view("dnd-5-5e", "monster.avatar-of-death").textContent, /\+3 \(13\)/);
+assert.match(view("dnd-5e", "monster.acolyte").textContent, /3.*bless/is);
+const priest = view("dnd-5-5e", "monster.priest-acolyte");
+assert.match(priest.textContent, /Divine Aid/);
+const spell = all(priest, node => node.tagName === "A" && node.textContent === "spell.bless")[0];
+assert.ok(spell.attrs.href.includes("/rulesets/dnd-5-5e/rules/spell.bless"));
+assert.match(view("dnd-5-5e", "monster.adult-red-dragon").textContent, /Lair XP 20000/);
+const spirit = view("dnd-5-5e", "monster.draconic-spirit-acid");
+assert.match(spirit.textContent, /14 \+ the spell's level/);
+assert.match(spirit.textContent, /50 \+ 10 for each spell level above 5/);
+assert.match(spirit.textContent, /equals your Proficiency Bonus/);
+assert.match(view("dnd-5-5e", "monster.animated-object-huge").textContent, /Animate Objects/);
+console.log("Imported native creature fixture checks passed.");
