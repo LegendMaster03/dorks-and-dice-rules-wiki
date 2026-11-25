@@ -209,14 +209,18 @@ export function installWikiExperience(app) {
         if (extra.length) groups.push({ name: "Other categories", description: "Additional native reference categories", types: extra });
         return groups;
     };
-    app.renderNavigation = () => {
-        const nav = el("nav", { className: "wiki-ribbon", ariaLabel: "Rules Wiki" });
-        const selector = el("select", { className: "form-select form-select-sm wiki-ruleset-selector", ariaLabel: "Ruleset" });
+    const populateRulesetSelector = selector => {
+        selector.replaceChildren();
         selector.append(el("option", { value: "", text: "Select ruleset", disabled: true }));
         for (const descriptor of app.wikiDescriptors ?? [])
             selector.append(el("option", { value: descriptor.id,
                 text: descriptor.metadata?.displayName ?? descriptor.id }));
         selector.value = app.rulesContext?.rulesetId ?? "";
+    };
+    app.renderNavigation = () => {
+        const nav = el("nav", { className: "wiki-ribbon", ariaLabel: "Rules Wiki" });
+        const selector = el("select", { className: "form-select form-select-sm wiki-ruleset-selector", ariaLabel: "Ruleset" });
+        populateRulesetSelector(selector);
         selector.addEventListener("change", () => { if (selector.value) void go("/", "", selector.value); });
         nav.append(selector, el("button", { type: "button", text: "Wiki home", disabled: !app.rulesContext, onClick: app.navigateWikiHome }));
         const groups = el("div", { className: "wiki-ribbon-groups" });
@@ -278,6 +282,8 @@ export function installWikiExperience(app) {
             const sets = await app.api.getNativeRulesets();
             if (reader !== app.rulesetReader) return;
             app.wikiDescriptors = authorizedRulesetDescriptors(sets);
+            const selector = app.root.querySelector(".wiki-ruleset-selector");
+            if (selector) populateRulesetSelector(selector);
             const current = app.wikiDescriptors.find(r => r.id === reader.context.rulesetId);
             if (!current) {
                 clearContext();

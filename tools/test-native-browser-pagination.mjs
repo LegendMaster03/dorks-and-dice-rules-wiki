@@ -11,9 +11,9 @@ const manifest = fixture("manifest.json");
 const catalogs = new Map();
 for (const entry of manifest.fixtures) {
     const definition = fixture(entry.file);
-    // Fixture records retain their original wrappers. The API's native
-    // category is normally the stable ID prefix for these selected records.
-    const kind = entry.nativeEntityId.split(".")[0];
+    // Core's loader uses the outer record's kind, not its ID prefix.
+    const kind = definition.kind;
+    assert.equal(typeof kind, "string");
     const record = { id: entry.nativeEntityId, name: definition.name ?? definition.definition?.name ?? entry.nativeEntityId,
         kind, definition };
     const records = catalogs.get(entry.rulesetId) ?? [];
@@ -72,7 +72,7 @@ for (const id of catalogs.keys()) {
     } else {
         const actions = await readNativeCatalogPage(reader, { entityType: "action", limit: 10 });
         assert.equal(actions.rules[0].nativeId, "action.attack");
-        assert.ok(actions.entityTypeFacets.some(f => f.entityType === "section"));
+        assert.ok(actions.entityTypeFacets.some(f => f.entityType === "chapter"));
     }
 }
 assert.equal(warlocks.size, 3);

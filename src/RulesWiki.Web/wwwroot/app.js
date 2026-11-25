@@ -50,7 +50,6 @@ try {
     installRulesCoreUx(app);
     installWikiReferenceNavigation(app);
     installWikiExperience(app);
-    await app.prepareWikiExperience();
     await app.render();
 } catch (error) {
     console.error("Rules Wiki failed to initialize.", error);
