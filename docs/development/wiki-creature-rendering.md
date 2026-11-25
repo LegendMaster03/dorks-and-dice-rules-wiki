@@ -38,3 +38,7 @@ B's initial shared module exports `renderInlineContent`, `renderStructuredRefere
 The asynchronous bridge passes the prepared map into the shared renderer and returns detached DOM through the existing lifecycle-aware dispatcher. A resolver probe is covered on the foundation; real integration assertions activate when B's three public exports are present. Pinned Bless and Frightened records from each edition and the SRD 5.2.1 Tarrasque provide actual source-backed reference tests. No foreign catalog transport or authorization changes are introduced.
 
 Conditional AC and entry titles preserve inline tokens through the B content hook; the pinned Archmage and Mage Armor fixtures verify the reference in the stat tile rather than only the catalog list. The foundation fallback still renders the same conditional AC as readable text.
+
+## Integration reconciliation
+
+The finalized shared structured-content module replaces the legacy creature inline and recursive entry parser. First-party and imported statblocks use the same renderer and bounded roll callback; imported statblocks additionally supply the exact reader context and source-tag mapping. Specialized statblock, spellcasting and complex-combatant layouts remain owned by the creature renderer. Flat compatible native monster records are selected structurally; first-party compatibility remains explicit because its saves and complex-combatant semantics differ. The shared inline-reference assertions are mandatory rather than conditionally skipped.

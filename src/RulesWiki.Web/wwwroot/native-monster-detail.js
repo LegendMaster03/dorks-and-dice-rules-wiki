@@ -1,4 +1,5 @@
 import { element } from "./ui.js";
+import { renderStructuredContent, stripSourceTags } from "./structured-content.js";
 
 // Presentation only. The native Core definition is the sole authority; never
 // substitute data from an SRD, legacy browser, or inferred monster variant.
@@ -64,8 +65,7 @@ const signed = value => {
 const valueText = value => {
     if (empty(value)) return "";
     if (Array.isArray(value)) return value.map(valueText).filter(Boolean).join(", ");
-    if (typeof value !== "object") return String(value).replace(/\{@([\w]+)\s*([^{}]*)\}/g,
-        (_, tag, payload) => tagText(tag, payload));
+    if (typeof value !== "object") return stripSourceTags(value);
     if ("special" in value && Object.keys(value).length === 1) return valueText(value.special);
     if ("average" in value && "formula" in value) return `${value.average} (${value.formula})`;
     if ("ac" in value) return [value.ac, value.from ? `(${valueText(value.from)})` : ""].filter(Boolean).join(" ");
@@ -83,38 +83,6 @@ const rollExpression = expression => {
     return Array.from({ length: count }, () => 1 + Math.floor(Math.random() * sides))
         .reduce((sum, number) => sum + number, modifier);
 };
-const tagText = (tag, payload) => {
-    const display = payload.split("|");
-    const name = display[2]?.trim() || display[0]?.trim() || "";
-    const normalized = tag.toLowerCase();
-    const markers = { h: "Hit: ", acttrigger: "Trigger: ", actresponse: "Response: ",
-        actsavefail: "Failure: ", actsavesuccess: "Success: ",
-        actsavefailorsuccess: "Failure or Success: ", actsavesuccessorfail: "Success or Failure: " };
-    if (normalized in markers) return markers[normalized];
-    if (normalized === "atkr") return name.includes("r") && name.includes("m") ? "Melee or Ranged Attack: "
-        : name.includes("r") ? "Ranged Attack: " : "Melee Attack: ";
-    if (normalized === "atk") return "Attack: ";
-    if (normalized === "actsave") return `${pretty(name)} Saving Throw: `;
-    if (normalized === "hit") return signed(name) || name;
-    if (normalized === "dc") return `DC ${name}`;
-    if (normalized === "recharge") return name ? `Recharge ${name}–6` : "Recharge 6";
-    return name;
-};
-
-function inlineContent(value, output) {
-    const text = String(value);
-    const regex = /\{@([a-z][\w]*)\s*([^{}]*)\}/gi;
-    let previous = 0;
-    for (const match of text.matchAll(regex)) {
-        if (match.index > previous) output.append(element("span", { text: text.slice(previous, match.index) }));
-        const tag = match[1].toLowerCase();
-        const raw = match[2].split("|")[0].trim();
-        const dice = renderMonsterDice({ tag, expression: raw });
-        output.append(dice ?? element("span", { text: tagText(tag, match[2]) }));
-        previous = match.index + match[0].length;
-    }
-    if (previous < text.length) output.append(element("span", { text: text.slice(previous) }));
-}
 /** Creature-specific action callback for the shared structured renderer.
  * Symbolic and unbounded expressions remain text, never executable rolls. */
 export function renderMonsterDice({ tag, expression, display }) {
@@ -145,40 +113,11 @@ function announceRoll(origin, expression) {
     if (region) region.textContent = `${expression}: ${result}`;
 }
 function renderContent(value, renderRaw) {
-    // Optional shared structured-content hook; the existing creature parser remains
-    // the compatibility path until Workstream B finalizes its contract.
     if (value === null || value === undefined) return null;
-    if (renderRaw.renderStructured) return renderRaw.renderStructured(value);
-    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-        const output = element("span", { className: "rw-stat-inline" });
-        inlineContent(value, output);
-        return output;
-    }
-    if (Array.isArray(value)) {
-        const output = element("div", { className: "rw-stat-paragraphs" });
-        for (const item of value) output.append(renderContent(item, renderRaw));
-        return output;
-    }
-    if (typeof value !== "object") return renderRaw(value);
-    if (value.type === "list" && Array.isArray(value.items)) {
-        return element("ul", { className: "rw-stat-list" }, value.items.map(item =>
-            element("li", {}, renderContent(item.entry ?? item.entries ?? item, renderRaw))));
-    }
-    if (value.type === "table" && Array.isArray(value.rows)) {
-        return element("div", { className: "rw-stat-table-scroll" },
-            element("table", { className: "rw-stat-table" },
-                value.caption ? element("caption", { text: value.caption }) : null,
-                value.colLabels ? element("thead", {}, element("tr", {}, value.colLabels.map(label => element("th", { text: valueText(label) })))) : null,
-                element("tbody", {}, value.rows.map(row => element("tr", {},
-                    (Array.isArray(row) ? row : [row]).map(cell => element("td", {}, renderContent(cell, renderRaw))))))));
-    }
-    const nested = field(value, ["entries", "entry", "items", "attackEntries", "hitEntries"]);
-    if (!empty(nested)) {
-        return element("div", { className: "rw-stat-nested" },
-            value.name ? element("strong", { text: valueText(value.name) }) : null,
-            renderContent(nested, renderRaw));
-    }
-    return renderRaw(value);
+    // Imported records supply a snapshot-bound content hook; legacy statblocks
+    // use the same parser and bounded dice callback without inferred links.
+    return renderRaw.renderStructured ? renderRaw.renderStructured(value)
+        : renderStructuredContent(value, { inlineClass: "rw-stat-inline", renderDice: renderMonsterDice });
 }
 function renderEntry(item, renderRaw) {
     if (typeof item !== "object" || !item || Array.isArray(item)) return element("div", { className: "rw-stat-entry" }, renderContent(item, renderRaw));

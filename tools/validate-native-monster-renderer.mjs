@@ -189,7 +189,8 @@ const view = (rulesetId, id) => {
     const { record } = imported.find(x => x.rulesetId === rulesetId && x.record.id === id);
     const rule = { id, name: record.name, kind: record.kind, definition: record };
     assert.ok(supportsImportedCreature({ context: { rulesetId }, record, rule }));
-    assert.equal(supportsImportedCreature({ context: { rulesetId: "fate-condensed" }, record, rule }), false);
+    assert.ok(supportsImportedCreature({ context: { rulesetId: "compatible-fixture" }, record, rule }), "Compatible flat records do not require a catalog allowlist.");
+    assert.equal(supportsImportedCreature({ context: { rulesetId: "first-party-001" }, record, rule }), false, "Preserve first-party save and complex combatant semantics.");
     const target = new FakeNode("main");
     const snapshot = JSON.stringify(record);
     const context = { rulesetId, fingerprint: "fixture-only", campaignId: null, campaignRevisionId: null };
@@ -279,7 +280,7 @@ assert.equal(renderMonsterDice({tag:"damage",expression:"1d6 + summonSpellLevel"
 assert.equal(renderMonsterDice({tag:"dice",expression:"999d9999"}), null);
 assert.equal(renderMonsterDice({tag:"hit",expression:"4"}).textContent, "+4");
 
-// The real B integration cases activate when its public shared exports arrive.
+// The shared B contract is required for the integrated creature workstream.
 // The pinned native reader returns only exact same-catalog fixture envelopes.
 const referenceFixtures = JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/creature-workstream-c-references.json", import.meta.url)));
 assert.match(view("dnd-5-5e", "monster.tarrasque").textContent, /697/);
@@ -296,7 +297,9 @@ const asyncSharedProbe = { ...sharedProbe,
 };
 await renderImportedCreature(asyncInput, asyncSharedProbe);
 assert.ok(prepared);
-if (typeof sharedPresentation.resolveSourceReferenceIds === "function" && typeof sharedPresentation.renderInlineContent === "function") {
+assert.equal(typeof sharedPresentation.resolveSourceReferenceIds, "function");
+assert.equal(typeof sharedPresentation.renderInlineContent, "function");
+{
     for (const [rulesetId, creatureId, referenceId] of [
         ["dnd-5e", "monster.acolyte", "spell.bless"],
         ["dnd-5e", "monster.archmage", "spell.mage-armor"],

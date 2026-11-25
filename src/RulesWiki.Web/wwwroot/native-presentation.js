@@ -1,6 +1,7 @@
 /** Native presentation adapters use the existing private transport. */
 import { requireBaseContext, validateNativeEnvelope, assertSnapshot, nativeRuleIdentity, ruleRoute } from "./rules-context.js";
 import { packageDescriptor, renderPackageAttribution } from "./package-attribution.js";
+import { renderStructuredContent } from "./structured-content.js";
 export function createRulesetReader(api, context, descriptor = null) {
     const c = requireBaseContext(context);
     return Object.freeze({
@@ -60,45 +61,8 @@ const node = (tag, text) => {
     if (text !== undefined) value.textContent = String(text);
     return value;
 };
-const append = (parent, child) => { parent.append(child); return parent; };
-/** Render unknown shapes without interpreting HTML, Markdown or inline tags. */
-export function renderStructuredContent(value) {
-    if (value === null || typeof value !== "object") return node("span", value === null ? "None" : String(value));
-    if (Array.isArray(value)) {
-        const list = node("ul");
-        for (const item of value) list.append(append(node("li"), renderStructuredContent(item)));
-        return list;
-    }
-    if (Array.isArray(value.rows) && value.rows.every(Array.isArray) &&
-        (value.type === "table" || Array.isArray(value.colLabels))) {
-        const wrapper = node("div"), table = node("table");
-        if (typeof value.name === "string" || typeof value.caption === "string")
-            table.append(node("caption", value.caption ?? value.name));
-        if (Array.isArray(value.colLabels)) {
-            const row = node("tr");
-            for (const label of value.colLabels) {
-                const cell = append(node("th"), renderStructuredContent(label));
-                cell.scope = "col"; row.append(cell);
-            }
-            table.append(append(node("thead"), row));
-        }
-        const body = node("tbody");
-        for (const sourceRow of value.rows) {
-            const row = node("tr");
-            for (const cell of sourceRow) row.append(append(node("td"), renderStructuredContent(cell)));
-            body.append(row);
-        }
-        table.append(body); wrapper.append(table);
-        const extras = Object.fromEntries(Object.entries(value).filter(([key]) =>
-            !["type", "name", "caption", "colLabels", "rows"].includes(key)));
-        if (Object.keys(extras).length) wrapper.append(renderStructuredContent(extras));
-        return wrapper;
-    }
-    const definition = node("dl");
-    for (const [key, entry] of Object.entries(value))
-        definition.append(node("dt", key), append(node("dd"), renderStructuredContent(entry)));
-    return definition;
-}
+// Expose the shared inline and reference hooks for the creature and other native adapters.
+export { renderStructuredContent, renderInlineContent, renderStructuredReference, resolveSourceReferenceIds } from "./structured-content.js";
 export function renderNativeAttribution(input) {
     const section = node("section");
     section.append(node("h3", "Source and attribution"));
@@ -117,7 +81,7 @@ export function renderGenericNative(input) {
     const article = node("article");
     article.append(node("h2", input.rule.name),
         node("p", "Generic native reference · " + input.context.rulesetId + " · " + input.rule.kind),
-        renderStructuredContent(input.record), renderNativeAttribution(input),
+        renderStructuredContent(input.record, { input }), renderNativeAttribution(input),
         renderPackageAttribution(input.context, input.packageDescriptor));
     return article;
 }
