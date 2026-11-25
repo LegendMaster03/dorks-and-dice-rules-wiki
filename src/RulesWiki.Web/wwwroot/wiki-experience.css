@@ -97,3 +97,5 @@
 .wiki-experience .rules-core-library-index,
 .wiki-experience .rules-core-library-index-list,
 .wiki-experience .rules-core-library-detail { overscroll-behavior-y: contain; }
+
+.wiki-ruleset-selector { width: auto; max-width: min(100%, 18rem); min-width: 8rem; }

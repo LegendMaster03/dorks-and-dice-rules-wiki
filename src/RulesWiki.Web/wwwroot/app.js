@@ -25,8 +25,16 @@ root.append(element("div", { className: "card card-body text-body-secondary", te
 try {
     const hostContext = await loadToolHostContext(root);
     const api = installWikiReferenceApi(new RulesCoreApi(hostContext));
-    api.openRulesetReader = async rulesetId => {
-        const { context, descriptor } = await discoverPackageContext(api, rulesetId);
+    api.openRulesetReader = async (rulesetId, onDiscovery = null) => {
+        // Share this exact fresh discovery with the selector, not a second
+        // ticketed operation or a mutable cached authorization decision.
+        const { context, descriptor } = await discoverPackageContext({
+            getNativeRulesets: async () => {
+                const response = await api.getNativeRulesets();
+                onDiscovery?.(response);
+                return response;
+            }
+        }, rulesetId);
         return createRulesetReader(api, context, descriptor);
     };
     const session = await api.getOptionalSession();

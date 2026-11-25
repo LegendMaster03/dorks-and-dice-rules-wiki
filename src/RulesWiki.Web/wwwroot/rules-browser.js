@@ -11,6 +11,8 @@ import {
 } from "./ui.js";
 import { cancelNativeDetailRender, renderRuleDetailPane } from "./rules-browser-detail.js";
 import { restoreMountedClassFragment } from "./native-class-navigation.js";
+import { DEFAULT_RULESET_ID } from "./rules-context.js";
+import { packageDisplayName } from "./package-attribution.js";
 import {
     catalogRouteForEntity,
     currentToolRoute,
@@ -107,7 +109,7 @@ export function installResolvedRulesBrowser(app) {
         app.browserFilters.fieldFilters = nextFieldFilters;
         app.browserSort = normalizeBrowserSort(nextEntityType, app.browserSort);
         app.activeView = "library";
-        pushToolRoute(app, catalogRouteForEntity(nextEntityType), app.browserScope);
+        pushToolRoute(app, catalogRouteForEntity(nextEntityType, app), app.browserScope);
         await app.render();
     };
 
@@ -175,7 +177,8 @@ export function installResolvedRulesBrowser(app) {
         if (toolRoute === "/sources" || toolRoute.startsWith("/sources/")) return;
 
         const next = parseToolRoute(toolRoute);
-        if (restoreMountedClassFragment(app, event.state, next, window.location.hash)) return;
+        if ((next.rulesetId ?? DEFAULT_RULESET_ID) === (app.rulesContext?.rulesetId ?? DEFAULT_RULESET_ID)
+            && restoreMountedClassFragment(app, event.state, next, window.location.hash)) return;
         const nextEntityType = next.entityType ?? "";
         const nextViewState = parseBrowserViewStateFromLocation(nextEntityType);
         app.browserScope = parseBrowserScopeFromLocation(app) ?? "global";
@@ -198,6 +201,9 @@ export function installResolvedRulesBrowser(app) {
 /** Create the list/detail workspace and load the active catalog page. */
 async function renderRulesBrowser(app, container) {
     clear(container);
+    const boundContext = app.rulesContext;
+    const boundReader = app.rulesetReader;
+    const currentSurface = () => container.isConnected && app.rulesContext === boundContext && app.rulesetReader === boundReader;
 
     const shell = element("section", { className: "rules-core-library-shell" });
     const headingTitle = element("h2", {
@@ -217,7 +223,7 @@ async function renderRulesBrowser(app, container) {
         className: "form-select form-select-sm rules-core-library-scope",
         ariaLabel: "Rules scope"
     });
-    scope.append(element("option", { value: "global", text: "Dorks & Dice" }));
+    scope.append(element("option", { value: "global", text: app.nativeReferenceOnly ? "Base ruleset" : "Dorks & Dice" }));
     for (const campaign of app.campaigns) {
         scope.append(element("option", {
             value: `campaign:${campaign.id}`,
@@ -387,6 +393,7 @@ async function renderRulesBrowser(app, container) {
     // changes. Generation counters discard responses from superseded requests.
     let loadSerial = 0;
     let detailSerial = 0;
+    let mountedSelection = null;
     let rowByConceptKey = new Map();
     let currentRules = [];
     let totalCount = 0;
@@ -451,7 +458,7 @@ async function renderRulesBrowser(app, container) {
     };
 
     const selectRule = async rule => {
-        if (!rule) return;
+        if (!rule || !currentSurface()) return;
         preserveDeepLink = false;
         pushToolRoute(app, rule.browserLink?.toolRelativePath);
         await renderSelection(rule.conceptKey);
@@ -595,6 +602,12 @@ async function renderRulesBrowser(app, container) {
         dynamicFilterFields.replaceChildren();
         const definitions = getBrowserFilterDefinitions(app.browserFilters.entityType)
             .filter(definition => definition.mode === "client-complete");
+        if (app.nativeReferenceOnly) {
+            filterAvailability.hidden = false;
+            filterAvailability.textContent = "Type-specific filters require server-projected fields; the native catalog currently supplies names and categories only.";
+            syncFilterControls();
+            return;
+        }
         const complete = hasCompleteDataset();
         const normalized = normalizeBrowserFieldFilters(
             app.browserFilters.entityType,
@@ -657,6 +670,7 @@ async function renderRulesBrowser(app, container) {
         search.select();
     };
     app.browserKeyboard.selectRelative = async direction => {
+        if (!currentSurface()) return;
         const displayRules = currentDisplayRules();
         if (!displayRules.length) return;
 
@@ -692,9 +706,9 @@ async function renderRulesBrowser(app, container) {
     };
 
     const showIndexOnCompactViewport = () => {
-        if (!isCompactLibraryViewport(shell)) return false;
+        if (!currentSurface() || !isCompactLibraryViewport(shell)) return false;
         workspace.classList.remove("has-selection");
-        pushToolRoute(app, catalogRouteForEntity(app.browserFilters.entityType), app.browserScope);
+        pushToolRoute(app, catalogRouteForEntity(app.browserFilters.entityType, app), app.browserScope);
         const selectedRow = rowByConceptKey.get(app.browserSelectedConceptKey);
         if (selectedRow) {
             selectedRow.scrollIntoView?.({ block: "nearest" });
@@ -708,6 +722,13 @@ async function renderRulesBrowser(app, container) {
 
     // Increment the detail serial to invalidate slow responses for older rows.
     const renderSelection = async conceptKey => {
+        if (!currentSurface()) return;
+        if (mountedSelection === conceptKey && detail.querySelector(".rules-core-library-detail-body")) {
+            app.browserSelectedConceptKey = conceptKey;
+            workspace.classList.add("has-selection");
+            syncSelectedRowState(conceptKey);
+            return;
+        }
         const serial = ++detailSerial;
         app.browserSelectedConceptKey = conceptKey;
         workspace.classList.add("has-selection");
@@ -721,7 +742,9 @@ async function renderRulesBrowser(app, container) {
             () => detailSerial,
             showIndexOnCompactViewport);
 
-        if (isCompactLibraryViewport(shell) && serial === detailSerial) {
+        if (!currentSurface() || serial !== detailSerial) return;
+        mountedSelection = detail.querySelector(".rules-core-library-detail-body") ? conceptKey : null;
+        if (isCompactLibraryViewport(shell)) {
             detail.focus({ preventScroll: true });
             if (!app.nativeReferenceOnly) detail.scrollIntoView({ block: "start" });
         }
@@ -736,7 +759,7 @@ async function renderRulesBrowser(app, container) {
         if (!hasPublishedRuleset) {
             indexStatus.textContent = "Nothing published";
         } else if (hasMore) {
-            indexStatus.textContent = `${currentRules.length} of ${totalCount} · load all to sort/filter`;
+            indexStatus.textContent = `${currentRules.length} of ${totalCount} · ${app.nativeReferenceOnly ? "server order" : "load all to sort/filter"}`;
         } else if (clientFiltered) {
             indexStatus.textContent = `${displayedCount} matching · ${totalCount} total`;
         } else {
@@ -756,7 +779,7 @@ async function renderRulesBrowser(app, container) {
 
     // Reject page responses that belong to a superseded filter generation.
     loadMore = async () => {
-        if (!hasMore || isLoadingMore) return [];
+        if (!currentSurface() || !hasMore || isLoadingMore) return [];
         const serial = loadSerial;
         isLoadingMore = true;
         loadMoreError = null;
@@ -773,11 +796,11 @@ async function renderRulesBrowser(app, container) {
                 offset
             };
             const requested = app.browserScope === "global"
-                ? await app.api.getGlobalRulesCatalog(filters)
+                ? await app.api.getGlobalRulesCatalog(filters, boundReader)
                 : await app.api.getCampaignRulesCatalog(
                     app.browserScope.slice("campaign:".length),
                     filters);
-            if (serial !== loadSerial) return [];
+            if (!currentSurface() || serial !== loadSerial) return [];
 
             const added = requested.rules ?? [];
             if (!added.length) {
@@ -805,10 +828,10 @@ async function renderRulesBrowser(app, container) {
             }
             return added;
         } catch (error) {
-            if (serial === loadSerial) loadMoreError = describeError(error);
+            if (currentSurface() && serial === loadSerial) loadMoreError = describeError(error);
             return [];
         } finally {
-            if (serial === loadSerial) {
+            if (currentSurface() && serial === loadSerial) {
                 isLoadingMore = false;
                 refreshListState();
             }
@@ -817,7 +840,7 @@ async function renderRulesBrowser(app, container) {
 
     // Client-only field filters require every matching server-side page.
     const loadCompleteDatasetForActiveClientFilters = async serial => {
-        if (!hasClientBrowserFilters(
+        if (app.nativeReferenceOnly || !hasClientBrowserFilters(
             app.browserFilters.entityType,
             app.browserFilters.fieldFilters)) return;
         while (hasMore && serial === loadSerial) {
@@ -830,6 +853,7 @@ async function renderRulesBrowser(app, container) {
     // Capture the request generation before any await; later responses may
     // update the browser only if no newer filter/scope request superseded them.
     load = async ({ keepSelection = false } = {}) => {
+        if (!currentSurface()) return;
         const serial = ++loadSerial;
         app.browserPage = 0;
         isLoadingMore = false;
@@ -843,12 +867,17 @@ async function renderRulesBrowser(app, container) {
         app.browserFilters = {
             entityType: app.browserFilters.entityType ?? "",
             query: search.value.trim(),
-            sourceCode: sourceFilter.value,
+            sourceCode: app.nativeReferenceOnly ? "" : sourceFilter.value,
             overridesOnly: scope.value.startsWith("campaign:") && overrideInput.checked,
-            fieldFilters: normalizeBrowserFieldFilters(
+            fieldFilters: app.nativeReferenceOnly ? {} : normalizeBrowserFieldFilters(
                 app.browserFilters.entityType,
                 app.browserFilters.fieldFilters)
         };
+        if (app.nativeReferenceOnly) {
+            sourceFilter.value = "";
+            if (!["name", "entityType"].includes(app.browserSort?.key)) app.browserSort = { key: null, direction: "asc" };
+            replaceToolRoute(app, currentToolRoute(app), app.browserScope);
+        }
         app.browserSort = normalizeBrowserSort(app.browserFilters.entityType, app.browserSort);
         syncFilterControls();
 
@@ -867,11 +896,11 @@ async function renderRulesBrowser(app, container) {
                 offset: 0
             };
             const requested = app.browserScope === "global"
-                ? await app.api.getGlobalRulesCatalog(filters)
+                ? await app.api.getGlobalRulesCatalog(filters, boundReader)
                 : await app.api.getCampaignRulesCatalog(
                     app.browserScope.slice("campaign:".length),
                     filters);
-            if (serial !== loadSerial) return;
+            if (!currentSurface() || serial !== loadSerial) return;
 
             populateEntityTypeFacets(requested.entityTypeFacets);
             populateSourceFacets(requested.sourceFacets);
@@ -888,7 +917,7 @@ async function renderRulesBrowser(app, container) {
                 : `${scopeLabel(app, app.browserScope)} · Nothing published`;
 
             await loadCompleteDatasetForActiveClientFilters(serial);
-            if (serial !== loadSerial) return;
+            if (!currentSurface() || serial !== loadSerial) return;
 
             const clientFiltersActive = hasClientBrowserFilters(
                 app.browserFilters.entityType,
@@ -918,7 +947,7 @@ async function renderRulesBrowser(app, container) {
 
             if (!requested.revisionNumber) {
                 const message = app.browserScope === "global"
-                    ? "No Dorks & Dice rules have been published yet."
+                    ? "No rules have been published for this ruleset yet."
                     : "No rules have been published for this campaign yet.";
                 list.replaceChildren(renderIndexState(message, "Published rules will appear here when they are available."));
                 app.browserSelectedConceptKey = null;
@@ -930,19 +959,24 @@ async function renderRulesBrowser(app, container) {
             }
 
             if (!rules.length) {
+                if (preserveDeepLink && app.browserDeepLink) {
+                    const id = app.browserDeepLink;
+                    app.browserDeepLink = null;
+                    list.replaceChildren(renderIndexState("No native rules match this category or search."));
+                    await renderSelection(id);
+                    return;
+                }
                 const emptyState = await resolvePublishedEmptyState(app);
-                if (serial !== loadSerial) return;
+                if (!currentSurface() || serial !== loadSerial) return;
                 list.replaceChildren(renderIndexState(
                     emptyState.message,
                     emptyState.note,
                     emptyState.showSourceLibrary ? renderSourceLibraryAction(app) : null));
 
                 if (keepSelection && app.browserSelectedConceptKey) {
-                    const remainsAvailable = await isRuleAvailableInScope(
-                        app,
-                        app.browserSelectedConceptKey,
-                        app.browserScope);
-                    if (serial !== loadSerial) return;
+                    const remainsAvailable = app.nativeReferenceOnly && mountedSelection === app.browserSelectedConceptKey
+                        || await isRuleAvailableInScope(app, app.browserSelectedConceptKey, app.browserScope);
+                    if (!currentSurface() || serial !== loadSerial) return;
                     if (remainsAvailable) {
                         await renderSelection(app.browserSelectedConceptKey);
                         return;
@@ -973,17 +1007,15 @@ async function renderRulesBrowser(app, container) {
                 app.browserDeepLink = null;
             } else if (conceptKey && keepSelection
                 && !currentRules.some(rule => rule.conceptKey === conceptKey)) {
-                const remainsAvailable = await isRuleAvailableInScope(
-                    app,
-                    conceptKey,
-                    app.browserScope);
-                if (serial !== loadSerial) return;
+                const remainsAvailable = app.nativeReferenceOnly && mountedSelection === conceptKey
+                    || await isRuleAvailableInScope(app, conceptKey, app.browserScope);
+                if (!currentSurface() || serial !== loadSerial) return;
                 if (!remainsAvailable) {
                     conceptKey = isCompactLibraryViewport(shell) ? null : currentDisplayRules()[0]?.conceptKey;
                     app.browserSelectedConceptKey = conceptKey;
                     pushToolRoute(
                         app,
-                        catalogRouteForEntity(app.browserFilters.entityType),
+                        catalogRouteForEntity(app.browserFilters.entityType, app),
                         app.browserScope);
                 }
             } else if (!conceptKey) {
@@ -999,7 +1031,7 @@ async function renderRulesBrowser(app, container) {
                 detail.replaceChildren(renderEmptyDetail("Select a rule from the list."));
             }
         } catch (error) {
-            if (serial !== loadSerial) return;
+            if (!currentSurface() || serial !== loadSerial) return;
             loadMoreError = null;
             list.replaceChildren(renderIndexError(error, () => void load({ keepSelection: true })));
             indexFooter.replaceChildren();
@@ -1079,6 +1111,8 @@ async function renderRulesBrowser(app, container) {
     });
 
     search.addEventListener("input", () => {
+        if (!currentSurface()) return;
+        ++loadSerial;
         preserveDeepLink = false;
         clearSearch.disabled = !search.value;
         app.browserFilters.query = search.value.trim();
@@ -1229,7 +1263,7 @@ async function isRuleAvailableInScope(app, conceptKey, scopeValue) {
                 scopeValue.slice("campaign:".length),
                 conceptKey);
         } else {
-            await app.api.getGlobalResolvedRule(conceptKey);
+            await app.api.getGlobalResolvedRule(conceptKey, app.rulesetReader);
         }
         return true;
     } catch (error) {
@@ -1239,7 +1273,8 @@ async function isRuleAvailableInScope(app, conceptKey, scopeValue) {
 }
 
 function scopeLabel(app, scopeValue) {
-    if (scopeValue === "global") return "Dorks & Dice";
+    if (scopeValue === "global") return app.rulesContext
+        ? packageDisplayName(app.rulesContext, app.rulesetReader?.packageDescriptor) : "Dorks & Dice";
     return campaignName(app, scopeValue.slice("campaign:".length));
 }
 

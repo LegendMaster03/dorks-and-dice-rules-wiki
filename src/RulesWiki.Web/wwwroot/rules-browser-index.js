@@ -83,7 +83,7 @@ export function renderIndexHeader(
     onSort = null,
     { canSort = false, hideSource = false } = {})
 {
-    const columns = getBrowserColumns(entityType).filter(column => !hideSource || column.key !== "source");
+    const columns = getBrowserColumns(entityType).filter(column => !hideSource || ["name", "entityType"].includes(column.key));
     const normalizedSort = normalizeBrowserSort(entityType, sort);
     container.replaceChildren();
     container.style.gridTemplateColumns = columns.map(value => value.width).join(" ");
@@ -156,7 +156,7 @@ export function renderRuleRows(container, rules, entityType, onSelect, { append 
     }
 
     const configuration = getEntityBrowserConfig(entityType);
-    const columns = configuration.columns.filter(column => !hideSource || column.key !== "source");
+    const columns = configuration.columns.filter(column => !hideSource || ["name", "entityType"].includes(column.key));
     const template = columns.map(value => value.width).join(" ");
     for (const rule of rules) {
         const row = element("button", {

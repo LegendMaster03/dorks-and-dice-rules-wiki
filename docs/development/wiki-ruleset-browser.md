@@ -6,7 +6,7 @@ Starting foundation: `4c15cac665e96cf9cea4a3ddd046e0c739e399d7`. The browser rem
 
 The existing reference API now accepts an explicit snapshot-pinned reader. Its page adapter returns a single server page, authoritative matching totals, catalog-wide category facets, and ruleset-qualified row links. It uses native entity IDs for the mounted detail surface and tuple-qualified IDs for identity outside that surface. A first-party compatibility category uses a bounded concatenation of its native category streams (condition/leveled-condition; rule/ruleChapter/rule-chapter). The displayed order is server order within each stream; it is not a global alphabetical sort. Foreign kinds are not remapped.
 
-The adapter is an intermediate integration step. The legacy browser callers still use the existing first-party full-catalog route until the application is wired to a bound reader, the foreign-route guard is reconciled, and history and in-flight state are isolated.
+The active browser now passes its authorized snapshot-pinned reader explicitly to the page adapter. Each selection, URL or history context change cancels detail leases and discards incompatible index state. The selector consumes the same discovery response used by the reader. Explicit unavailable or malformed URLs fail closed. Legacy first-party paths remain readable; new native row links are qualified. A qualified catalog home is also the all-category index with `browse=1` or a search query. Recent history stores qualified IDs only in tab storage and resolves labels within the active fingerprint. Legacy history is migrated only as first-party IDs. Class playtest cards on the first-party home use at most ten class details and explicitly disclose a partial list. Contextual row summaries are unavailable rather than recovered via one private read per row.
 
 ## Core contract observations
 
@@ -16,4 +16,4 @@ Required private projection discussion with F/Core: optional safe row summaries 
 
 ## Validation
 
-The new fixture test exercises the adapter on all four existing fixture catalogs, identical native IDs, qualified routes, denied discovery, fingerprint mismatch, and a synthetic large catalog. It checks operation counts without making live ticket or publication claims. Full browser integration, live ticket measurements and browser acceptance remain pending.
+The new fixture test exercises the adapter on all four existing fixture catalogs, identical native IDs, qualified routes, denied discovery, fingerprint mismatch, and a synthetic large catalog. It checks operation counts without making live ticket or publication claims. The existing browser tests have been updated for bounded pagination and the qualified-route parser. Full four-system hosted-browser acceptance and live ticket measurements remain pending. No private access or campaign authoring policy was changed.

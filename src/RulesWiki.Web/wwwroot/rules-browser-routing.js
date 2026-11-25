@@ -6,7 +6,7 @@ import {
     getEntityBrowserConfig,
     getEntityBrowserConfigForRoute
 } from "./rules-browser-config.js";
-import { DEFAULT_RULESET_ID, parseQualifiedRoute } from "./rules-context.js";
+import { DEFAULT_RULESET_ID, parseQualifiedRoute, catalogRoute, categoryRoute, ruleRoute } from "./rules-context.js";
 import { normalizeBrowserFieldFilters } from "./rules-browser-filters.js";
 
 /** Unknown or unsupported paths intentionally yield no selection. */
@@ -18,10 +18,7 @@ export function parseToolRoute(toolRoute) {
     const qualified = parseQualifiedRoute(path);
     if (qualified) {
         if (qualified.status !== "valid") return { unsupportedRulesContext: true };
-        // Keep unsupported routes out of legacy selection and fragment history.
-        if (qualified.rulesetId !== DEFAULT_RULESET_ID)
-            return { rulesetId: qualified.rulesetId, unsupportedRulesContext: true };
-        return { rulesetId: qualified.rulesetId,
+        return { rulesetId: qualified.rulesetId, qualified: true,
             ...(qualified.kind === "rule" ? { conceptKey: qualified.ruleId } : {}),
             ...(qualified.kind === "category" ? { entityType: qualified.category } : {}) };
     }
@@ -97,8 +94,19 @@ export function parseBrowserViewStateFromLocation(entityType = "") {
 /** Preserve active browser filters when constructing a destination URL. */
 export function browserHref(app, toolRelativePath, scopeValue = app.browserScope) {
     const base = app.hostContext.toolBasePath ?? "/tools/rules-wiki";
-    const path = `${base.replace(/\/$/, "")}${toolRelativePath || "/"}`;
+    const activeRoute = parseToolRoute(currentToolRoute(app));
+    let relative = toolRelativePath || "/";
+    const id = app.rulesContext?.rulesetId;
+    if (id && (activeRoute.qualified || id !== DEFAULT_RULESET_ID) && !parseQualifiedRoute(relative)) {
+        const legacy = parseToolRoute(relative);
+        if (legacy.conceptKey) relative = ruleRoute(id, legacy.conceptKey);
+        else if (legacy.entityType) relative = categoryRoute(id, legacy.entityType);
+        else if (relative === "/" || relative === "/all") relative = catalogRoute(id);
+    }
+    const path = `${base.replace(/\/$/, "")}${relative}`;
     const parameters = new URLSearchParams(window.location.search);
+    parameters.delete("browse");
+    if (id && relative === catalogRoute(id)) parameters.set("browse", "1");
     parameters.delete("scope");
     parameters.delete("q");
     parameters.delete("sort");
@@ -159,7 +167,10 @@ function updateToolRoute(app, toolRelativePath, scopeValue, replace) {
     }
 }
 
-export function catalogRouteForEntity(entityType) {
+export function catalogRouteForEntity(entityType, app = null) {
+    const id = app?.rulesContext?.rulesetId;
+    if (id && (id !== DEFAULT_RULESET_ID || parseToolRoute(currentToolRoute(app)).qualified))
+        return entityType ? categoryRoute(id, entityType) : catalogRoute(id);
     if (!entityType) return "/all";
     const configuration = getEntityBrowserConfig(entityType);
     if (configuration.routeFamily) return `/${configuration.routeFamily}`;
