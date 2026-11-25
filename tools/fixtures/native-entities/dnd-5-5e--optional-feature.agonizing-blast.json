@@ -1,0 +1,77 @@
+{
+  "id": "optional-feature.agonizing-blast",
+  "kind": "optional-feature",
+  "name": "Agonizing Blast",
+  "featureType": [
+    "EI"
+  ],
+  "prerequisite": [
+    {
+      "spell": [
+        {
+          "choose": "level=0|class=Warlock",
+          "entry": "a Warlock Cantrip That Deals Damage",
+          "entrySummary": "Warlock Cantrip That Deals Damage",
+          "predicate": {
+            "dealsDamage": true,
+            "requiresAttackRoll": false
+          },
+          "selection": {
+            "known": true,
+            "differentOnRepeat": true,
+            "minimumRangeFeet": null
+          }
+        }
+      ],
+      "level": {
+        "level": 2,
+        "class": {
+          "name": "Warlock",
+          "source": "SRD52",
+          "visibleStats": true
+        }
+      }
+    }
+  ],
+  "entries": [
+    "Choose one of your known Warlock cantrips that deals damage. You can add your Charisma modifier to that spell's damage rolls.",
+    {
+      "type": "entries",
+      "entries": [
+        {
+          "type": "entries",
+          "name": "Repeatable",
+          "entries": [
+            "You can gain this invocation more than once. Each time you do so, choose a different eligible cantrip."
+          ]
+        }
+      ]
+    }
+  ],
+  "catalogReferences": [
+    "class.warlock",
+    "rulebook.page-072"
+  ],
+  "source": {
+    "release": "srd-5.2.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+    "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [
+      72
+    ],
+    "candidatePage": 72,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "optionalfeatures.json",
+      "pointer": "/optionalfeature/49"
+    },
+    "structuredStatus": "pinned edition-specific structured feat or optional feature; publisher name locator where available; full body and semantic review pending"
+  },
+  "repeatability": {
+    "allowed": true,
+    "distinctSelection": "cantrip"
+  }
+}
