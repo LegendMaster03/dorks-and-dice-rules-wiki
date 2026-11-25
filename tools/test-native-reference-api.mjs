@@ -1,14 +1,8 @@
 // Native reference operation and browser adapter contract checks.
-import fs from 'node:fs';
-import path from 'node:path';
 import assert from 'node:assert/strict';
-import { fileURLToPath } from 'node:url';
 
-const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src/RulesWiki.Web/wwwroot');
-const moduleFromFile = async file => import('data:text/javascript;base64,' +
-    Buffer.from(fs.readFileSync(path.join(dir, file))).toString('base64'));
-const { RulesCoreApi } = await moduleFromFile('api.js');
-const { installNativeReferenceApi } = await moduleFromFile('rules-reference-api.js');
+import { RulesCoreApi } from '../src/RulesWiki.Web/wwwroot/api.js';
+import { installNativeReferenceApi } from '../src/RulesWiki.Web/wwwroot/rules-reference-api.js';
 const calls = [];
 const original = globalThis.fetch;
 globalThis.fetch = async (url, options) => {

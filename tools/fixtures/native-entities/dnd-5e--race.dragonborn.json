@@ -1,0 +1,338 @@
+{
+  "id": "race.dragonborn",
+  "kind": "race",
+  "name": "Dragonborn",
+  "size": [
+    "M"
+  ],
+  "speed": 30,
+  "ability": [
+    {
+      "str": 2,
+      "cha": 1
+    }
+  ],
+  "languageProficiencies": [
+    {
+      "common": true,
+      "draconic": true
+    }
+  ],
+  "resist": [
+    {
+      "choose": {
+        "from": [
+          "acid",
+          "cold",
+          "fire",
+          "lightning",
+          "poison"
+        ]
+      }
+    }
+  ],
+  "entries": [
+    {
+      "name": "Age",
+      "type": "entries",
+      "entries": [
+        "Young dragonborn grow quickly. They walk hours after hatching, attain the size and development of a 10-year-old human child by the age of 3, and reach adulthood by 15. They live to be around 80."
+      ]
+    },
+    {
+      "type": "entries",
+      "name": "Alignment",
+      "entries": [
+        "Dragonborn tend to extremes, making a conscious choice for one side or the other in the cosmic war between good and evil. Most dragonborn are good, but those who side with evil can be terrible villains."
+      ]
+    },
+    {
+      "type": "entries",
+      "name": "Size",
+      "entries": [
+        "Dragonborn are taller and heavier than humans, standing well over 6 feet tall and averaging almost 250 pounds. Your size is Medium."
+      ]
+    },
+    {
+      "name": "Draconic Ancestry",
+      "entries": [
+        "You have draconic ancestry. Choose one type of dragon from the Draconic Ancestry table. Your breath weapon and damage resistance are determined by the dragon type, as shown in the table.",
+        {
+          "type": "table",
+          "caption": "Draconic Ancestry",
+          "colLabels": [
+            "Dragon",
+            "Damage Type",
+            "Breath Weapon"
+          ],
+          "colStyles": [
+            "col-3 text-center",
+            "col-3 text-center",
+            "col-6"
+          ],
+          "rows": [
+            [
+              "Black",
+              "Acid",
+              "5 by 30 ft. line (Dex. save)"
+            ],
+            [
+              "Blue",
+              "Lightning",
+              "5 by 30 ft. line (Dex. save)"
+            ],
+            [
+              "Brass",
+              "Fire",
+              "5 by 30 ft. line (Dex. save)"
+            ],
+            [
+              "Bronze",
+              "Lightning",
+              "5 by 30 ft. line (Dex. save)"
+            ],
+            [
+              "Copper",
+              "Acid",
+              "5 by 30 ft. line (Dex. save)"
+            ],
+            [
+              "Gold",
+              "Fire",
+              "15 ft. cone (Dex. save)"
+            ],
+            [
+              "Green",
+              "Poison",
+              "15 ft. cone (Con. save)"
+            ],
+            [
+              "Red",
+              "Fire",
+              "15 ft. cone (Dex. save)"
+            ],
+            [
+              "Silver",
+              "Cold",
+              "15 ft. cone (Con. save)"
+            ],
+            [
+              "White",
+              "Cold",
+              "15 ft. cone (Con. save)"
+            ]
+          ]
+        }
+      ],
+      "type": "entries"
+    },
+    {
+      "name": "Breath Weapon",
+      "entries": [
+        "You can use your action to exhale destructive energy. Your draconic ancestry determines the size, shape, and damage type of the exhalation.",
+        "When you use your breath weapon, each creature in the area of the exhalation must make a saving throw, the type of which is determined by your draconic ancestry. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes {@damage 2d6} damage on a failed save, and half as much damage on a successful one. The damage increases to {@damage 3d6} at 6th level, {@damage 4d6} at 11th level, and {@damage 5d6} at 16th level.",
+        "After you use your breath weapon, you can't use it again until you complete a short or long rest."
+      ],
+      "type": "entries"
+    },
+    {
+      "name": "Damage Resistance",
+      "entries": [
+        "You have resistance to the damage type associated with your draconic ancestry."
+      ],
+      "type": "entries"
+    },
+    {
+      "name": "Languages",
+      "entries": [
+        "You can speak, read, and write Common and Draconic. Draconic is thought to be one of the oldest languages and is often used in the study of magic. The language sounds harsh to most other creatures and includes numerous hard consonants and sibilants."
+      ],
+      "type": "entries"
+    }
+  ],
+  "catalogReferences": [
+    "language.common",
+    "language.draconic",
+    "rulebook.page-005",
+    "rulebook.page-006"
+  ],
+  "source": {
+    "release": "srd-5.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+    "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [
+      5,
+      6
+    ],
+    "candidatePage": 5,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "races.json",
+      "pointer": "/race/0"
+    },
+    "structuredStatus": "publisher name/page locator and pinned structured projection; full descriptive and mechanical field review pending",
+    "additionalStructuredSources": [
+      {
+        "provider": "CoolFireGiant/hewnhero-srd",
+        "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+        "path": "races.json",
+        "pointer": "/subrace/0"
+      }
+    ]
+  },
+  "_versions": [
+    {
+      "_abstract": {
+        "name": "Dragonborn ({{color}})",
+        "source": "SRD51",
+        "_mod": {
+          "entries": [
+            {
+              "mode": "removeArr",
+              "names": "Draconic Ancestry"
+            },
+            {
+              "mode": "replaceArr",
+              "replace": "Breath Weapon",
+              "items": {
+                "type": "entries",
+                "name": "Breath Weapon",
+                "entries": [
+                  "You can use your action to exhale destructive energy in a {{area}}.",
+                  "When you use your breath weapon, each creature in the area of the exhalation must make a {{savingThrow}} saving throw. The DC for this saving throw equals 8 + your Constitution modifier + your proficiency bonus. A creature takes {@damage 2d6} {{damageType}} damage on a failed save, and half as much damage on a successful one. The damage increases to {@damage 3d6} at 6th level, {@damage 4d6} at 11th level, and {@damage 5d6} at 16th level.",
+                  "After you use your breath weapon, you can't use it again until you complete a short or long rest."
+                ]
+              }
+            },
+            {
+              "mode": "replaceArr",
+              "replace": "Damage Resistance",
+              "items": {
+                "type": "entries",
+                "name": "Damage Resistance",
+                "entries": [
+                  "You have resistance to {{damageType}} damage."
+                ]
+              }
+            }
+          ]
+        }
+      },
+      "_implementations": [
+        {
+          "_variables": {
+            "color": "Black",
+            "damageType": "acid",
+            "area": "5-foot-wide, 30-foot-long line",
+            "savingThrow": "Dexterity"
+          },
+          "resist": [
+            "acid"
+          ]
+        },
+        {
+          "_variables": {
+            "color": "Blue",
+            "damageType": "lightning",
+            "area": "5-foot-wide, 30-foot-long line",
+            "savingThrow": "Dexterity"
+          },
+          "resist": [
+            "lightning"
+          ]
+        },
+        {
+          "_variables": {
+            "color": "Brass",
+            "damageType": "fire",
+            "area": "5-foot-wide, 30-foot-long line",
+            "savingThrow": "Dexterity"
+          },
+          "resist": [
+            "fire"
+          ]
+        },
+        {
+          "_variables": {
+            "color": "Bronze",
+            "damageType": "lightning",
+            "area": "5-foot-wide, 30-foot-long line",
+            "savingThrow": "Dexterity"
+          },
+          "resist": [
+            "lightning"
+          ]
+        },
+        {
+          "_variables": {
+            "color": "Copper",
+            "damageType": "acid",
+            "area": "5-foot-wide, 30-foot-long line",
+            "savingThrow": "Dexterity"
+          },
+          "resist": [
+            "acid"
+          ]
+        },
+        {
+          "_variables": {
+            "color": "Gold",
+            "damageType": "fire",
+            "area": "15-foot cone",
+            "savingThrow": "Dexterity"
+          },
+          "resist": [
+            "fire"
+          ]
+        },
+        {
+          "_variables": {
+            "color": "Green",
+            "damageType": "poison",
+            "area": "15-foot cone",
+            "savingThrow": "Constitution"
+          },
+          "resist": [
+            "poison"
+          ]
+        },
+        {
+          "_variables": {
+            "color": "Red",
+            "damageType": "fire",
+            "area": "15-foot cone",
+            "savingThrow": "Dexterity"
+          },
+          "resist": [
+            "fire"
+          ]
+        },
+        {
+          "_variables": {
+            "color": "Silver",
+            "damageType": "cold",
+            "area": "15-foot cone",
+            "savingThrow": "Constitution"
+          },
+          "resist": [
+            "cold"
+          ]
+        },
+        {
+          "_variables": {
+            "color": "White",
+            "damageType": "cold",
+            "area": "15-foot cone",
+            "savingThrow": "Constitution"
+          },
+          "resist": [
+            "cold"
+          ]
+        }
+      ]
+    }
+  ]
+}

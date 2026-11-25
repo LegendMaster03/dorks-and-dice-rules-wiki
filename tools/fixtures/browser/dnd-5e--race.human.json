@@ -1,0 +1,85 @@
+{
+  "id": "race.human",
+  "kind": "race",
+  "name": "Human",
+  "size": [
+    "M"
+  ],
+  "speed": 30,
+  "languageProficiencies": [
+    {
+      "common": true,
+      "anyStandard": 1
+    }
+  ],
+  "entries": [
+    {
+      "name": "Age",
+      "type": "entries",
+      "entries": [
+        "Humans reach adulthood in their late teens and live less than a century."
+      ]
+    },
+    {
+      "type": "entries",
+      "name": "Alignment",
+      "entries": [
+        "Humans tend toward no particular alignment. The best and the worst are found among them."
+      ]
+    },
+    {
+      "type": "entries",
+      "name": "Size",
+      "entries": [
+        "Humans vary widely in height and build, from barely 5 feet to well over 6 feet tall. Regardless of your position in that range, your size is Medium."
+      ]
+    },
+    {
+      "name": "Languages",
+      "entries": [
+        "You can speak, read, and write Common and one extra language of your choice. Humans typically learn the languages of other peoples they deal with, including obscure dialects. They are fond of sprinkling their speech with words borrowed from other tongues: Orc curses, Elvish musical expressions, Dwarvish military phrases, and so on."
+      ],
+      "type": "entries"
+    }
+  ],
+  "catalogReferences": [
+    "language.common",
+    "rulebook.page-005"
+  ],
+  "source": {
+    "release": "srd-5.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+    "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [
+      5
+    ],
+    "candidatePage": 4,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "races.json",
+      "pointer": "/race/13"
+    },
+    "structuredStatus": "publisher name/page locator and pinned structured projection; full descriptive and mechanical field review pending",
+    "additionalStructuredSources": [
+      {
+        "provider": "CoolFireGiant/hewnhero-srd",
+        "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+        "path": "races.json",
+        "pointer": "/subrace/7"
+      }
+    ]
+  },
+  "ability": [
+    {
+      "str": 1,
+      "dex": 1,
+      "con": 1,
+      "int": 1,
+      "wis": 1,
+      "cha": 1
+    }
+  ]
+}

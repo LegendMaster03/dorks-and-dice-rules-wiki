@@ -1,7 +1,9 @@
 // Checks native monster and Kaiju statblock presentation contracts.
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { renderNativeMonster } from "../src/RulesWiki.Web/wwwroot/native-monster-detail.js";
+import { renderNativeMonster, renderMonsterDice } from "../src/RulesWiki.Web/wwwroot/native-monster-detail.js";
+import * as sharedPresentation from "../src/RulesWiki.Web/wwwroot/native-presentation.js";
+import { supportsImportedCreature, renderImportedCreature } from "../src/RulesWiki.Web/wwwroot/native-renderers-creature.js";
 import { renderNativeDetail } from "../src/RulesWiki.Web/wwwroot/native-rule-detail.js";
 
 // Local DOM substitute used for renderer regression checks without a browser.
@@ -94,36 +96,7 @@ assert.ok(cls(lich, "rw-stat-entry").length >= 4);
 
 // Kaiju fixture uses the reference concepts already implemented in Block
 // Initiative. Values are testing data, never added to authoritative creatures.
-const kaijuReference = {
-    chaosThreshold: 150, finishingBlow: 60, vulnerabilityIdentificationDc: 18,
-    xpMilestones: [{ criteria: "Chaos reduced to zero", xp: 5000 }, { criteria: "Victory", xp: 10000 }],
-    vulnerableAreas: [
-        { id: "head", name: "Head", maxHp: 35,
-            targetableWhen: "When exposed by the creature's Behaviour",
-            exploitationEffect: "Area-specific consequence", futureAreaRule: "Keep this detail",
-            variants: [{ cr: 12, ac: 15, hp: 35 }, { cr: 18, ac: 18, hp: 65 },
-                { cr: 24, ac: 21, hp: 105 }] },
-        { id: "arm", name: "Arm", hp: 25, ac: 17, onExploited: "Additional effect" }
-    ],
-    behaviours: [
-        { name: "Escalation", trigger: "At the stated encounter trigger", entries: ["Change combat behavior"],
-            gainedFeatures: ["New Slam"], lostFeatures: ["Old Slam"] },
-        { name: "Counterattack", when: "In response to an attack", description: "Use the listed counterattack" }
-    ],
-    rampage: "When Chaos Threshold reaches zero",
-    deathThroes: "Once all Vulnerable Areas are exploited",
-    deathRattle: "Post-defeat consequence",
-    additionalKaijuRule: { effect: "preserve unexplained mechanics" }
-};
-const kaiju = show({
-    name: "Kaiju Reference Fixture", blockType: "kaiju", size: ["G"], type: "monstrosity",
-    ac: [22], hp: { average: 999, formula: "99d10" }, speed: { walk: 40 },
-    str: 26, dex: 10, con: 24, int: 8, wis: 12, cha: 8,
-    kaiju: kaijuReference,
-    action: [{ name: "Slam", lostWhile: "Head Exploited",
-        entries: ["{@atkr m} {@hit 10}, {@h}{@damage 3d10 + 8} force."] }],
-    legendary: [{ name: "Legendary Action", entries: ["Special attack."] }]
-});
+const kaiju = show(JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/synthetic/kaiju-reference-fixture.json", import.meta.url))));
 assert.equal(cls(kaiju, "rw-statblock-kaiju").length, 1);
 assert.match(kaiju.textContent, /Kaiju Reference/);
 assert.equal(cls(kaiju, "rw-stat-kaiju-columns").length, 1,
@@ -210,3 +183,147 @@ assert.equal(cls(integrated, "rw-stat-ability").length, 6);
 assert.match(integrated.textContent, /Bite attack/);
 assert.doesNotMatch(integrated.textContent, /Undefined/);
 console.log("Native monster statblock renderer checks passed.");
+ // Actual source records from both editions, pinned to the Core foundation revision.
+const imported = JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/creature-workstream-c.json", import.meta.url)));
+const view = (rulesetId, id) => {
+    const { record } = imported.find(x => x.rulesetId === rulesetId && x.record.id === id);
+    const rule = { id, name: record.name, kind: record.kind, definition: record };
+    assert.ok(supportsImportedCreature({ context: { rulesetId }, record, rule }));
+    assert.ok(supportsImportedCreature({ context: { rulesetId: "compatible-fixture" }, record, rule }), "Compatible flat records do not require a catalog allowlist.");
+    assert.equal(supportsImportedCreature({ context: { rulesetId: "first-party-001" }, record, rule }), false, "Preserve first-party save and complex combatant semantics.");
+    const target = new FakeNode("main");
+    const snapshot = JSON.stringify(record);
+    const context = { rulesetId, fingerprint: "fixture-only", campaignId: null, campaignRevisionId: null };
+    renderNativeDetail(target, { rulesetId, fingerprint: "fixture-only", rule }, () => {}, null,
+        { reader: { context, packageDescriptor: null } });
+    assert.equal(cls(target, "rw-statblock").length, 1);
+    assert.equal(JSON.stringify(record), snapshot);
+    assert.doesNotMatch(target.textContent, /NaN|\[object Object\]/);
+    return target;
+};
+const oldWerewolf = view("dnd-5e", "monster.werewolf");
+assert.match(oldWerewolf.textContent, /11 \(in humanoid form\), 12 \(natural armor; in wolf or hybrid form\)/);
+assert.match(oldWerewolf.textContent, /30 ft\. \(40 ft\. in wolf form\)/);
+assert.match(oldWerewolf.textContent, /from nonmagical attacks that aren't silvered/);
+const newWerewolf = view("dnd-5-5e", "monster.werewolf");
+assert.match(newWerewolf.textContent, /71 \(11d8 \+ 22\)/);
+assert.doesNotMatch(newWerewolf.textContent, /11 \(in humanoid form\)/);
+for (const id of ["dnd-5e", "dnd-5-5e"]) {
+    const avatar = view(id, "monster.avatar-of-death");
+    assert.match(avatar.textContent, /Half the hit point maximum of its summoner/);
+    assert.match(avatar.textContent, /0 XP/);
+    assert.doesNotMatch(avatar.textContent, /CR null/);
+    assert.match(avatar.textContent, /60 ft\. \(hover\)/);
+    const condition = all(avatar, node => node.tagName === "A" && node.textContent === "condition.charmed")[0];
+    assert.ok(condition);
+    assert.ok(condition.attrs.href.includes("/rulesets/" + id + "/rules/condition.charmed"));
+    const dragon = view(id, "monster.adult-red-dragon");
+    assert.match(dragon.textContent, /Legendary Actions/);
+}
+assert.match(view("dnd-5-5e", "monster.avatar-of-death").textContent, /\+3 \(13\)/);
+assert.match(view("dnd-5e", "monster.acolyte").textContent, /3.*bless/is);
+const priest = view("dnd-5-5e", "monster.priest-acolyte");
+assert.match(priest.textContent, /Divine Aid/);
+const spell = all(priest, node => node.tagName === "A" && node.textContent === "spell.bless")[0];
+assert.ok(spell.attrs.href.includes("/rulesets/dnd-5-5e/rules/spell.bless"));
+assert.match(view("dnd-5-5e", "monster.adult-red-dragon").textContent, /Lair XP 20000/);
+const spirit = view("dnd-5-5e", "monster.draconic-spirit-acid");
+assert.match(spirit.textContent, /14 \+ the spell's level/);
+assert.match(spirit.textContent, /50 \+ 10 for each spell level above 5/);
+assert.match(spirit.textContent, /equals your Proficiency Bonus/);
+assert.match(view("dnd-5-5e", "monster.animated-object-huge").textContent, /Animate Objects/);
+console.log("Imported native creature fixture checks passed.");
+
+const oldSwarm = view("dnd-5e", "monster.swarm-of-bats");
+assert.match(oldSwarm.textContent, /Medium · Swarm of Tiny Beast/);
+assert.match(oldSwarm.textContent, /0 ft\./);
+const newSwarm = view("dnd-5-5e", "monster.swarm-of-insects");
+assert.match(newSwarm.textContent, /20 ft\. \(Climb or Fly\) \(GM's choice\)/);
+assert.match(view("dnd-5e", "monster.acolyte").textContent, /Level 1 \(3 slots\)/);
+const firstPartyRecords = ["monster.goblin-warrior", "monster.tarrasque"].map(id => JSON.parse(fs.readFileSync(
+    new URL("./fixtures/multi-system/first-party-001--" + id + ".json", import.meta.url))));
+for (const record of firstPartyRecords) {
+    const target = new FakeNode("main");
+    renderNativeDetail(target, { rulesetId: "first-party-001", fingerprint: "fixture-only",
+        rule: { id: record.id, name: record.name, kind: record.kind, definition: record } }, () => {});
+    assert.equal(cls(target, "rw-statblock").length, 1);
+    assert.match(target.textContent, /Armor Class/);
+    assert.match(target.textContent, /Actions/);
+    assert.equal(cls(target, "rw-statblock-kaiju").length, 0);
+}
+const sparse = show({name:"Sparse source", challenge:"2", str:"variable", ac:[{special:"depends on summoner"}]});
+assert.match(sparse.textContent, /CR 2/);
+assert.match(sparse.textContent, /variable/);
+assert.match(sparse.textContent, /depends on summoner/);
+
+assert.match(view("dnd-5e", "monster.green-hag").textContent, /Coven CR 5/);
+assert.match(view("dnd-5-5e", "monster.otherworldly-steed").textContent, /Celestial or Fey or Fiend/);
+
+ // Independent seam validation: the structured renderer receives the exact
+ // context and the bounded dice callback, without copying B's implementation.
+const importedRecord = imported.find(x => x.rulesetId === "dnd-5e" && x.record.id === "monster.acolyte").record;
+const context = { rulesetId: "dnd-5e", fingerprint: "fixture-only", campaignId: null, campaignRevisionId: null };
+const adapterInput = { context, record: importedRecord,
+    rule: { id: importedRecord.id, kind: importedRecord.kind, name: importedRecord.name, definition: importedRecord },
+    references: null, hrefForRule: id => "/rulesets/dnd-5e/rules/" + id };
+let structuredCalls = 0;
+const sharedProbe = { renderInlineContent() {}, renderStructuredContent(value, options) {
+    structuredCalls++;
+    assert.equal(options.input, adapterInput);
+    assert.equal(options.renderDice, renderMonsterDice);
+    const node = new FakeNode("span"); node.textContent = JSON.stringify(value); return node;
+}, renderNativeAttribution: () => new FakeNode("aside") };
+const noReader = renderImportedCreature(adapterInput, sharedProbe);
+assert.ok(structuredCalls > 0);
+assert.equal(all(noReader, n => n.tagName === "A").length, 0, "No unbound catalog links.");
+assert.equal(renderMonsterDice({tag:"damage",expression:"1d6 + summonSpellLevel"}), null);
+assert.equal(renderMonsterDice({tag:"dice",expression:"999d9999"}), null);
+assert.equal(renderMonsterDice({tag:"hit",expression:"4"}).textContent, "+4");
+
+// The shared B contract is required for the integrated creature workstream.
+// The pinned native reader returns only exact same-catalog fixture envelopes.
+const referenceFixtures = JSON.parse(fs.readFileSync(new URL("./fixtures/multi-system/creature-workstream-c-references.json", import.meta.url)));
+assert.match(view("dnd-5-5e", "monster.tarrasque").textContent, /697/);
+const sourceMap = new Map([["{@spell bless}", "spell.bless"]]);
+const asyncInput = { ...adapterInput, references: { context, resolve() {} } };
+let prepared = false;
+const asyncSharedProbe = { ...sharedProbe,
+    async resolveSourceReferenceIds(input) { assert.equal(input, asyncInput); prepared = true; return sourceMap; },
+    renderStructuredContent(value, options) {
+        assert.equal(options.input, asyncInput);
+        assert.equal(options.referenceIds, sourceMap);
+        const node = new FakeNode("span"); node.textContent = JSON.stringify(value); return node;
+    }
+};
+await renderImportedCreature(asyncInput, asyncSharedProbe);
+assert.ok(prepared);
+assert.equal(typeof sharedPresentation.resolveSourceReferenceIds, "function");
+assert.equal(typeof sharedPresentation.renderInlineContent, "function");
+{
+    for (const [rulesetId, creatureId, referenceId] of [
+        ["dnd-5e", "monster.acolyte", "spell.bless"],
+        ["dnd-5e", "monster.archmage", "spell.mage-armor"],
+        ["dnd-5-5e", "monster.priest-acolyte", "spell.bless"],
+        ["dnd-5e", "monster.adult-red-dragon", "condition.frightened"],
+        ["dnd-5-5e", "monster.tarrasque", "condition.frightened"]
+    ]) {
+        const { record } = imported.find(x => x.rulesetId === rulesetId && x.record.id === creatureId);
+        const context = { rulesetId, fingerprint: "fixture-only", campaignId: null, campaignRevisionId: null };
+        const reader = { context, packageDescriptor: null, async resolve(id) {
+            const entry = referenceFixtures.find(x => x.rulesetId === rulesetId && x.record.id === id);
+            if (!entry) throw Error("Not supplied by this fixture reader");
+            return { rulesetId, fingerprint: context.fingerprint,
+                rule: { id, kind: entry.record.kind, name: entry.record.name, definition: entry.record } };
+        }};
+        const target = new FakeNode("main");
+        await renderNativeDetail(target, { rulesetId, fingerprint: context.fingerprint,
+            rule: { id: creatureId, name: record.name, kind: record.kind, definition: record } }, () => {}, null, { reader });
+        const links = all(target, node => node.tagName === "A" && node.attrs.href?.endsWith("/rules/" + referenceId));
+        assert.ok(links.some(node => node.textContent !== referenceId), "Expected an embedded reference, not only catalog list");
+        assert.ok(links.every(node => node.attrs.href.includes("/rulesets/" + rulesetId + "/rules/")));
+        if (creatureId === "monster.archmage") assert.ok(cls(target, "rw-stat-tile").some(tile => all(tile, n => n.tagName === "A" && n.attrs.href?.endsWith("/rules/spell.mage-armor")).length), "Conditional AC preserves its embedded reference.");
+    }
+    console.log("Shared creature inline reference integration checks passed.");
+}
+
+assert.match(view("dnd-5e", "monster.archmage").textContent, /15 \(with mage armor\)/i);

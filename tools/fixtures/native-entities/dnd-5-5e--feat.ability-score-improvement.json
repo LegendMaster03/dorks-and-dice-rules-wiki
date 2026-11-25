@@ -1,0 +1,73 @@
+{
+  "id": "feat.ability-score-improvement",
+  "kind": "feat",
+  "name": "Ability Score Improvement",
+  "category": "G",
+  "prerequisite": [
+    {
+      "level": 4
+    }
+  ],
+  "repeatable": true,
+  "ability": [
+    {
+      "choose": {
+        "from": [
+          "str",
+          "dex",
+          "con",
+          "int",
+          "wis",
+          "cha"
+        ],
+        "amount": 2
+      },
+      "hidden": true
+    },
+    {
+      "choose": {
+        "from": [
+          "str",
+          "dex",
+          "con",
+          "int",
+          "wis",
+          "cha"
+        ],
+        "count": 2
+      },
+      "hidden": true
+    }
+  ],
+  "entries": [
+    "Increase one ability score of your choice by 2, or increase two ability scores of your choice by 1. This feat can't increase an ability score above 20.",
+    {
+      "type": "entries",
+      "name": "Repeatable",
+      "entries": [
+        "You can take this feat more than once."
+      ]
+    }
+  ],
+  "catalogReferences": [
+    "rulebook.page-087"
+  ],
+  "source": {
+    "release": "srd-5.2.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+    "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [
+      87
+    ],
+    "candidatePage": 202,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "feats.json",
+      "pointer": "/feat/0"
+    },
+    "structuredStatus": "pinned edition-specific structured feat or optional feature; publisher name locator where available; full body and semantic review pending"
+  }
+}

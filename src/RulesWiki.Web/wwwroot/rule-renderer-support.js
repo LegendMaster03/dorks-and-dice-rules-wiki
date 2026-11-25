@@ -3,6 +3,7 @@
  * from Core or a source variation; these helpers do not adjudicate mechanics.
  */
 import { codeBlock, element } from "./ui.js";
+import { renderStructuredContent, rendererTagText, stripSourceTags } from "./structured-content.js";
 
 export const ABILITIES = [
     ["STR", "str"],
@@ -164,42 +165,21 @@ export function renderCompactStatistic(label, value) {
         element("div", { className: "rules-core-compact-stat-value", text: String(value) }));
 }
 
-export function renderNamedRuleEntry(entry) {
-    const item = element("div", { className: "rules-core-rule-entry" });
-    if (entry && typeof entry === "object" && !Array.isArray(entry) && entry.name) {
-        item.append(element("div", {
-            className: "rules-core-rule-entry-name",
-            text: stripRendererTags(entry.name)
-        }));
-    }
-    if (entry && typeof entry === "object" && !Array.isArray(entry)) {
-        const bodies = [];
-        for (const candidate of [entry.entries, entry.entry, entry.items, entry.attackEntries, entry.hitEntries, entry.headerEntries, entry.footerEntries]) {
-            if (candidate !== null && candidate !== undefined) bodies.push(candidate);
-        }
-        if (bodies.length) {
-            for (const body of bodies) item.append(renderRuleContent(body));
-        } else {
-            const fallback = Object.fromEntries(Object.entries(entry).filter(([key]) => key !== "name"));
-            if (Object.keys(fallback).length) item.append(renderRuleContent(fallback));
-        }
-    } else if (entry !== null && entry !== undefined) {
-        item.append(renderRuleContent(entry));
-    }
-    return item;
+export function renderNamedRuleEntry(entry, options = {}) {
+    return renderStructuredContent(entry, options);
 }
 
+/** The unknown resolved-rule path uses the same structured renderer.
+ * Keep the raw document available when the caller requests disclosure. */
 export function renderGeneric(document, options = {}) {
-    const entries = firstDefined(document?.entries, document?.rules, document?.text);
-    if (hasSectionContent(entries)) {
-        return renderStructuredRule(document, options, {
-            sections: [["Rules", entries]],
-            consumed: ["entries", "rules", "text"]
-        });
+    const root = element("article", { className: "rules-core-rule-renderer rules-core-structured-rule" },
+        renderStructuredContent(document, options));
+    if (options.showDocument !== false) {
+        root.append(element("details", { className: "rules-core-secondary-details" },
+            element("summary", { text: options.documentLabel ?? "Resolved rule" }),
+            element("div", { className: "rules-core-secondary-details-body" }, codeBlock(document))));
     }
-    return renderDocumentDisclosure(
-        document,
-        options.documentLabel ?? "Resolved rule");
+    return root;
 }
 
 export function renderAbilityGrid(document) {
@@ -316,83 +296,16 @@ export function renderRulesCoreExtensions(extension) {
 }
 
 /** Render structured or text rule content without interpreting its effects. */
-export function renderRuleContent(value) {
-    const wrapper = element("div", { className: "rules-core-rule-content" });
-    appendRuleContent(wrapper, value);
-    return wrapper;
+export function renderRuleContent(value, options = {}) {
+    return element("div", { className: "rules-core-rule-content" }, renderStructuredContent(value, options));
 }
 
-export function appendRuleContent(parent, value) {
-    if (value === null || value === undefined) return;
-    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-        parent.append(element("span", { text: stripRendererTags(String(value)) }));
-        return;
-    }
-    if (Array.isArray(value)) {
-        value.forEach((item, index) => {
-            if (index > 0 && isInlineRuleValue(item)) parent.append(document.createTextNode(" "));
-            if (isInlineRuleValue(item)) {
-                appendRuleContent(parent, item);
-            } else {
-                parent.append(renderNamedRuleEntry(item));
-            }
-        });
-        return;
-    }
-    if (typeof value !== "object") {
-        parent.append(element("span", { text: String(value) }));
-        return;
-    }
-
-    if (value.type === "list" && Array.isArray(value.items)) {
-        const list = element("ul", { className: "rules-core-rule-list" });
-        for (const item of value.items) {
-            list.append(element("li", {}, renderRuleContent(item?.entry ?? item?.entries ?? item)));
-        }
-        parent.append(list);
-        return;
-    }
-    if (value.type === "table" && Array.isArray(value.rows)) {
-        parent.append(renderRuleTable(value));
-        return;
-    }
-    const nested = firstDefined(value.entries, value.entry, value.items, value.attackEntries, value.hitEntries);
-    if (nested !== null && nested !== undefined) {
-        if (value.name) {
-            parent.append(element("strong", { className: "rules-core-inline-entry-name", text: stripRendererTags(value.name) }));
-            parent.append(document.createTextNode(" "));
-        }
-        appendRuleContent(parent, nested);
-        return;
-    }
-
-    const pairs = Object.entries(value)
-        .filter(([key, candidate]) => !["name", "type"].includes(key) && hasValue(candidate));
-    if (!pairs.length) return;
-    const list = element("dl", { className: "rules-core-inline-details" });
-    for (const [key, candidate] of pairs) {
-        list.append(element("dt", { text: humanizeKey(key) }), element("dd", {}, renderRuleContent(candidate)));
-    }
-    parent.append(list);
+export function appendRuleContent(parent, value, options = {}) {
+    if (value !== null && value !== undefined) parent.append(renderStructuredContent(value, options));
 }
 
-/** Display table data as published, with no inferred progression or values. */
-export function renderRuleTable(table) {
-    const wrapper = element("div", { className: "table-responsive rules-core-inline-table" });
-    const node = element("table", { className: "table table-sm mb-0" });
-    if (table.caption) node.append(element("caption", { text: stripRendererTags(table.caption) }));
-    if (Array.isArray(table.colLabels) && table.colLabels.length) {
-        node.append(element("thead", {}, element("tr", {},
-            table.colLabels.map(label => element("th", { text: stripRendererTags(String(label)) })))));
-    }
-    const body = element("tbody");
-    for (const row of table.rows) {
-        const cells = Array.isArray(row) ? row : [row];
-        body.append(element("tr", {}, cells.map(cell => element("td", {}, renderRuleContent(cell)))));
-    }
-    node.append(body);
-    wrapper.append(node);
-    return wrapper;
+export function renderRuleTable(table, options = {}) {
+    return renderStructuredContent({ ...table, type: "table" }, options);
 }
 
 export function collectMonsterTags(document) {
@@ -540,50 +453,11 @@ export function formatDetailValue(value) {
 }
 
 export function stripRendererTags(value) {
-    let result = String(value ?? "");
-    for (let pass = 0; pass < 4 && result.includes("{@"); pass += 1) {
-        result = result.replace(/\{@([a-zA-Z][\w]*)\s+([^{}]+)\}/g, (_match, tag, payload) =>
-            formatRendererTag(tag, payload));
-    }
-    return result.replace(/\s+/g, " ").trim();
+    return stripSourceTags(value).replace(/\s+/g, " ").trim();
 }
 
 export function formatRendererTag(tag, payload) {
-    const normalizedTag = String(tag).toLowerCase();
-    const parts = String(payload).split("|");
-    const primary = parts[0]?.trim() ?? "";
-    const display = parts.length >= 3 && parts[2]?.trim() ? parts[2].trim() : primary;
-    switch (normalizedTag) {
-        case "atk":
-            return formatAttackTag(primary);
-        case "hit": {
-            const number = Number(primary);
-            return Number.isFinite(number) ? formatSignedValue(number) : primary;
-        }
-        case "dc":
-            return `DC ${primary}`;
-        case "recharge":
-            return primary ? `Recharge ${primary}–6` : "Recharge 6";
-        case "damage":
-        case "dice":
-        case "d20":
-        case "chance":
-            return primary;
-        case "spell":
-        case "item":
-        case "condition":
-        case "skill":
-        case "creature":
-        case "class":
-        case "feat":
-        case "race":
-        case "background":
-        case "action":
-        case "sense":
-            return display;
-        default:
-            return display || primary;
-    }
+    return rendererTagText(tag, payload);
 }
 
 export function formatAttackTag(value) {

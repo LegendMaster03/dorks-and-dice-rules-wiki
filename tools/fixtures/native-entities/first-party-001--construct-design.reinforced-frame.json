@@ -1,0 +1,16 @@
+{
+  "id": "construct-design.reinforced-frame",
+  "kind": "construct-design",
+  "name": "Reinforced frame",
+  "rulesStatus": "candidate design; recipe and functional effects provisional",
+  "description": "Strengthens an assembly's structural implementation without assuming its material, dimensions, or limb count.",
+  "compatibleComponentCapabilities": [
+    "structural-support",
+    "articulation"
+  ],
+  "provides": [
+    "reinforced-structure"
+  ],
+  "craftingRecipeId": "crafting-recipe.construct-design.reinforced-frame",
+  "powerDemand": 0
+}

@@ -1,0 +1,14 @@
+{
+  "id": "competency.smithing",
+  "name": "Smithing",
+  "kind": "competency",
+  "profile": {
+    "proficiency": "binary",
+    "level": "progressive",
+    "levelScale": "pending-reconciliation",
+    "abilityResolution": "per-activity"
+  },
+  "associatedTools": [
+    "Smith's Tools"
+  ]
+}

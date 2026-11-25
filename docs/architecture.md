@@ -1,6 +1,17 @@
 # Rules Wiki architecture
 
-Rules Wiki is the human-facing Dorks & Dice Tool for the rules platform. Rules Library browsing, detail and comparison views, Sources, Rules Lawyer authoring and adjudication, campaign rule authoring, source-update review, and related administration UI all live here. Rules Core remains the authoritative rules backend.
+Rules Wiki is the human-facing Dorks & Dice Tool for the rules platform. Rules Core remains the authoritative rules backend. The active native Wiki is a read-only multi-system reference browser. Historical comparison, source administration, Rules Lawyer, and custom/campaign authoring modules are retained for future authorized restoration; they are not active native workflows.
+
+## Active multi-system reference architecture
+
+- Discover only Core-authorized descriptors through `getNativeRulesets`. Bind the exact ruleset ID and fingerprint to one reader; replace the context and reader together. Qualified routes use `/rulesets/{rulesetId}`, `/types/{category}` or `/rules/{ruleId}` beneath that catalog. Legacy first-party links remain valid. Unavailable routes fail closed rather than switching to another catalog.
+- The browser requests bounded native search pages (1–100 rows), uses Core's catalog-wide facets and exact search total, and preserves native category names except the established first-party compatibility families. It does not crawl every record to build an index. Unsupported filters, global ordering on partial datasets, and missing projections are not presented as supported.
+- `rules-context.js`, `native-presentation.js` and `native-renderer-registration.js` provide one context, reader, render lease and priority-checked registry. The class, creature, and reference slots select compatible native structures. First-party compatibility layouts remain available; unmatched foreign structures use the common readable fallback.
+- `structured-content.js` owns inert structured entries, inline source tags, tables, Fate Markdown and scoped reference links. A foreign-scoped subtree remains text, never borrowing the local reader's identity. Source labels do not imply a target ID. All entity details use the same mount/lifecycle boundary.
+- `package-attribution.js` validates manifest metadata against the authorized descriptor. Entity provenance and package attribution remain separate; the shared dispatcher mounts the package notice exactly once. Core without optional metadata remains compatible, with an explicit unavailable notice.
+- Caches are snapshot/reader scoped and bounded where reused; recent history contains qualified identities, not rule contents. Old asynchronous results can not overwrite a newer selection or catalog. Campaign revision and effective resolution remain Core responsibilities; the browser rejects campaign contexts until an approved authoritative native contract exists.
+
+See [the integrated contract](development/wiki-multi-system-contract.md), [browser behavior](rules-browser.md), [render lifecycle](frontend-render-lifecycle.md), [integration review](development/wiki-multi-system-integration-review.md), and [historical campaign reconciliation](development/native-campaign-ruleset-reconciliation.md).
 
 ## Non-negotiable Rules Core boundary
 
@@ -18,7 +29,7 @@ Rules Core's public API exists for other Dorks & Dice Tools and independent cons
 
 ## Request path
 
-The target data path is:
+The active native reference data path is:
 
 ```text
 Browser
@@ -50,9 +61,9 @@ Rules Wiki has no general browser-facing `/api/*` contract and no transparent Co
 
 The browser uses a narrow application-internal UI transport under `/_rules-wiki/operations/{operation}`. That route accepts only named operations from a finite server-side operation catalog. Browser callers can not supply an arbitrary Rules Core path, host, target Tool, authentication header, or tunnel credential.
 
-The server-side operation catalog owns the mapping from a Wiki UI operation to a Rules Core internal route. This is an implementation boundary for the Rules Wiki web application, not a public compatibility API. Adding a new operation requires an explicit server-side mapping and must not silently expand Rules Core's public API.
+The server-side operation catalog owns the mapping from a Wiki UI operation to a Rules Core internal route. The current catalog permits only `getNativeRulesets`, `searchNativeRules`, and `getNativeRule`; the dispatcher validates native identities and search arguments, and the private client independently rejects other route shapes before ticket exchange. This is an implementation boundary for the Rules Wiki web application, not a public compatibility API. Adding a new operation requires an explicit server-side mapping and must not silently expand Rules Core's public API.
 
-A small frontend compatibility translator may temporarily map known private Core-shaped strings used by existing Wiki modules into those named UI operations during migration. Those strings never cross the network as target paths, unmapped paths fail closed, and stable public Rules Core consumer routes are intentionally not translatable. New frontend work should use named Wiki operations rather than add new Core-shaped browser routing.
+The active browser uses these named operations directly. Historical Core-shaped compatibility translators are not part of the active native transport; do not reintroduce them or add a public consumer fallback.
 
 ## Internal does not mean authorization-free
 
@@ -82,7 +93,7 @@ Rules Wiki does not have a Rules Core database, source-grant store, parallel aut
 
 ## Contract ownership
 
-Rules Wiki-specific Core contracts are internal first-party integration contracts. This includes, without limitation:
+Rules Wiki-specific Core contracts are internal first-party integration contracts. The following describes architectural ownership, including historical or future capabilities; only the three native reference operations above are currently active:
 
 - accessible reference catalog/search/facets;
 - reference detail and source/history views;

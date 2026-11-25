@@ -1,0 +1,470 @@
+{
+  "id": "class.warlock",
+  "name": "Warlock",
+  "kind": "class",
+  "definition": {
+    "classType": "base",
+    "equipmentProficiencyGrants": {
+      "fixed": [
+        {
+          "id": "group-weapon-simple",
+          "targetId": "equipment.group.weapon.simple"
+        },
+        {
+          "id": "group-armor-light",
+          "targetId": "equipment.group.armor.light"
+        }
+      ]
+    },
+    "band": 1,
+    "levelRange": [
+      1,
+      20
+    ],
+    "alphaVersion": "0.3.1",
+    "rulesStatus": "selected-for-playtest; subject-to-change",
+    "playtestMode": "replaces-host-5e-or-5.5e-warlock",
+    "sourcePackage": "Dorks_and_Dice_Warlock_Alpha_0.3.1_Playtest_Revised.pdf (approved feedback revision, 2026-10-30)",
+    "description": "A Patron supplies Warlock power, a Pact is the type or manifestation of its agreement, and Invocations are additional terms attached to that Pact. This selected modular design is under active testing alongside coherent native classes; it is not a source edition candidate or a finalized architecture decision.",
+    "hitDie": {
+      "number": 1,
+      "faces": 8
+    },
+    "spellcastingAbility": "charisma",
+    "savingThrowProficiencies": [
+      "wisdom",
+      "charisma"
+    ],
+    "armorProficiencies": [
+      "light"
+    ],
+    "weaponProficiencies": [
+      "simple"
+    ],
+    "skillChoices": {
+      "count": 2,
+      "from": [
+        "arcana",
+        "deception",
+        "history",
+        "intimidation",
+        "investigation",
+        "nature",
+        "religion"
+      ]
+    },
+    "progression": [
+      {
+        "level": 1,
+        "proficiencyBonus": 2,
+        "featureGrants": [
+          "class-feature.warlock.pact-magic",
+          "class-feature.warlock.eldritch-blast",
+          "class-feature.warlock.patron-choice",
+          "class-feature.warlock.pact-choice",
+          "class-feature.warlock.eldritch-invocations"
+        ],
+        "invocationsElectiveTotal": 1,
+        "ordinaryCantripsKnown": 2,
+        "ordinarySpellsKnown": 2,
+        "pactSlots": 1,
+        "pactSlotLevel": 1,
+        "damageReduction": 0,
+        "energyResistance": 0,
+        "relatedFeatures": [
+          {
+            "name": "Dark One's Blessing (Fiend)",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 2,
+        "proficiencyBonus": 2,
+        "featureGrants": [
+          "class-feature.warlock.magical-cunning"
+        ],
+        "invocationsElectiveTotal": 2,
+        "ordinaryCantripsKnown": 2,
+        "ordinarySpellsKnown": 3,
+        "pactSlots": 2,
+        "pactSlotLevel": 1,
+        "damageReduction": 0,
+        "energyResistance": 0
+      },
+      {
+        "level": 3,
+        "proficiencyBonus": 2,
+        "featureGrants": [
+          "class-feature.warlock.damage-reduction"
+        ],
+        "invocationsElectiveTotal": 2,
+        "ordinaryCantripsKnown": 2,
+        "ordinarySpellsKnown": 4,
+        "pactSlots": 2,
+        "pactSlotLevel": 2,
+        "damageReduction": 1,
+        "energyResistance": 0,
+        "relatedFeatures": [
+          {
+            "name": "Fiend spell grants",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 4,
+        "proficiencyBonus": 2,
+        "featureGrants": [
+          "class-feature.warlock.ability-score-improvement",
+          "class-feature.warlock.deceive-item"
+        ],
+        "invocationsElectiveTotal": 3,
+        "ordinaryCantripsKnown": 3,
+        "ordinarySpellsKnown": 5,
+        "pactSlots": 2,
+        "pactSlotLevel": 2,
+        "damageReduction": 1,
+        "energyResistance": 0
+      },
+      {
+        "level": 5,
+        "proficiencyBonus": 3,
+        "featureGrants": [
+          "class-feature.warlock.deepened-pact"
+        ],
+        "invocationsElectiveTotal": 4,
+        "ordinaryCantripsKnown": 3,
+        "ordinarySpellsKnown": 6,
+        "pactSlots": 2,
+        "pactSlotLevel": 3,
+        "damageReduction": 1,
+        "energyResistance": 0,
+        "relatedFeatures": [
+          {
+            "name": "Fiend spell grants",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 6,
+        "proficiencyBonus": 3,
+        "featureGrants": [],
+        "invocationsElectiveTotal": 4,
+        "ordinaryCantripsKnown": 3,
+        "ordinarySpellsKnown": 7,
+        "pactSlots": 2,
+        "pactSlotLevel": 3,
+        "damageReduction": 1,
+        "energyResistance": 0,
+        "relatedFeatures": [
+          {
+            "name": "Dark One's Own Luck (Fiend)",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 7,
+        "proficiencyBonus": 3,
+        "featureGrants": [],
+        "invocationsElectiveTotal": 5,
+        "ordinaryCantripsKnown": 3,
+        "ordinarySpellsKnown": 8,
+        "pactSlots": 2,
+        "pactSlotLevel": 4,
+        "damageReduction": 2,
+        "energyResistance": 0,
+        "improvements": [
+          "Damage Reduction increases to 2."
+        ],
+        "relatedFeatures": [
+          {
+            "name": "Fiend spell grants",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 8,
+        "proficiencyBonus": 3,
+        "featureGrants": [
+          "class-feature.warlock.ability-score-improvement"
+        ],
+        "invocationsElectiveTotal": 5,
+        "ordinaryCantripsKnown": 3,
+        "ordinarySpellsKnown": 9,
+        "pactSlots": 2,
+        "pactSlotLevel": 4,
+        "damageReduction": 2,
+        "energyResistance": 0,
+        "relatedFeatures": [
+          {
+            "name": "Infernal Retaliation (Fiend)",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 9,
+        "proficiencyBonus": 4,
+        "featureGrants": [
+          "class-feature.warlock.contact-patron"
+        ],
+        "invocationsElectiveTotal": 6,
+        "ordinaryCantripsKnown": 3,
+        "ordinarySpellsKnown": 10,
+        "pactSlots": 2,
+        "pactSlotLevel": 5,
+        "damageReduction": 2,
+        "energyResistance": 0,
+        "relatedFeatures": [
+          {
+            "name": "Fiend spell grants",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 10,
+        "proficiencyBonus": 4,
+        "featureGrants": [
+          "class-feature.warlock.energy-resistance"
+        ],
+        "invocationsElectiveTotal": 6,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 10,
+        "pactSlots": 2,
+        "pactSlotLevel": 5,
+        "damageReduction": 2,
+        "energyResistance": 5
+      },
+      {
+        "level": 11,
+        "proficiencyBonus": 4,
+        "featureGrants": [
+          "class-feature.warlock.mystic-arcanum-6"
+        ],
+        "invocationsElectiveTotal": 7,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 11,
+        "pactSlots": 3,
+        "pactSlotLevel": 5,
+        "damageReduction": 3,
+        "energyResistance": 5,
+        "improvements": [
+          "Damage Reduction increases to 3."
+        ]
+      },
+      {
+        "level": 12,
+        "proficiencyBonus": 4,
+        "featureGrants": [
+          "class-feature.warlock.imbue-item",
+          "class-feature.warlock.ability-score-improvement"
+        ],
+        "invocationsElectiveTotal": 7,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 11,
+        "pactSlots": 3,
+        "pactSlotLevel": 5,
+        "damageReduction": 3,
+        "energyResistance": 5
+      },
+      {
+        "level": 13,
+        "proficiencyBonus": 5,
+        "featureGrants": [
+          "class-feature.warlock.mystic-arcanum-7"
+        ],
+        "invocationsElectiveTotal": 8,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 12,
+        "pactSlots": 3,
+        "pactSlotLevel": 5,
+        "damageReduction": 3,
+        "energyResistance": 5,
+        "relatedFeatures": [
+          {
+            "name": "Infernal Retaliation Improvement (Fiend)",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 14,
+        "proficiencyBonus": 5,
+        "featureGrants": [],
+        "invocationsElectiveTotal": 8,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 12,
+        "pactSlots": 3,
+        "pactSlotLevel": 5,
+        "damageReduction": 3,
+        "energyResistance": 5,
+        "relatedFeatures": [
+          {
+            "name": "Hurl Through Hell (Fiend)",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 15,
+        "proficiencyBonus": 5,
+        "featureGrants": [
+          "class-feature.warlock.mystic-arcanum-8"
+        ],
+        "invocationsElectiveTotal": 9,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 13,
+        "pactSlots": 3,
+        "pactSlotLevel": 5,
+        "damageReduction": 4,
+        "energyResistance": 5,
+        "improvements": [
+          "Damage Reduction increases to 4."
+        ]
+      },
+      {
+        "level": 16,
+        "proficiencyBonus": 5,
+        "featureGrants": [
+          "class-feature.warlock.ability-score-improvement"
+        ],
+        "invocationsElectiveTotal": 10,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 13,
+        "pactSlots": 3,
+        "pactSlotLevel": 5,
+        "damageReduction": 4,
+        "energyResistance": 5
+      },
+      {
+        "level": 17,
+        "proficiencyBonus": 6,
+        "featureGrants": [
+          "class-feature.warlock.mystic-arcanum-9"
+        ],
+        "invocationsElectiveTotal": 10,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 14,
+        "pactSlots": 4,
+        "pactSlotLevel": 5,
+        "damageReduction": 4,
+        "energyResistance": 5
+      },
+      {
+        "level": 18,
+        "proficiencyBonus": 6,
+        "featureGrants": [],
+        "invocationsElectiveTotal": 11,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 14,
+        "pactSlots": 4,
+        "pactSlotLevel": 5,
+        "damageReduction": 4,
+        "energyResistance": 5,
+        "relatedFeatures": [
+          {
+            "name": "Infernal Retaliation Improvement (Fiend)",
+            "ruleId": "patron.warlock.fiend"
+          }
+        ]
+      },
+      {
+        "level": 19,
+        "proficiencyBonus": 6,
+        "featureGrants": [
+          "class-feature.warlock.ability-score-improvement"
+        ],
+        "invocationsElectiveTotal": 11,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 15,
+        "pactSlots": 4,
+        "pactSlotLevel": 5,
+        "damageReduction": 5,
+        "energyResistance": 5,
+        "improvements": [
+          "Damage Reduction increases to 5."
+        ]
+      },
+      {
+        "level": 20,
+        "proficiencyBonus": 6,
+        "featureGrants": [
+          "class-feature.warlock.eldritch-master"
+        ],
+        "invocationsElectiveTotal": 12,
+        "ordinaryCantripsKnown": 4,
+        "ordinarySpellsKnown": 15,
+        "pactSlots": 4,
+        "pactSlotLevel": 5,
+        "damageReduction": 5,
+        "energyResistance": 10,
+        "improvements": [
+          "Energy Resistance increases to 10 for each of your two chosen damage types."
+        ]
+      }
+    ],
+    "selectionRules": {
+      "patron": {
+        "requiredAtWarlockLevel": 1,
+        "identityMayBeInheritedOrUnknown": true,
+        "playtestPatronId": "patron.warlock.fiend"
+      },
+      "pact": {
+        "requiredAtWarlockLevel": 1,
+        "firstChoiceFree": true,
+        "extraPacts": "out-of-scope"
+      },
+      "invocations": {
+        "firstChoiceAtWarlockLevel": 1,
+        "everyChoiceAttachedToOneActualPact": true,
+        "patronAcceptanceRequired": true,
+        "severance": "suspend-without-refund",
+        "replacement": "one-on-warlock-level-up"
+      }
+    },
+    "baseFeatureIds": [
+      "class-feature.warlock.pact-magic",
+      "class-feature.warlock.eldritch-blast",
+      "class-feature.warlock.patron-choice",
+      "class-feature.warlock.pact-choice",
+      "class-feature.warlock.eldritch-invocations",
+      "class-feature.warlock.magical-cunning",
+      "class-feature.warlock.damage-reduction",
+      "class-feature.warlock.ability-score-improvement",
+      "class-feature.warlock.deceive-item",
+      "class-feature.warlock.deepened-pact",
+      "class-feature.warlock.contact-patron",
+      "class-feature.warlock.energy-resistance",
+      "class-feature.warlock.mystic-arcanum-6",
+      "class-feature.warlock.imbue-item",
+      "class-feature.warlock.mystic-arcanum-7",
+      "class-feature.warlock.mystic-arcanum-8",
+      "class-feature.warlock.mystic-arcanum-9",
+      "class-feature.warlock.eldritch-master"
+    ],
+    "separateGrants": {
+      "automaticEldritchBlast": true,
+      "extraKnownCantripCost": 0,
+      "pactMagicSlotsRecover": "short-or-long-rest",
+      "mysticArcanumSeparate": true
+    },
+    "limitations": [
+      "The host 5e/5.5e rules supply spell details, equipment, feats, creatures and ordinary combat mechanics for this standalone alpha.",
+      "Companion control, crafting checks, and some shared effects remain subject to host-game adjudication.",
+      "Star Chain / Seeker remains disabled. Improved Pact Weapon, Gift of the Ever-Living Ones, Aspect of the Moon, and Far Scribe remain outside the current alpha catalog.",
+      "Infernal Retaliation tick timing and Hurl Through Hell slot recharge action cost are provisional.",
+      "Alternative Invocation progressions are reference comparisons, not simultaneous grants.",
+      "No Band 2 or automatic Epic Boon at level 19."
+    ],
+    "referenceNotes": [
+      "Use the host 5e or 5.5e origin, ability-score, starting equipment, feat, and leveling rules with these class traits. A Magic action uses your Action when playing in 5e.",
+      "Invocation totals exclude the free Pact. Cantrip totals exclude automatic Eldritch Blast and Pact grants. Spells known exclude automatic Patron, Pact, and Mystic Arcanum grants.",
+      "Related Fiend milestones below describe the current playtest Patron. They are not additional base-class grants and do not award those features twice."
+    ]
+  }
+}

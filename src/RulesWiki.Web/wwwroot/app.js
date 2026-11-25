@@ -8,6 +8,8 @@ import { installWikiReferenceBrowserEnhancements, installWikiReferenceNavigation
 import { installRulesCoreUx } from "./ux-shell.js";
 import { alertNode, clear, describeError, element } from "./ui.js";
 import { installWikiExperience } from "./wiki-experience.js";
+import { discoverPackageContext } from "./package-attribution.js";
+import { createRulesetReader } from "./native-presentation.js";
 
 const root = document.getElementById("tool-root");
 if (!root) throw new Error("Rules Wiki could not find the Dorks & Dice tool root.");
@@ -23,6 +25,18 @@ root.append(element("div", { className: "card card-body text-body-secondary", te
 try {
     const hostContext = await loadToolHostContext(root);
     const api = installWikiReferenceApi(new RulesCoreApi(hostContext));
+    api.openRulesetReader = async (rulesetId, onDiscovery = null) => {
+        // Share this exact fresh discovery with the selector, not a second
+        // ticketed operation or a mutable cached authorization decision.
+        const { context, descriptor } = await discoverPackageContext({
+            getNativeRulesets: async () => {
+                const response = await api.getNativeRulesets();
+                onDiscovery?.(response);
+                return response;
+            }
+        }, rulesetId);
+        return createRulesetReader(api, context, descriptor);
+    };
     const session = await api.getOptionalSession();
     // The Site supplies identity; the native Core currently exposes no authoring
     // or campaign capabilities. Never infer those capabilities from Site roles.
@@ -36,7 +50,6 @@ try {
     installRulesCoreUx(app);
     installWikiReferenceNavigation(app);
     installWikiExperience(app);
-    await app.prepareWikiExperience();
     await app.render();
 } catch (error) {
     console.error("Rules Wiki failed to initialize.", error);

@@ -1,0 +1,252 @@
+{
+  "sourceRepository": "LegendMaster03/dorks-and-dice-rules-core",
+  "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+  "representation": "Verbatim native authored records selected from pinned Core files; not loader-expanded API projections. No runtime fingerprints.",
+  "fixtures": [
+    {
+      "file": "dnd-5e--condition.exhaustion.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "condition.exhaustion",
+      "sourceFile": "data/rulesets/dnd-5e/native/conditions.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--condition.exhaustion.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "condition.exhaustion",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/conditions.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--item.javelin-of-lightning.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "item.javelin-of-lightning",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/items/structured-05.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--item-group.arcane-focus.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "item-group.arcane-focus",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/items/structured-10.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--magic-variant.1-ammunition.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "magic-variant.1-ammunition",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/items/structured-12.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--item.1-arrow.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "item.1-arrow",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/items/numbered-variants-01.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--item.adamantine-breastplate.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "item.adamantine-breastplate",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/items/named-variants-01.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--race.dragonborn.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "race.dragonborn",
+      "sourceFile": "data/rulesets/dnd-5e/native/character-origins.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--subrace.dwarf.hill.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "subrace.dwarf.hill",
+      "sourceFile": "data/rulesets/dnd-5e/native/character-origins.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--feat.ability-score-improvement.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "feat.ability-score-improvement",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/feats-and-optional-features.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--optional-feature.agonizing-blast.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "optional-feature.agonizing-blast",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/feats-and-optional-features.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--trap.collapsing-roof.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "trap.collapsing-roof",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/supplementary-rules.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--glossary.ability-check.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "glossary.ability-check",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/supplementary-rules.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--language.abyssal.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "language.abyssal",
+      "sourceFile": "data/rulesets/dnd-5e/native/general-rules.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--sense.blindsight.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "sense.blindsight",
+      "sourceFile": "data/rulesets/dnd-5e/native/general-rules.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--rulebook.page-003.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "rulebook.page-003",
+      "sourceFile": "data/rulesets/dnd-5e/native/rulebook/pages-003-027.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--skill.perform.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "skill.perform",
+      "sourceFile": "data/rulesets/first-party-001/native/skills.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--skill.perform-act.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "skill.perform-act",
+      "sourceFile": "data/rulesets/first-party-001/native/skills.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--skill.athletics.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "skill.athletics",
+      "sourceFile": "data/rulesets/first-party-001/native/skills.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--competency.smithing.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "competency.smithing",
+      "sourceFile": "data/rulesets/first-party-001/native/competencies.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--competency-category.crafting-method.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "competency-category.crafting-method",
+      "sourceFile": "data/rulesets/first-party-001/native/competencies.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--condition.exhaustion.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "condition.exhaustion",
+      "sourceFile": "data/rulesets/first-party-001/native/conditions.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--equipment.group.weapon.all.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "equipment.group.weapon.all",
+      "sourceFile": "data/rulesets/first-party-001/native/equipment-qualifications.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--equipment.weapon.club.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "equipment.weapon.club",
+      "sourceFile": "data/rulesets/first-party-001/native/equipment-qualifications.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--ancestry.elf.drow.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "ancestry.elf.drow",
+      "sourceFile": "data/rulesets/first-party-001/native/origination/biological/species/ancestry/elf/drow.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--trait.skillful.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "trait.skillful",
+      "sourceFile": "data/rulesets/first-party-001/native/origination/biological/genes/trait.skillful.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--upbringing.aristocratic.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "upbringing.aristocratic",
+      "sourceFile": "data/rulesets/first-party-001/native/upbringings/aristocratic.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--construct-design.reinforced-frame.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "construct-design.reinforced-frame",
+      "sourceFile": "data/rulesets/first-party-001/native/origination/construct-assembly/designs.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "fate-condensed--rule.adjective-ladder.json",
+      "rulesetId": "fate-condensed",
+      "nativeEntityId": "rule.adjective-ladder",
+      "sourceFile": "data/rulesets/fate-condensed/native/structured.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "fate-condensed--rule.starting-skill-pyramid.json",
+      "rulesetId": "fate-condensed",
+      "nativeEntityId": "rule.starting-skill-pyramid",
+      "sourceFile": "data/rulesets/fate-condensed/native/structured.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "fate-condensed--rule.stress-capacity.json",
+      "rulesetId": "fate-condensed",
+      "nativeEntityId": "rule.stress-capacity",
+      "sourceFile": "data/rulesets/fate-condensed/native/structured.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--skill.athletics.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "skill.athletics",
+      "sourceFile": "data/rulesets/dnd-5e/native/skills.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--baseitem.plate-armor.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "baseitem.plate-armor",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/items/structured-12.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--rule.species-subspecies-upbringing.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "rule.species-subspecies-upbringing",
+      "sourceFile": "data/rulesets/first-party-001/native/rules/species-subspecies-upbringing.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--rule.creature-origination.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "rule.creature-origination",
+      "sourceFile": "data/rulesets/first-party-001/native/rules/creature-origination.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    }
+  ]
+}

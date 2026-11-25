@@ -1,9 +1,14 @@
+import { readingKey, ruleRoute } from "./rules-context.js";
+
 // Session-scoped reading state only: no character choices or rule definitions.
 // Consume on return to the same class/snapshot, and restore lazy sections through
 // their explicit render hook rather than observing arbitrary DOM mutations.
 /** Restore reading position only for the same class and catalog fingerprint. */
-export function createClassReturnState(root, { classId, fingerprint }) {
-    const storageKey = "rulesWikiClassReturn";
+const returnStorageKey = (classId, context) => context
+    ? "rulesWikiClassReturn:" + readingKey(context, classId, "class") : "rulesWikiClassReturn";
+export function createClassReturnState(root, { classId, fingerprint, context = null, lifecycle = null }) {
+    const storageKey = returnStorageKey(classId, context);
+    const current = () => !lifecycle || (lifecycle.isCurrent() && root.isConnected);
     let saved = null;
     try {
         const candidate = JSON.parse(window.sessionStorage.getItem(storageKey));
@@ -23,7 +28,7 @@ export function createClassReturnState(root, { classId, fingerprint }) {
         return `${system ? systems().indexOf(system) : -1}:${control.getAttribute("aria-label")}`;
     };
     const restore = () => {
-        if (!saved) return;
+        if (!saved || !current()) return;
         const panels = systems();
         panels.forEach((panel, index) => {
             if (applied.has(panel)) return;
@@ -46,10 +51,13 @@ export function createClassReturnState(root, { classId, fingerprint }) {
             detail.open = saved.details?.includes(key) ?? false;
         }
         const waiting = saved.systems?.some(index => panels[index]
-            && panels[index].getAttribute("data-options-ready") !== "true");
+            && panels[index].getAttribute("data-options-ready") !== "true") ||
+            (context && [...root.querySelectorAll("[data-class-lazy][id]")].some(panel =>
+                saved.details?.includes(panel.id) && panel.getAttribute("data-options-ready") !== "true"));
         if (!waiting && !scrolled) {
             scrolled = true;
             const applyScroll = () => {
+                if (!current()) return;
                 const pane = root.closest(".rules-core-library-detail");
                 if (pane) pane.scrollTop = saved.scrollTop || 0;
                 if (document.scrollingElement) document.scrollingElement.scrollTop = saved.pageScrollTop || 0;
@@ -59,6 +67,7 @@ export function createClassReturnState(root, { classId, fingerprint }) {
         }
     };
     root.addEventListener("click", event => {
+        if (!current()) return;
         if ((event.button ?? 0) !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         const link = event.target?.closest?.("a[href]");
         const href = link?.getAttribute("href");
@@ -96,13 +105,14 @@ export function createClassReturnState(root, { classId, fingerprint }) {
 }
 
 /** Create a return link without treating view state as a character selection. */
-export function classReturnLink(classId, fingerprint) {
+export function classReturnLink(classId, fingerprint, context = null) {
     try {
-        const saved = JSON.parse(window.sessionStorage.getItem("rulesWikiClassReturn"));
+        const saved = JSON.parse(window.sessionStorage.getItem(returnStorageKey(classId, context)));
         if (saved?.version !== 1 || saved.classId !== classId || saved.fingerprint !== fingerprint
             || typeof saved.route !== "string") return null;
         const url = new URL(saved.route, window.location.origin);
-        if (url.origin !== window.location.origin || !url.pathname.endsWith(`/rules/${encodeURIComponent(classId)}`)) return null;
+        const expected = context ? ruleRoute(context.rulesetId, classId) : `/rules/${encodeURIComponent(classId)}`;
+        if (url.origin !== window.location.origin || !url.pathname.endsWith(expected)) return null;
         const fragment = typeof saved.fragment === "string" && /^#native-class-[\w.%~-]+$/.test(saved.fragment) ? saved.fragment : "";
         return { href: url.pathname + url.search + fragment, label: `Back to ${saved.className || "class"}` };
     } catch { return null; }

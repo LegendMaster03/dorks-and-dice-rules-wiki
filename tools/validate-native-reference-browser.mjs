@@ -1,19 +1,12 @@
-// Checks native reference navigation, catalog adaptation, and detail views.
+// Static architecture guards not already covered by executable browser/dispatcher tests.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert/strict';
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = name => fs.readFileSync(path.join(repo, 'src/RulesWiki.Web/wwwroot', name), 'utf8');
-assert.match(read('app.js'), /installResolvedRulesBrowser/);
 for (const sheet of ['rules-core.css', 'rules-core-detail.css', 'rules-wiki-shell.css']) assert.ok(read('app.js').includes(sheet));
 assert.doesNotMatch(read('api.js'), /translateLegacyPrivatePath|\/api\/wiki\/references|backend\(/);
-assert.match(read('api.js'), /getNativeRulesets.*searchNativeRules.*getNativeRule/s);
-assert.match(read('rules-reference-api.js'), /nativeId: rule.id/);
-assert.match(read('rules-reference-api.js'), /PAGE_SIZE = 100/);
-assert.match(read('rules-browser-detail.js'), /renderNativeDetail/);
 assert.match(read('ux-shell.js'), /disabled: app.nativeReferenceOnly/);
 assert.doesNotMatch(read('native-rule-detail.js'), /innerHTML|options.html/);
-const dispatcher = fs.readFileSync(path.join(repo, 'src/RulesWiki.Web/RulesCoreUiOperationDispatcher.cs'), 'utf8');
-assert.doesNotMatch(dispatcher, /"saveGlobalDecision"|"getWikiReferenceCatalog"/);
 console.log('Restored Wiki presentation and native-only boundary checks passed.');

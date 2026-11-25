@@ -1,0 +1,11 @@
+{
+  "id": "equipment.weapon.club",
+  "name": "Club",
+  "kind": "equipment-type",
+  "equipmentCategory": "weapon",
+  "groupIds": [
+    "equipment.group.weapon.simple",
+    "equipment.group.weapon.family.club",
+    "equipment.group.weapon.melee"
+  ]
+}

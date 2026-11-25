@@ -1,0 +1,6 @@
+{
+  "id": "equipment.group.weapon.all",
+  "name": "Weapons",
+  "kind": "equipment-group",
+  "equipmentCategory": "weapon"
+}

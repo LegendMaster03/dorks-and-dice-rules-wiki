@@ -1,0 +1,183 @@
+{
+  "sourceRepository": "LegendMaster03/dorks-and-dice-rules-core",
+  "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+  "representation": "Authored native record; not necessarily the loader-expanded API projection. No catalog fingerprint is fabricated.",
+  "fixtures": [
+    {
+      "file": "first-party-001--class.warlock.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "class.warlock",
+      "sourceFile": "data/rulesets/first-party-001/native/classes/base/warlock/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--class.warlock.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "class.warlock",
+      "sourceFile": "data/rulesets/dnd-5e/native/classes/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--class.warlock.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "class.warlock",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/classes/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--monster.goblin-warrior.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "monster.goblin-warrior",
+      "sourceFile": "data/rulesets/first-party-001/native/bestiary/goblin-warrior.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--monster.tarrasque.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "monster.tarrasque",
+      "sourceFile": "data/rulesets/first-party-001/native/bestiary/tarrasque.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--monster.avatar-of-death.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "monster.avatar-of-death",
+      "sourceFile": "data/rulesets/dnd-5e/native/bestiary/reviewed-initial.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--spell.acid-splash.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "spell.acid-splash",
+      "sourceFile": "data/rulesets/dnd-5e/native/spells/spells-001-025.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--spell.acid-splash.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "spell.acid-splash",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/spells/spells-001-025.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--item.backpack.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "item.backpack",
+      "sourceFile": "data/rulesets/dnd-5e/native/items/structured-01.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--species.human.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "species.human",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/character-origins.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--background.acolyte.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "background.acolyte",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/character-origins.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--background.acolyte.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "background.acolyte",
+      "sourceFile": "data/rulesets/first-party-001/native/backgrounds/acolyte.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "fate-condensed--section.taking-action-rolling-the-dice.json",
+      "rulesetId": "fate-condensed",
+      "nativeEntityId": "section.taking-action-rolling-the-dice",
+      "sourceFile": "data/rulesets/fate-condensed/native/sections.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "fate-condensed--section.getting-started.create-your-characters.skills.the-adjective-ladder.json",
+      "rulesetId": "fate-condensed",
+      "nativeEntityId": "section.getting-started.create-your-characters.skills.the-adjective-ladder",
+      "sourceFile": "data/rulesets/fate-condensed/native/sections.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "fate-condensed--skill.athletics.json",
+      "rulesetId": "fate-condensed",
+      "nativeEntityId": "skill.athletics",
+      "sourceFile": "data/rulesets/fate-condensed/native/structured.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "fate-condensed--action.attack.json",
+      "rulesetId": "fate-condensed",
+      "nativeEntityId": "action.attack",
+      "sourceFile": "data/rulesets/fate-condensed/native/structured.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5e--table.character-advancement.json",
+      "rulesetId": "dnd-5e",
+      "nativeEntityId": "table.character-advancement",
+      "sourceFile": "data/rulesets/dnd-5e/native/book-rules-and-tables.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--rule.monster-statblock-foundation.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "rule.monster-statblock-foundation",
+      "sourceFile": "data/rulesets/first-party-001/native/monster-statblock-foundation.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "first-party-001--species.human.json",
+      "rulesetId": "first-party-001",
+      "nativeEntityId": "species.human",
+      "sourceFile": "data/rulesets/first-party-001/native/origination/biological/species/base/human.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    },
+    {
+      "file": "dnd-5-5e--class-feature.warlock.pact-magic.1.json",
+      "rulesetId": "dnd-5-5e",
+      "nativeEntityId": "class-feature.warlock.pact-magic.1",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/classes/warlock.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e"
+    }
+  ],
+  "catalogAttribution": {
+    "first-party-001": {
+      "sourceFile": "data/rulesets/first-party-001/manifest.json",
+      "license": null,
+      "attribution": null
+    },
+    "dnd-5e": {
+      "sourceFile": "data/rulesets/dnd-5e/manifest.json",
+      "name": "D&D SRD 5.1",
+      "license": "CC-BY-4.0",
+      "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode."
+    },
+    "dnd-5-5e": {
+      "sourceFile": "data/rulesets/dnd-5-5e/manifest.json",
+      "name": "D&D SRD 5.2.1",
+      "license": "CC-BY-4.0",
+      "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode."
+    },
+    "fate-condensed": {
+      "sourceFile": "data/rulesets/fate-condensed/manifest.json",
+      "name": "Fate Condensed",
+      "license": "CC-BY-3.0",
+      "attribution": "This work is based on Fate Condensed (found at https://fate-srd.com/fate-condensed), a product of Evil Hat Productions, LLC, developed, authored, and edited by PK Sullivan, Lara Turner, Fred Hicks, Richard Bellingham, Robert Hanz, and Sophie Lagacé, and licensed for our use under the Creative Commons Attribution 3.0 Unported license (https://creativecommons.org/licenses/by/3.0/)."
+    }
+  },
+  "syntheticFixtures": [
+    {
+      "file": "synthetic/kaiju-reference-fixture.json",
+      "sourceRepository": "LegendMaster03/dorks-and-dice-rules-wiki",
+      "sourceRevision": "0115e131d2cb4c5a9306b5cb8e6de8d3ffc1de27",
+      "sourceFile": "tools/validate-native-monster-renderer.mjs",
+      "sourceDescription": "Existing Kaiju Reference Fixture object and its kaijuReference object, combined without modifying their values.",
+      "representation": "Synthetic presentation test only; not a native Core entity or approved gameplay content.",
+      "nativeEntityId": null
+    }
+  ]
+}

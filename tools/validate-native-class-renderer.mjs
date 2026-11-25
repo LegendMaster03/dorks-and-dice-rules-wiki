@@ -79,7 +79,6 @@ const content = renderNativeClass(sorcerer, {
 assert.equal(nodes(head, el => el.tagName === "LINK").length, 1);
 assert.match(content.textContent, /Sorcerer/);
 assert.match(content.textContent, /Sorcery points/);
-assert.match(content.textContent, /Sorcery points/);
 assert.match(content.textContent, /2d6|d6/); // Regression check: dice objects are legible.
 assert.match(content.textContent, /Fort/);
 assert.match(content.textContent, /Ref/);

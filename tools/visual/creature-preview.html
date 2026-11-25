@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Creature fixture review</title>
+<link rel="stylesheet" href="../../src/RulesWiki.Web/wwwroot/native-monster-detail.css">
+<style>
+/* Offline preview theme only; statblocks use the existing Wiki stylesheet. */
+:root{--bs-body-color:#242424;--bs-body-bg:#faf9f6;--bs-primary:#754126;--bs-primary-text-emphasis:#754126;--bs-secondary-color:#555;--bs-border-color:#bcb8b2;--bs-tertiary-bg:#f3f0ea}
+*{box-sizing:border-box} body{font:16px/1.5 system-ui,sans-serif;color:var(--bs-body-color);background:var(--bs-body-bg);margin:1rem}
+header.preview-controls{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin-bottom:1rem} select{font:inherit;max-width:100%}
+#preview{max-width:100%;margin:auto;min-width:0} #preview article{min-width:0}
+</style></head><body>
+<h1>Creature fixture review</h1><p>Local fixture preview only. No Core requests or live authorization.</p>
+<header class="preview-controls"><label>Creature <select id="fixture"></select></label>
+<label>Panel width <select id="width"><option value="100%">Full width</option><option value="1024px">1024 px</option><option value="760px">760 px</option><option value="420px">420 px</option><option value="320px">320 px</option></select></label></header>
+<div id="preview"></div><script type="module" src="./creature-preview.mjs"></script></body></html>

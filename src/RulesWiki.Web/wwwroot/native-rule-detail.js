@@ -6,6 +6,10 @@ import { browserHref } from "./rules-browser-routing.js";
 import { element, definitionList, badge } from "./ui.js";
 import { classReturnLink } from "./native-class-view-state.js";
 import { rememberRule } from "./wiki-experience.js";
+import { DEFAULT_RULESET_ID, createRulesContext, createRenderLifecycle, validateNativeEnvelope } from "./rules-context.js";
+import { createPresentationInput, createRulesetReader, mountNativePresentation } from "./native-presentation.js";
+import { renderPackageAttribution } from "./package-attribution.js";
+import { createRegisteredNativeRenderers, LEGACY_NATIVE_RENDERER } from "./native-renderer-registration.js";
 const label = name => String(name).replace(/([a-z])([A-Z])/g, "$1 $2")
     .replace(/[_-]/g, " ").replace(/^./, value => value.toUpperCase());
 
@@ -20,14 +24,77 @@ export function renderNativeValue(value) {
         element("dd", { className: "col-sm-8" }, renderNativeValue(item))
     ]));
 }
-/** Dispatch a native record to its dedicated read-only detail presentation. */
-export function renderNativeDetail(container, detail, onBack, app = null) {
+const directLifecycles = new WeakMap();
+
+/** One registry per hosted application; direct fixture calls use the same composition root. */
+export function createWikiNativeRendererRegistry(app = null) {
+    return createRegisteredNativeRenderers(input => {
+        const staging = element("div");
+        renderLegacyNativeDetail(staging, {
+            rulesetId: input.context.rulesetId, fingerprint: input.context.fingerprint, rule: input.rule
+        }, input.onBack, app, input.references);
+        staging.querySelector(".rules-core-library-detail-body")?.append(
+            renderPackageAttribution(input.context, input.packageDescriptor));
+        return [...staging.childNodes];
+    });
+}
+
+/** Active dispatcher. The supplied context is the requested snapshot, not a
+ * fallback inferred from a failed foreign read. Existing synchronous callers
+ * retain synchronous mounting; asynchronous adapters return a Promise<boolean>. */
+export function renderNativeDetail(container, detail, onBack, app = null, options = {}) {
+    const context = createRulesContext(options.context ?? detail);
+    validateNativeEnvelope(context, options.ruleId ?? detail.rule?.id, detail);
+    let lifecycle = options.lifecycle;
+    if (!lifecycle) {
+        if (!directLifecycles.has(container)) directLifecycles.set(container, createRenderLifecycle());
+        lifecycle = directLifecycles.get(container).begin(context, detail.rule.id);
+    }
+    const reader = options.reader ?? (app?.api?.getNativeRule && app?.api?.searchNativeRules
+        ? createRulesetReader(app.api, context, context.rulesetId === DEFAULT_RULESET_ID ? app.wikiIndex?.packageDescriptor : null) : null);
+    const input = createPresentationInput(context, detail, reader, {
+        toolBasePath: app?.hostContext?.toolBasePath ?? "", onBack, lifecycle,
+        renderSource: app?.renderNativeSource ? value => app.renderNativeSource(value) : null
+    });
+    const registry = app
+        ? (app.nativeRendererRegistry ??= createWikiNativeRendererRegistry(app))
+        : createWikiNativeRendererRegistry();
+    const selected = registry.select(input);
+    const result = mountNativePresentation(container, { render: value => selected.render(value) }, input, {
+        decorate: content => {
+            if (selected.id === LEGACY_NATIVE_RENDERER) return content;
+            const tabs = element("div", { className: "rules-core-version-tabs" },
+                element("button", { type: "button", className: "btn btn-sm btn-outline-secondary rules-core-library-mobile-back",
+                    text: "← Back to list", onClick: onBack }),
+                element("span", { className: "rules-core-version-tab is-active", text: context.rulesetId }),
+                element("span", { className: "rules-core-version-tabs-context" }, badge(label(input.rule.kind), "secondary")));
+            const body = element("div", { className: "rules-core-library-detail-body" });
+            body.append(...(Array.isArray(content) ? content : [content]));
+            // Generic fallback owns its notice for standalone use. Specialized
+            // renderers receive the same notice here, within the render lease.
+            if (selected.id !== "generic")
+                body.append(renderPackageAttribution(input.context, input.packageDescriptor));
+            return [tabs, body];
+        }
+    });
+    // Only a committed first-party view can update the legacy unqualified history.
+    // Foreign history will use the qualified keys in the catalog workstream.
+    const finish = mounted => {
+        if (mounted && lifecycle.isCurrent() && app) {
+            if (app.rememberNativeReference) app.rememberNativeReference(context, detail.rule);
+            else if (context.rulesetId === DEFAULT_RULESET_ID) rememberRule(detail.rule);
+        }
+        return mounted;
+    };
+    return result && typeof result.then === "function" ? result.then(finish) : finish(result);
+}
+
+/** Compatibility adapter: preserve the established first-party layout. */
+function renderLegacyNativeDetail(container, detail, onBack, app, reader) {
     const payload = detail.rule;
-    if (!payload || !payload.definition) throw new Error("Native rule detail is unavailable.");
     // Preserve the existing monster/condition detail contracts. Only the
     // class reader needs the inner gameplay definition in a wrapped record.
     const source = payload.definition;
-    if (app) rememberRule(payload);
     const backToClass = classReturnLink(source.parentClass ?? source.definition?.parentClass, detail.fingerprint);
     const rule = payload.kind === "class" && source && typeof source === "object"
         && source.id === payload.id && source.definition && typeof source.definition === "object"
@@ -74,12 +141,8 @@ export function renderNativeDetail(container, detail, onBack, app = null) {
         article.replaceChildren(renderNativeClass(rule, {
             renderValue: renderNativeValue,
             hrefForRule,
-            getRule: app?.api?.getNativeRule
-                ? id => app.api.getNativeRule(detail.rulesetId, id)
-                : null,
-            searchRules: app?.api?.searchNativeRules
-                ? filters => app.api.searchNativeRules(detail.rulesetId, filters)
-                : null,
+            getRule: reader ? id => reader.resolve(id) : null,
+            searchRules: reader ? filters => reader.search(filters) : null,
             catalogFingerprint: detail.fingerprint
         }));
     } else if (typeof rule.definition.description === "string") {
