@@ -1,0 +1,39 @@
+{
+  "id": "ancestry.elf.drow",
+  "name": "Drow",
+  "kind": "ancestry",
+  "status": "selected-native",
+  "selectable": true,
+  "parent": "species.elf",
+  "traits": [
+    {
+      "traitId": "trait.dancing-lights"
+    },
+    {
+      "traitId": "trait.faerie-fire"
+    },
+    {
+      "traitId": "trait.darkness"
+    },
+    {
+      "traitId": "trait.sunlight-sensitivity"
+    }
+  ],
+  "darkvisionFeet": 120,
+  "spellcastingAbilityChoice": [
+    "intelligence",
+    "wisdom",
+    "charisma"
+  ],
+  "defaultUpbringing": "upbringing.elf.drow",
+  "originLinkedSelections": [
+    {
+      "id": "drow-darkvision-sunlight",
+      "triggerIntrinsicSlot": "darkvisionFeet",
+      "requiresTraitDefinitionId": "trait.sunlight-sensitivity",
+      "scope": "same-contributor",
+      "kind": "Requires",
+      "description": "Manifesting this Drow source's 120-foot Darkvision requires its native Sunlight Sensitivity unless an authorized table decision waives or replaces that link. Ordinary light protection still prevents the authored exposure trigger. The link does not automatically confer either trait."
+    }
+  ]
+}

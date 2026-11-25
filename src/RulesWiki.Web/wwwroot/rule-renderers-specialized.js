@@ -313,7 +313,7 @@ export function renderGeneralRule(document = {}, options = {}) {
 
 // This shared frame lays out known fields and leaves remaining source content
 // available rather than silently treating it as unsupported mechanics.
-function renderStructuredRule(
+export function renderStructuredRule(
     document = {},
     options = {},
     {
@@ -331,6 +331,9 @@ function renderStructuredRule(
         "_rulesCore",
         ...consumed
     ]);
+    // Native adapters supply the common structured renderer and own field selection.
+    // Resolved-rule callers retain their established layout and extensions.
+    if (options.nativeTitle) root.append(element("h2", { className: "h3", text: options.nativeTitle }));
 
     const visibleSummary = summary.filter(([, value]) => hasValue(value));
     if (visibleSummary.length) {
@@ -341,13 +344,15 @@ function renderStructuredRule(
 
     const visibleDetails = details.filter(([, value]) => hasValue(value));
     if (visibleDetails.length) {
-        root.append(renderStructuredDetails(visibleDetails));
+        root.append(renderStructuredDetails(visibleDetails, options.renderContent));
     }
 
     for (const [title, value] of sections) {
         if (!hasSectionContent(value)) continue;
-        root.append(renderStructuredTextSection(title, value));
+        root.append(renderStructuredTextSection(title, value, options.renderContent));
     }
+
+    if (options.renderContent) return root;
 
     root.append(...renderRulesCoreExtensions(document?._rulesCore));
 
@@ -369,7 +374,7 @@ function renderStructuredRule(
     return root;
 }
 
-function renderStructuredDetails(items) {
+function renderStructuredDetails(items, renderContent = renderRuleContent) {
     const section = element("section", {
         className: "rules-core-structured-section rules-core-structured-details"
     });
@@ -377,20 +382,22 @@ function renderStructuredDetails(items) {
     for (const [label, value] of items) {
         list.append(
             element("dt", { text: label }),
-            element("dd", {}, renderRuleContent(value)));
+            element("dd", {}, renderContent(value)));
     }
     section.append(list);
     return section;
 }
 
-function renderStructuredTextSection(title, entries) {
+function renderStructuredTextSection(title, entries, renderContent = null) {
     const section = element("section", { className: "rules-core-structured-section" });
-    section.append(element("h4", {
+    section.append(element(renderContent ? "h3" : "h4", {
         className: "rules-core-structured-section-title",
         text: title
     }));
     const body = element("div", { className: "rules-core-rules-text" });
-    if (Array.isArray(entries)) {
+    if (renderContent) {
+        body.append(renderContent(entries));
+    } else if (Array.isArray(entries)) {
         for (const entry of entries) body.append(renderNamedRuleEntry(entry));
     } else {
         body.append(renderNamedRuleEntry(entries));
@@ -407,7 +414,7 @@ function renderDocumentDisclosure(document, label) {
     return raw;
 }
 
-function formatSpellLevel(value) {
+export function formatSpellLevel(value) {
     const level = Number(value);
     if (!Number.isFinite(level)) return formatDetailValue(value);
     if (level === 0) return "Cantrip";
@@ -421,13 +428,13 @@ function formatSpellLevel(value) {
     return `${level}${suffix} level`;
 }
 
-function formatSpellSchool(value) {
+export function formatSpellSchool(value) {
     if (!hasValue(value)) return null;
     const key = String(value).toUpperCase();
     return SPELL_SCHOOLS.get(key) ?? titleCase(stripRendererTags(String(value)));
 }
 
-function formatCastingTime(value) {
+export function formatCastingTime(value) {
     if (!hasValue(value)) return null;
     const times = Array.isArray(value) ? value : [value];
     return times.map(time => {
@@ -445,7 +452,7 @@ function formatCastingTime(value) {
     }).filter(Boolean).join("; ");
 }
 
-function formatSpellRange(value) {
+export function formatSpellRange(value) {
     if (!hasValue(value)) return null;
     if (typeof value !== "object" || Array.isArray(value)) return formatDetailValue(value);
 
@@ -470,7 +477,7 @@ function formatSpellRange(value) {
     return `${amount} ${unit}`;
 }
 
-function formatSpellComponents(value) {
+export function formatSpellComponents(value) {
     if (!hasValue(value)) return null;
     if (typeof value !== "object" || Array.isArray(value)) return formatDetailValue(value);
 
@@ -487,7 +494,7 @@ function formatSpellComponents(value) {
     return parts.join(", ") || formatDetailValue(value);
 }
 
-function formatSpellDuration(value) {
+export function formatSpellDuration(value) {
     if (!hasValue(value)) return null;
     const durations = Array.isArray(value) ? value : [value];
     return durations.map(duration => {
@@ -514,7 +521,7 @@ function formatSpellDuration(value) {
     }).filter(Boolean).join("; ");
 }
 
-function hasConcentration(value) {
+export function hasConcentration(value) {
     const durations = Array.isArray(value) ? value : hasValue(value) ? [value] : [];
     return durations.some(duration =>
         duration && typeof duration === "object" && duration.concentration === true);
@@ -528,7 +535,7 @@ function formatHitDie(value) {
     return hasValue(faces) ? `${number}d${faces}` : formatDetailValue(value);
 }
 
-function formatAbilityReference(value) {
+export function formatAbilityReference(value) {
     if (!hasValue(value)) return null;
     if (typeof value === "string") return value.toUpperCase();
     if (Array.isArray(value)) {
@@ -604,7 +611,7 @@ function formatPrerequisite(value) {
     return formatDetailValue(value);
 }
 
-function formatFeatCategory(value) {
+export function formatFeatCategory(value) {
     if (!hasValue(value)) return null;
     const text = String(value);
     const categories = new Map([
@@ -616,19 +623,19 @@ function formatFeatCategory(value) {
     return categories.get(text.toUpperCase()) ?? titleCase(text);
 }
 
-function formatItemType(value) {
+export function formatItemType(value) {
     if (!hasValue(value)) return null;
     const text = String(value);
     return ITEM_TYPE_LABELS.get(text.toUpperCase()) ?? titleCase(text);
 }
 
-function formatRarity(value) {
+export function formatRarity(value) {
     if (!hasValue(value)) return null;
     const text = String(value);
     return text.toLowerCase() === "none" ? "—" : titleCase(text);
 }
 
-function formatItemDamage(document) {
+export function formatItemDamage(document) {
     const formula = firstDefined(document?.dmg1, document?.damage);
     if (!hasValue(formula)) return null;
     const type = document?.dmgType
@@ -637,13 +644,13 @@ function formatItemDamage(document) {
     return [stripRendererTags(String(formula)), type].filter(Boolean).join(" ");
 }
 
-function formatWeight(value) {
+export function formatWeight(value) {
     const number = Number(value);
     if (!Number.isFinite(number)) return formatDetailValue(value);
     return `${number} lb.`;
 }
 
-function formatCurrency(value) {
+export function formatCurrency(value) {
     const copper = Number(value);
     if (!Number.isFinite(copper)) return formatDetailValue(value);
     if (copper === 0) return "0 gp";
@@ -652,7 +659,7 @@ function formatCurrency(value) {
     return `${copper} cp`;
 }
 
-function formatAttunement(value) {
+export function formatAttunement(value) {
     if (!hasValue(value)) return null;
     if (value === true) return "Required";
     if (value === false) return "Not required";

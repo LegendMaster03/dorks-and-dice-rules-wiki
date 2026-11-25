@@ -1,0 +1,21 @@
+{
+  "id": "skill.athletics",
+  "name": "Athletics",
+  "kind": "skill",
+  "defaultAbility": "strength",
+  "description": [
+    "Jump farther than normal, stay afloat in rough water, or break something."
+  ],
+  "childSkills": [
+    "skill.climb",
+    "skill.jump",
+    "skill.swim"
+  ],
+  "composition": {
+    "operation": "arithmetic-mean",
+    "direction": "components-to-parent",
+    "rounding": "truncate-toward-zero",
+    "componentModifiers": "before-mean",
+    "parentModifiers": "after-mean"
+  }
+}

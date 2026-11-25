@@ -1,0 +1,70 @@
+{
+  "id": "rule.adjective-ladder",
+  "kind": "rule",
+  "name": "Adjective Ladder",
+  "ratings": [
+    {
+      "rating": 8,
+      "name": "Legendary"
+    },
+    {
+      "rating": 7,
+      "name": "Epic"
+    },
+    {
+      "rating": 6,
+      "name": "Fantastic"
+    },
+    {
+      "rating": 5,
+      "name": "Superb"
+    },
+    {
+      "rating": 4,
+      "name": "Great"
+    },
+    {
+      "rating": 3,
+      "name": "Good"
+    },
+    {
+      "rating": 2,
+      "name": "Fair"
+    },
+    {
+      "rating": 1,
+      "name": "Average"
+    },
+    {
+      "rating": 0,
+      "name": "Mediocre"
+    },
+    {
+      "rating": -1,
+      "name": "Poor"
+    },
+    {
+      "rating": -2,
+      "name": "Terrible"
+    },
+    {
+      "rating": -3,
+      "name": "Catastrophic"
+    },
+    {
+      "rating": -4,
+      "name": "Horrifying"
+    }
+  ],
+  "catalogReferences": [
+    "section.getting-started.create-your-characters.skills.the-adjective-ladder"
+  ],
+  "source": {
+    "commit": "93ed848e723f31b4994b466b7241011ba24be885",
+    "path": "docs/markdown/Fate-Condensed-SRD-CC-BY.md",
+    "line": 116,
+    "license": "CC-BY-3.0",
+    "attribution": "This work is based on Fate Condensed (found at https://fate-srd.com/fate-condensed), a product of Evil Hat Productions, LLC, developed, authored, and edited by PK Sullivan, Lara Turner, Fred Hicks, Richard Bellingham, Robert Hanz, and Sophie Lagacé, and licensed for our use under the Creative Commons Attribution 3.0 Unported license (https://creativecommons.org/licenses/by/3.0/).",
+    "url": "https://github.com/fate-srd/fate-srd-content/blob/93ed848e723f31b4994b466b7241011ba24be885/docs/markdown/Fate-Condensed-SRD-CC-BY.md"
+  }
+}

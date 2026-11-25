@@ -1,0 +1,72 @@
+{
+  "id": "condition.exhaustion",
+  "kind": "condition",
+  "name": "Exhaustion",
+  "entries": [
+    "Some special abilities and environmental hazards, such as starvation and the long-term effects of freezing or scorching temperatures, can lead to a special condition called exhaustion. Exhaustion is measured in six levels. An effect can give a creature one or more levels of exhaustion, as specified in the effect's description.",
+    {
+      "type": "table",
+      "colLabels": [
+        "Level",
+        "Effect"
+      ],
+      "colStyles": [
+        "col-1 text-center",
+        "col-11"
+      ],
+      "rows": [
+        [
+          "1",
+          "Disadvantage on ability checks"
+        ],
+        [
+          "2",
+          "Speed halved"
+        ],
+        [
+          "3",
+          "Disadvantage on attack rolls and saving throws"
+        ],
+        [
+          "4",
+          "Hit point maximum halved"
+        ],
+        [
+          "5",
+          "Speed reduced to 0"
+        ],
+        [
+          "6",
+          "Death"
+        ]
+      ]
+    },
+    "If an already exhausted creature suffers another effect that causes exhaustion, its current level of exhaustion increases by the amount specified in the effect's description.",
+    "A creature suffers the effect of its current level of exhaustion as well as all lower levels. For example, a creature suffering level 2 exhaustion has its speed halved and has disadvantage on ability checks.",
+    "An effect that removes exhaustion reduces its level as specified in the effect's description, with all exhaustion effects ending if a creature's exhaustion level is reduced below 1.",
+    "Finishing a long rest reduces a creature's exhaustion level by 1, provided that the creature has also ingested some food and drink."
+  ],
+  "source": {
+    "release": "srd-5.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.1/SRD_CC_v5.1.pdf",
+    "pdfSha256": "2504d2a0abb0a4d491a939be4f17910a2dde0312570ab8d208080225ccf0a1f0",
+    "pages": [
+      358
+    ],
+    "section": "Appendix PH-A / Conditions",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material taken from the System Reference Document 5.1 (“SRD 5.1”) by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "conditionsdiseases.json",
+      "pointer": "/condition/6"
+    },
+    "adaptation": "reviewed structured entry against official PDF; original 5e.tools entry format retained; removed resurrection-based recovery absent from pinned SRD"
+  },
+  "catalogReferences": [
+    "rulebook.page-358"
+  ],
+  "levels": 6,
+  "description": "Exhaustion has six levels with cumulative effects: disadvantage on ability checks, half speed, disadvantage on attack rolls and saving throws, half maximum hit points, zero speed, and death. A long rest with food and drink removes one level."
+}

@@ -1,0 +1,89 @@
+{
+  "id": "trap.collapsing-roof",
+  "kind": "trap",
+  "name": "Collapsing Roof",
+  "trapHazType": "TRP",
+  "rating": [
+    {
+      "tier": 1,
+      "threat": "deadly"
+    }
+  ],
+  "trigger": [
+    "A creature crosses a trip wire"
+  ],
+  "duration": [
+    {
+      "type": "instant"
+    }
+  ],
+  "entries": [
+    "This trap uses a trip wire to collapse an unstable section of ceiling. The trip wire is 3 inches off the ground and stretches between two weak supports that topple when the trip wire is pulled.",
+    "The first creature that crosses the trip wire causes the supports to topple and the unstable section of ceiling to collapse. Each creature beneath the unstable section of ceiling must succeed on a {@dc 13} Dexterity saving throw, taking 11 ({@damage 2d10}) Bludgeoning damage on a failed save or half as much damage on a successful one. Rubble from the collapse turns the trapped area into {@variantrule Difficult Terrain|SRD52}.",
+    {
+      "type": "entries",
+      "name": "Detect and Disarm",
+      "entries": [
+        "As a {@action Search|SRD52} action, a creature can examine the trapped area and make a {@dc 11} Wisdom ({@skill Perception|SRD52}) check, detecting the trip wire and the unstable section of ceiling on a successful check. Once detected, the trip wire can be easily cut or avoided (no ability check required)."
+      ]
+    },
+    {
+      "type": "entries",
+      "name": "At Higher Levels",
+      "entries": [
+        "You can scale the trap for higher levels by increasing the damage and the save DC, as shown in the following table.",
+        {
+          "type": "table",
+          "colLabels": [
+            "Levels",
+            "Bludgeoning Damage",
+            "Save DC"
+          ],
+          "colStyles": [
+            "col-2 text-center",
+            "col-5 text-center",
+            "col-5 text-center"
+          ],
+          "rows": [
+            [
+              "5–10",
+              "22 ({@damage 4d10})",
+              "15"
+            ],
+            [
+              "11–16",
+              "55 ({@damage 10d10})",
+              "17"
+            ],
+            [
+              "17–20",
+              "99 ({@damage 18d10})",
+              "19"
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "catalogReferences": [
+    "rulebook.page-199"
+  ],
+  "source": {
+    "release": "srd-5.2.1",
+    "url": "https://media.dndbeyond.com/compendium-images/srd/5.2/SRD_CC_v5.2.1.pdf",
+    "pdfSha256": "8974902d109d6e63672d7c490bde9ccf052410503d9cfa768237154fbc5e3d87",
+    "license": "CC-BY-4.0",
+    "attribution": "This work includes material from the System Reference Document 5.2.1 (“SRD 5.2.1”) by Wizards of the Coast LLC, available at https://www.dndbeyond.com/srd. The SRD 5.2.1 is licensed under the Creative Commons Attribution 4.0 International License, available at https://creativecommons.org/licenses/by/4.0/legalcode.",
+    "pages": [
+      199
+    ],
+    "candidatePage": 199,
+    "structuredSource": {
+      "provider": "CoolFireGiant/hewnhero-srd",
+      "commit": "d06d1dadee357857767b1e4da985df6609509bcf",
+      "path": "trapshazards.json",
+      "pointer": "/trap/1"
+    },
+    "structuredStatus": "pinned edition-specific projection; publisher locator verified; full body and semantic review pending"
+  }
+}

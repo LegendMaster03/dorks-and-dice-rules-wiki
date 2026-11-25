@@ -1,0 +1,7 @@
+{
+  "id": "skill.perform",
+  "name": "Perform",
+  "kind": "skill-family",
+  "defaultAbility": "charisma",
+  "independentChildren": true
+}
