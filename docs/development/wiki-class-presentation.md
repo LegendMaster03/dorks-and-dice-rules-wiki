@@ -23,9 +23,32 @@ The historical class/subclass/prestige-class renderers in `rule-renderers-specia
 
 Further observed class bundles: the 5e Fighter lacks a numerical classTableGroups table; 5.5e Fighter has a 20-row Second Wind / Weapon Mastery table. Both Wizard editions contain separate ordinary and spell-slot table surfaces. The model never fabricates missing statistics or copies another edition. Subclasses use their own feature tuples and their explicit parent class catalog references. Fate Condensed has no class surface.
 
+## Complete class catalog audit
+
+The pinned Core tree contains eight first-party base class records (Barbarian, Bard, Cleric, Druid, Rogue, Sorcerer, Warlock, Wizard), all wrapped in a native definition with a 20-row progression. Warlock alone supplies the inspected explicit playtest status. The other first-party definitions remain on the established native class reader; the imported adapters do not claim those records or infer their playtest readiness.
+
+All twelve imported base class files and their accompanying subclass and feature records were inspected in each edition. The exact-reference audit checked 296 feature occurrences for SRD 5.1 and 307 for SRD 5.2.1 (603 total), with zero absent or ambiguous matches at the pinned source revision. The checked-in representative regression suite covers 140 of these occurrences; the wider 603-reference result is a source inspection, not an additional automated test count.
+
+| Class | 5e numerical table groups | 5.5e numerical table groups | Spell-list level groups (both) | 5e optional-feature groups | 5.5e optional-feature / feat groups |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Barbarian | 1 | 1 | 0 | 0 | 0 / 1 |
+| Bard | 2 | 2 | 10 | 0 | 0 / 1 |
+| Cleric | 2 | 2 | 10 | 0 | 0 / 1 |
+| Druid | 2 | 2 | 10 | 0 | 0 / 1 |
+| Fighter | 0 | 1 | 0 | 1 | 0 / 2 |
+| Monk | 1 | 1 | 0 | 0 | 0 / 1 |
+| Paladin | 1 | 2 | 5 | 1 | 0 / 2 |
+| Ranger | 2 | 3 | 5 | 1 | 0 / 2 |
+| Rogue | 1 | 1 | 0 | 0 | 0 / 1 |
+| Sorcerer | 3 | 3 | 10 | 1 | 1 / 1 |
+| Warlock | 1 | 1 | 10 | 2 | 1 / 1 |
+| Wizard | 2 | 2 | 10 | 0 | 0 / 1 |
+
+Counts describe the actual imported records, not a normative assertion that all editions must have these surfaces. Some numerical tables use rowsSpellProgression rather than rows; the existing family model retains each published surface separately.
+
 ## Relationship and lifecycle decisions
 
-* The class/subclass UIDs are not native IDs. Render their exact authored display names and levels. Use only IDs present in catalogReferences when resolving the feature; current imported IDs end in the authored feature level. On expansion, resolve same-level candidates through the pinned reader, verify the exact name, class, source (when supplied), subclass and level tuple, and accept exactly one match. The fixture audit checked 140 references across six class bundles without mismatch. A UID remains a local UI occurrence key only.
+* The class/subclass UIDs are not native IDs. Render their exact authored display names and levels. Use only IDs present in catalogReferences when resolving the feature; current imported IDs end in the authored feature level. On expansion, resolve same-level candidates through the pinned reader, verify the exact name, class, source (when supplied), subclass and level tuple, and accept exactly one match. The representative fixture regression covers 140 references across six class bundles; the full source inspection matched 603 across all 24 imported bundles. A UID remains a local UI occurrence key only.
 * The imported base class records do not enumerate subclass or option native IDs. On expansion, page the authorized catalog and verify subclass reverse ownership or explicit feature-type/category membership, including available class/subclass ownership constraints. General feat categories are reference lists, not eligibility decisions. Render prerequisites without executing them. This fallback makes no inference about character choices and never reaches another ruleset.
 * The class spell list is the explicit level-grouped spellList in the record. Links use exact qualified IDs; human-readable names are requested lazily from the same snapshot. If name resolution is unavailable, the existing explicit ID link remains.
 * Imported reading state is isolated by readingKey(context, classId, "class"). Native feature retrieval checks exact snapshot and record identity; asynchronous commits require the current render lease and current mount. Legacy first-party class storage and links remain unchanged; first-party async customization/feature reads additionally avoid mutating detached hosted nodes. A future unified first-party navigation/state migration belongs with the navigation integration.
@@ -53,3 +76,7 @@ Use the exact fixture-backed reader or an authorized dev-only context, not publi
 | Fate Condensed | No fabricated class or mandatory class navigation |
 
 Automated DOM tests cover structure, relationships, reading state and lifecycle. They are not a substitute for visual browser acceptance. Run the existing class reading suite plus the new fixture-driven module through npm test; final integrated acceptance requires B's rich structured renderer and A's authorized navigation, along with browser verification of the cases above. No production deployment or access-policy modification.
+
+## Workstream validation record
+
+The implementation candidate `55a9631f71a234d3422422add052cb4d349c78cf` passed the complete Validate Rules Wiki workflow ([run 45691181203](https://github.com/LegendMaster03/dorks-and-dice-rules-wiki/actions/runs/45691181203)): 11 C# tests, browser syntax and native-first contracts, the existing first-party class reading tests, the new 140-relationship fixture regression, deployment guards, Compose validation, container build and stateless host smoke test. The preceding run detected a disclosure syntax error, corrected at this candidate. Visual acceptance on actual browser viewports remains open pending integrated A/B; this run does not grant foreign runtime access or authorize deployment.
