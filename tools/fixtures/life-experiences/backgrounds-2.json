@@ -1,0 +1,975 @@
+{
+  "coreCommit": "0baa466b7fc8f55e5d675b886f76e95f9a4b551f",
+  "records": [
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/guild-merchant.json",
+      "blobSha": "0a7630cb50371ff5f03731132c95c567f36fe01a",
+      "record": {
+        "id": "background.guild-merchant",
+        "name": "Guild Merchant",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have worked in commerce as a buyer, seller, broker, supplier, or organizer of trade through a recognized merchant guild or comparable association. Your membership and commercial experience may have been acquired later in life and do not require inherited wealth, a particular Upbringing, a production craft, or a continuing business.",
+        "benefits": [
+          {
+            "id": "guild-merchant-persuasion",
+            "name": "Persuasion Training",
+            "description": "Gain training in Persuasion through negotiation and commercial dealings.",
+            "skill": "skill.persuasion",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "guild-merchant-commercial-skill",
+            "name": "Commercial Skill Training",
+            "description": "Choose one Skill from Insight, Appraise, or Gather Information reflecting your experience assessing trading partners, valuing goods, or finding commercial opportunities.",
+            "grantType": "skill-training",
+            "chooseOne": [
+              "skill.insight",
+              "skill.appraise",
+              "skill.gather-information"
+            ],
+            "choiceCount": 1
+          },
+          {
+            "id": "guild-merchant-trade-language",
+            "name": "Trade Language",
+            "description": "Learn one language used in your merchant guild, its commercial partners, client relationships, markets, or trade routes. Common is valid where appropriate.",
+            "extraLanguages": 1,
+            "choiceConstraint": "associated-with-merchant-guild-partners-clients-markets-or-trade-routes"
+          },
+          {
+            "id": "guild-merchant-professional-choice",
+            "name": "Navigation or Additional Trade Language",
+            "description": "Choose one: gain one rank in Navigation (Navigator's Tools), or learn one additional language used in commercial dealings. The baseline Trade Language benefit above applies in either case; do not gain both alternatives.",
+            "grantType": "benefit-choice",
+            "choiceCount": 1,
+            "options": [
+              {
+                "id": "navigation",
+                "name": "Navigation Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.navigation",
+                    "description": "Gain one rank in the native Navigation Competency, associated with Navigator's Tools. This does not confer vehicle-operation proficiency, an additional equipment qualification, or ownership of the tools.",
+                    "competencyTraining": {
+                      "ranks": 1,
+                      "proficient": false
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "additional-trade-language",
+                "name": "Additional Trade Language",
+                "benefits": [
+                  {
+                    "extraLanguages": 1,
+                    "choiceConstraint": "learned-through-commercial-dealings",
+                    "description": "Learn one additional language used in commercial dealings, beyond the baseline Trade Language grant."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "guild-merchant-membership",
+            "name": "Guild Membership",
+            "grantType": "background-feature",
+            "description": "Your experience and recognized standing with a merchant guild or comparable commercial association may provide introductions to members, trade contacts, and modest food or lodging when its members can reasonably assist you. The organization may offer advocacy or introductions to influential people when doing so serves its interests. Assistance depends on the association's reach, resources, and your standing; it does not guarantee credit, discounts, profits, unrestricted goods, legal immunity, or access to unrelated guilds. Maintaining good standing ordinarily requires dues of 5 gp each month, with missed payments and circumstances adjudicated by the DM."
+          }
+        ],
+        "startingEquipment": {
+          "description": "A mule and cart, a guild letter of introduction or other evidence of membership, traveler's clothes, and a pouch containing 15 gp. These are ordinary starting possessions. The mule and cart replace the artisan tool-set baseline; they do not provide trade goods, a warehouse, guaranteed profits, or proficiency with land vehicles. Animal care and travel remain subject to ordinary play and DM adjudication.",
+          "items": [
+            {
+              "name": "Mule",
+              "quantity": 1
+            },
+            {
+              "name": "Cart",
+              "quantity": 1
+            },
+            {
+              "name": "Guild letter of introduction or evidence of membership",
+              "quantity": 1
+            },
+            {
+              "name": "Traveler's clothes",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 15
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "Your route, trade goods, guild affiliation, responsibilities, and financial history are optional details. The Background does not require you to be a traveling caravaner, own a storefront, or have been raised in a merchant family.",
+          "prompts": [
+            "What goods or services did you buy, sell, or arrange?",
+            "Which guild or association recognized your commercial work?",
+            "Where do you have established trading relationships?",
+            "What obligations or rivalries influence your current standing?"
+          ]
+        },
+        "reviewNotes": [
+          "Guild Merchant is a standalone native Background and is not a variant or descendant of Guild Artisan. The two may share the functional Guild Membership feature without inheriting other grants.",
+          "Fixed Persuasion plus one Skill choice from Insight, Appraise, or Gather Information; Appraise and Gather Information exist in the native catalog but their skill-action metadata needs general review.",
+          "Retains one trade-associated baseline language, with Common valid where appropriate.",
+          "One mutually exclusive mixed-result choice gives competency.navigation (Navigator's Tools) or one additional language used in commerce. The first baseline language is granted in either case; choose only one alternative.",
+          "The benefit-choice/options/benefits structure records approved choice semantics for future common grant execution. It does not claim the current consumer already projects mixed-result choices.",
+          "Navigation does not grant Land Vehicles qualification. Owning a mule and cart does not imply proficiency operating every vehicle.",
+          "The shared Guild Membership feature remains a conditional commercial relationship and retains the original 5 gp monthly dues. No recurring billing or dedicated guild-management subsystem is introduced.",
+          "The source-derived mule and cart are an approved starting-equipment baseline for corpus balance comparison against Guild Artisan's trade tools. No inventory or caravan profit subsystem is created.",
+          "Starting items enter ordinary inventory once item identities and grant projection are implemented; the mule is an owned animal, not an extra combat companion or follower entitlement.",
+          "An unrelated non-guild Merchant Background is not selected by this record. Guild Membership requires an appropriate professional association in the setting.",
+          "No fixed ability score changes, Origin feat, inherited guild rights, craft-producing Competency, or automatic merchant discounts are granted.",
+          "Duplicate Skills, navigation grants, and languages across Background and Upbringing require later general duplicate-grant review."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/hermit.json",
+      "blobSha": "bbef82f05fd0b566a490f2d46f8ccd73037a0752",
+      "record": {
+        "id": "background.hermit",
+        "name": "Hermit",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You spent a significant period apart from ordinary society, whether alone or in a sheltered community, and made a consequential discovery during that time. Your seclusion may have occurred early or later in life; it need not imply a particular religion, Species, Upbringing, isolation throughout childhood, spellcasting, poverty, exile, or permanent withdrawal.",
+        "benefits": [
+          {
+            "id": "hermit-seclusion-skills",
+            "name": "Seclusion Skills",
+            "grantType": "skill-training",
+            "description": "Choose two distinct Skills from Medicine, Religion, Nature, Survival, Arcana, History, Investigation, or Insight to reflect what you learned or practiced during seclusion. Medicine and Religion remain a possible combination, but neither is required.",
+            "chooseFrom": [
+              "skill.medicine",
+              "skill.religion",
+              "skill.nature",
+              "skill.survival",
+              "skill.arcana",
+              "skill.history",
+              "skill.investigation",
+              "skill.insight"
+            ],
+            "choiceCount": 2,
+            "distinctChoices": true
+          },
+          {
+            "id": "hermit-discovery",
+            "name": "Discovery",
+            "grantType": "background-feature",
+            "description": "During your time apart from ordinary society, you uncovered one meaningful truth about a person, place, event, practice, or aspect of the world that was not generally understood in the circles you knew. Work with the GM to establish what you discovered, how you came to know it, and why it may matter. The agreed discovery is genuine within its established circumstances, although your understanding of its causes, scope, and implications may be incomplete. When you apply that discovery during play, you know the established information without needing an ordinary knowledge check merely to rediscover it. This does not grant an unapproved spell, item, ability, access right, guaranteed solution to a future challenge, or a continuing power to demand additional hidden facts. The GM determines undiscovered details and how the world responds to the information."
+          }
+        ],
+        "startingEquipment": {
+          "description": "One scroll case holding personal notes or a notebook of studies, observations, drawings, or reflections from seclusion; one winter blanket or comparable modest bedding; common or practical clothes; one ordinary personal item used during seclusion agreed with the GM without guaranteed resale value, tool proficiency, or special effects; and 5 gp. All items are ordinary character inventory. No Herbalism Kit, other tool kit, or valuable relic is automatically guaranteed.",
+          "items": [
+            {
+              "name": "Personal notes in a scroll case or notebook",
+              "quantity": 1,
+              "options": [
+                "Scroll case with personal notes",
+                "Notebook of personal notes"
+              ],
+              "choiceCount": 1
+            },
+            {
+              "name": "Winter blanket or comparable modest bedding",
+              "quantity": 1
+            },
+            {
+              "name": "Common or practical clothes",
+              "quantity": 1
+            },
+            {
+              "name": "Ordinary personal item used during seclusion",
+              "quantity": 1,
+              "choiceConstraint": "gm-agreed-ordinary-item-without-guaranteed-resale-value-training-or-special-effects"
+            }
+          ],
+          "currency": {
+            "gp": 5
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "The reason for seclusion, the community or environment involved, and the nature of the discovery are developed through the character's history and setting, rather than mandatory personality, religion, or childhood assumptions.",
+          "prompts": [
+            "What circumstances led you to live apart from ordinary society?",
+            "What occupied your studies, work, or contemplation during that period?",
+            "What meaningful truth did you uncover, and how was its scope established with the GM?",
+            "What remains uncertain about the discovery, and why did you return to wider society?"
+          ]
+        },
+        "reviewNotes": [
+          "Approved as an independent native Hermit Background, using flexible skill Model C rather than retaining the source's fixed ascetic-healer training package.",
+          "Choose two distinct Skills from Medicine, Religion, Nature, Survival, Arcana, History, Investigation, and Insight. The source Medicine and Religion pair is available but not mandatory.",
+          "Intentionally grants no automatic Herbalism Competency, extra learned language, other vocational proficiency, or vehicle qualification. This differs from the 2014 Hermit source and is subject to later corpus-wide balance review.",
+          "Discovery establishes one genuine, meaningful GM-agreed piece of information learned during sustained seclusion; the core established truth need not be rediscovered by an ordinary check. The character's interpretations and any previously unknown details remain uncertain.",
+          "Discovery is not a reusable secret-finding power, automatically invented major plot truth, spell, valuable item, access right, skill bonus, or assured solution to a future challenge.",
+          "The player and GM should define the discovery during character creation where feasible. If the setting is not sufficiently established, agree on its nature before the feature is invoked; do not retroactively invent a guaranteed solution after encountering a challenge.",
+          "Discovery is distinct from Sage's Researcher (locating a possible source for unknown lore), Explorer's Expedition Survey (interpreting current field evidence), Acolyte's Shelter of the Faithful (institutional relationships), and Wilderness-Raised's provisioning.",
+          "Seclusion can occur during childhood, adolescence or later experience, alone or within a secluded community. It is not an automatic Isolated-Raised Upbringing, whose possible creation remains a separate unapproved decision.",
+          "Starting equipment consists of personal notes in a scroll case or notebook, a winter blanket or equivalent bedding, everyday clothes, one DM-agreed ordinary personal item without guaranteed value or training, and 5 gp in ordinary inventory. There is no guaranteed Herbalism Kit or relic.",
+          "No fixed 2024 ability increases, Origin feat, spellcasting, class powers, exclusive Species, forced religious role or social-isolation subsystem.",
+          "Execution of two distinct Skill choices, discovery information projection, ordinary item identity/materialization, cross-package duplicate grants, and relative feature strength remain deferred to shared mechanics/integration."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/knight.json",
+      "blobSha": "b4a458cff157c345e9e21c49b4e5867362281028",
+      "record": {
+        "id": "background.knight",
+        "name": "Knight",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have served in a recognized knightly role through an oath, commission, title, order, or comparable obligation. Knighthood may be earned or granted and does not require noble birth, an Aristocratic Upbringing, a military command, ownership of a mount, or a particular class or alignment.",
+        "benefits": [
+          {
+            "id": "knight-persuasion",
+            "name": "Persuasion Training",
+            "description": "Gain training in Persuasion from the duties and relationships associated with your knightly service.",
+            "skill": "skill.persuasion",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "knight-service-training",
+            "name": "Knightly Service Training",
+            "description": "Choose one Skill training reflecting the nature of your knightly duties: Athletics, Animal Handling, Ride, History, Religion, Arcana, or Nature.",
+            "grantType": "skill-training",
+            "chooseOne": [
+              "skill.athletics",
+              "skill.animal-handling",
+              "skill.ride",
+              "skill.history",
+              "skill.religion",
+              "skill.arcana",
+              "skill.nature"
+            ],
+            "choiceCount": 1
+          },
+          {
+            "id": "knight-leisure-training",
+            "name": "Gaming or Musical Training",
+            "description": "Choose one type of gaming set or one type of musical instrument and gain training with that choice. The selection is one proficiency in total, not one from each category.",
+            "grantType": "qualification-training",
+            "choiceCategories": [
+              "gaming-set",
+              "musical-instrument"
+            ],
+            "choiceCount": 1,
+            "qualificationCategory": "tool"
+          },
+          {
+            "id": "knight-service-language",
+            "name": "Knightly Service Language",
+            "description": "Learn one language of your choice associated with your knightly order, patron, training, or duties. Common is a valid choice where appropriate to the character's experience.",
+            "extraLanguages": 1,
+            "choiceConstraint": "associated-with-knightly-order-patron-training-or-duties"
+          },
+          {
+            "id": "knight-retainers",
+            "name": "Retainers",
+            "grantType": "background-feature",
+            "description": "Three noncombat retainers attend you: a squire and two other ordinary attendants. They may perform customary duties and errands, but they do not fight for you or accompany you into obviously dangerous places, such as dungeons. They may leave if you repeatedly put them in danger or mistreat them. The DM adjudicates their conduct and circumstances as with other NPCs. This feature grants neither player-controlled adventuring characters nor noble status or military command."
+          }
+        ],
+        "startingEquipment": {
+          "description": "An insignia or document representing your knightly standing, clothing appropriate to your service, a personal token associated with your patron or duties, and a pouch containing 10 gp. These are ordinary inventory possessions. No mount, weapon, armor, estate, or hereditary title is included.",
+          "items": [
+            {
+              "name": "Insignia or document of knightly standing",
+              "quantity": 1,
+              "options": [
+                "Knightly insignia",
+                "Commission or certificate of knightly standing"
+              ]
+            },
+            {
+              "name": "Service clothing",
+              "quantity": 1
+            },
+            {
+              "name": "Token of service or patronage",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 10
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "The source of knighthood, code, patron, order, and duties are roleplaying choices. They do not require nobility, religious practice, mounted service, military rank, or a specific alignment.",
+          "prompts": [
+            "Who recognized your knightly service, and under what terms?",
+            "What duty or obligation defines your knighthood?",
+            "How do you relate to your squire and other attendants?",
+            "Where is your standing recognized, questioned, or unknown?"
+          ]
+        },
+        "reviewNotes": [
+          "Selected as an independent native Background. Knight does not inherit the Noble or Soldier Background and is not a variant of either.",
+          "Persuasion is fixed; choose one of Athletics, Animal Handling, Ride, History, Religion, Arcana, or Nature as the second skill.",
+          "One authorized equipment-type choice from the union of gaming sets and musical instruments uses the native equipment proficiency contract; it is one total selection, not two.",
+          "The service-associated language is one learned language; Common is eligible if connected to the character's knightly experience.",
+          "Retainers follow the intentional 2014 5e limits: a squire plus two ordinary noncombat attendants, no combat service, no entrance into obviously dangerous areas, possible departure after mistreatment or repeated danger, and ordinary DM adjudication.",
+          "No daily pay, replacements, food and lodging system, recruitment mechanics, retainer inventory or NPC leveling system is introduced; unspecified logistics remain unspecified.",
+          "Recognized knightly standing is narrative context, not a second background-feature grant of Noble's Position of Privilege or Soldier's Military Rank.",
+          "The four-item and 10 gp equipment package reflects approved service-based possessions without guaranteeing a mount, armor, weapons, land, or noble title; ordinary inventory item resolution is deferred.",
+          "No free martial class proficiencies, spellcasting, feats, or fixed ability score increases are awarded by the Background.",
+          "Narrative guidance is optional; combinations with any Upbringing, including Aristocratic, are allowed. Duplicate-grant handling remains deferred to the general corpus review.",
+          "This record uses original Dorks & Dice prose and derives the generic Retainers game mechanic from the non-SRD 2014 Knight material; it does not reproduce PHB narrative expression."
+        ],
+        "equipmentProficiencyGrants": {
+          "choices": [
+            {
+              "id": "knight-leisure-training",
+              "count": 1,
+              "fromCategory": "tool",
+              "fromGroupIds": [
+                "equipment.group.tool.gaming-set",
+                "equipment.group.tool.musical-instrument"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/noble.json",
+      "blobSha": "cf760ce98fff186cdfe9543954189922dee93997",
+      "record": {
+        "id": "background.noble",
+        "name": "Noble",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "Your experiences include possessing or exercising recognized noble standing within a society. That position may come from family, appointment, service, adoption, marriage, or another accepted path. This Background does not require an aristocratic childhood, a particular Species, or continuing approval from every political authority.",
+        "benefits": [
+          {
+            "id": "noble-history",
+            "name": "History Training",
+            "description": "Gain training in History.",
+            "skill": "skill.history",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "noble-persuasion",
+            "name": "Persuasion Training",
+            "description": "Gain training in Persuasion.",
+            "skill": "skill.persuasion",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "noble-gaming-set",
+            "name": "Gaming Set Training",
+            "description": "Choose one type of gaming set and gain training with it.",
+            "grantType": "qualification-training",
+            "choiceCategory": "gaming-set",
+            "choiceCount": 1,
+            "qualificationCategory": "tool"
+          },
+          {
+            "id": "noble-learned-language",
+            "name": "Additional Language",
+            "description": "Learn one language of your choice through the education, dealings, or relationships associated with your noble experience. This grant is separate from languages learned through Upbringing.",
+            "extraLanguages": 1
+          },
+          {
+            "id": "noble-position-of-privilege",
+            "name": "Position of Privilege",
+            "grantType": "background-feature",
+            "description": "Where your standing is recognized, you are generally treated as a member of the noble social order. You can make appropriate requests for introductions, hospitality, or audiences within its conventions, including opportunities not ordinarily offered to outsiders. The response depends on jurisdiction, relationships, available access, and the people involved; this feature does not confer universal command, guaranteed admission, or automatic cooperation. A change in your recognized standing does not erase your acquired training."
+          }
+        ],
+        "startingEquipment": {
+          "description": "Fine clothes, a signet ring, a document establishing pedigree or bestowed standing, and a purse containing 25 gp. A charter or commission can replace a lineage record for a character elevated to noble standing later in life. These possessions enter ordinary inventory.",
+          "items": [
+            {
+              "name": "Fine clothes",
+              "quantity": 1
+            },
+            {
+              "name": "Signet ring",
+              "quantity": 1
+            },
+            {
+              "name": "Record of pedigree or bestowed noble standing",
+              "quantity": 1,
+              "examples": [
+                "Pedigree scroll",
+                "Charter of nobility",
+                "Commission establishing rank"
+              ]
+            },
+            {
+              "name": "Purse",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 25
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "Personality traits, ideals, bonds, flaws, family standing, political loyalties, and obligations are optional prompts, not prerequisites. Nobility need not be inherited and does not impose a particular attitude toward other people.",
+          "prompts": [
+            "How was your standing recognized or acquired?",
+            "Which responsibilities or relationships came with your position?",
+            "Where is your title or standing acknowledged, and where is it disputed?",
+            "How has that experience shaped your dealings with people outside noble circles?"
+          ]
+        },
+        "reviewNotes": [
+          "Native reconciliation follows the 2014 5e Noble Background as an independent package rather than inheriting Aristocratic Upbringing.",
+          "The 2014 History, Persuasion, one Gaming Set type, one learned language, Position of Privilege, and 25 gp inventory baseline are retained.",
+          "The social feature is contextual to recognized rank and institutions; it does not enforce a biological genealogy, prescribe aristocratic childhood, or guarantee unconditional access.",
+          "The record establishing status may be an award or legal grant rather than hereditary pedigree, allowing later ennoblement.",
+          "Noble and Knight are independent Backgrounds. No Knight variant or Retainers replacement feature is embedded in Noble.",
+          "No fixed 2024 ability score increases or automatic Skilled Origin feat.",
+          "Starting equipment awaits verified native item identities and materialization into ordinary inventory; it is not a separate inventory collection.",
+          "The gaming-set choice is represented as one selected native equipment proficiency, not a ranked Competency; authorized choice execution remains Character-owned.",
+          "Overlapping grants from Aristocratic Upbringing or other sources await general duplicate-grant semantics rather than automatic proficiency stacking."
+        ],
+        "equipmentProficiencyGrants": {
+          "choices": [
+            {
+              "id": "noble-gaming-set",
+              "count": 1,
+              "fromCategory": "tool",
+              "fromGroupIds": [
+                "equipment.group.tool.gaming-set"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/sage.json",
+      "blobSha": "b179167fda878f2a4e4504c8267313ca6bc280df",
+      "record": {
+        "id": "background.sage",
+        "name": "Sage",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have devoted substantial effort to the study, preservation, investigation, or teaching of knowledge. Your work may be mundane or magical, independent or institutional; choosing this Background does not require membership in an academy or training as a spellcaster.",
+        "benefits": [
+          {
+            "id": "sage-arcana",
+            "name": "Arcana Training",
+            "description": "Gain training in Arcana.",
+            "skill": "skill.arcana",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "sage-history",
+            "name": "History Training",
+            "description": "Gain training in History.",
+            "skill": "skill.history",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "sage-learned-language",
+            "name": "Additional Scholarly Language",
+            "description": "Learn one additional language of your choice through your studies. Languages provided by Upbringing are separate learned grants.",
+            "extraLanguages": 1
+          },
+          {
+            "id": "sage-researcher",
+            "name": "Researcher",
+            "grantType": "background-feature",
+            "description": "When you lack a piece of lore, you can often identify an expert, archive, text, institution, or other source where the information might be found. Knowing where to look does not grant the information or access to it, and the GM determines whether the knowledge is secret, inaccessible, or unavailable."
+          }
+        ],
+        "startingEquipment": {
+          "description": "An ink bottle, a quill, a small knife, scholarly correspondence concerning an unresolved question, common clothes, and 10 gp. These possessions enter ordinary inventory; the correspondence is a suggested story hook, not a mandatory personal-history fact.",
+          "items": [
+            {
+              "name": "Ink bottle",
+              "quantity": 1
+            },
+            {
+              "name": "Quill",
+              "quantity": 1
+            },
+            {
+              "name": "Small knife",
+              "quantity": 1
+            },
+            {
+              "name": "Scholarly correspondence",
+              "quantity": 1
+            },
+            {
+              "name": "Common clothes",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 10
+          }
+        },
+        "suggestedSpecialties": [
+          "Alchemist",
+          "Astronomer",
+          "Discredited Academic",
+          "Librarian",
+          "Professor",
+          "Researcher",
+          "Wizard's Apprentice",
+          "Scribe"
+        ],
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "Personality traits, ideals, bonds, flaws, and scholarly specialties are inspiration only. Select, adapt, combine, or disregard them; no backstory or personality is required to choose Sage.",
+          "prompts": [
+            "What question or field of knowledge keeps drawing you back?",
+            "Who taught you, challenged you, or relied on your research?",
+            "What principle guides your pursuit of knowledge?",
+            "What habit or blind spot has your education given you?"
+          ]
+        },
+        "reviewNotes": [
+          "Native reconciliation uses the broad 2014 5e Sage rather than the narrower 2024 Wizard-focused package.",
+          "The 2014 grant of two languages is reduced to one learned language choice because formative language learning is normally represented by Upbringing.",
+          "2014 Sage specialties and suggested characteristics remain optional narrative prompts, not required or separately granted mechanical specializations.",
+          "No Magic Initiate (Wizard), fixed 2024 ability increases, or universal Calligraphy grant.",
+          "Starting equipment is described here but requires later item-identity and ordinary-inventory materialization; do not interpret this descriptive package as already executable.",
+          "Researcher is a GM-adjudicated informational benefit; its description does not promise an automatic answer or unrestricted institutional access.",
+          "The 2024 Sage working source is retained separately as non-authoritative source evidence."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/sailor.json",
+      "blobSha": "1882d56b86e5fa03f7d561b8a7ff5326155af78f",
+      "record": {
+        "id": "background.sailor",
+        "name": "Sailor",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have meaningful experience serving or working aboard vessels on seas, rivers, lakes, or other navigable waters. Your service may have been commercial, exploratory, civilian, or military. This Background does not require a particular childhood, current shipboard employment, naval rank, ownership of a vessel, or a specific moral outlook.",
+        "benefits": [
+          {
+            "id": "sailor-athletics",
+            "name": "Athletics Training",
+            "grantType": "skill-training",
+            "skill": "skill.athletics",
+            "description": "Gain training in Athletics. As a composite Skill, Athletics does not automatically train the independently ranked Climb, Jump, or Swim components."
+          },
+          {
+            "id": "sailor-perception",
+            "name": "Perception Training",
+            "grantType": "skill-training",
+            "skill": "skill.perception",
+            "description": "Gain training in Perception. As a composite Skill, Perception does not automatically train the independently ranked Listen or Spot components."
+          },
+          {
+            "id": "sailor-navigation",
+            "name": "Navigation Training",
+            "grantType": "competency-training",
+            "competency": "competency.navigation",
+            "description": "Gain one rank in the native Navigation Competency, associated with Navigator's Tools. This is distinct from training to operate water vehicles and does not grant Cartography, a second equipment qualification, or ownership of the tools.",
+            "competencyTraining": {
+              "ranks": 1,
+              "proficient": false
+            }
+          },
+          {
+            "id": "sailor-water-vehicles",
+            "name": "Water Vehicles Training",
+            "grantType": "qualification-training",
+            "qualificationCategory": "vehicle",
+            "vehicleType": "water",
+            "description": "Gain training with water vehicles through practical shipboard experience. This does not grant Land Vehicles training, ownership of a ship, or command over its crew."
+          },
+          {
+            "id": "sailor-ships-passage",
+            "name": "Ship's Passage",
+            "grantType": "background-feature",
+            "description": "Through your former service and relationships with other seafarers, you can usually arrange passage aboard a vessel for yourself and your traveling companions without paying the ordinary passenger fare. You may rely on a ship or crew you know or on maritime contacts. The route, departure, and duration depend on journeys and vessels actually available; you can not require a particular destination, departure time, or travel schedule. In exchange, you and your companions are expected to assist with reasonable shipboard duties during the voyage. This benefit does not grant ownership of a vessel or authority over its captain and crew."
+          }
+        ],
+        "startingEquipment": {
+          "description": "A belaying pin that can serve as a club, 50 feet of silk rope, one ordinary lucky charm or trinket, common clothes, and a pouch containing 10 gp. All are ordinary starting inventory possessions. The charm has no automatic supernatural effect.",
+          "items": [
+            {
+              "name": "Belaying pin",
+              "quantity": 1,
+              "notes": "Can serve as an ordinary club."
+            },
+            {
+              "name": "Silk rope",
+              "quantity": 1,
+              "lengthFeet": 50
+            },
+            {
+              "name": "Lucky charm or ordinary trinket",
+              "quantity": 1
+            },
+            {
+              "name": "Common clothes",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 10
+          }
+        },
+        "suggestedSpecialties": [
+          "Deckhand",
+          "Navigator",
+          "Cook",
+          "Lookout",
+          "Boatswain",
+          "Ship's Officer",
+          "Sailmaker",
+          "Quartermaster",
+          "River Pilot",
+          "Fisher",
+          "Merchant Mariner"
+        ],
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "Shipboard roles, destinations, crews, maritime customs, and past obligations are optional prompts and do not create additional mechanical variants. Former service aboard a pirate ship does not automatically grant Pirate's distinct feature.",
+          "prompts": [
+            "What sort of vessel did you serve aboard, and what were your duties?",
+            "Which shipmates or maritime contacts still recognize you?",
+            "What voyages shaped your professional experience?",
+            "What circumstances brought you away from your former crew?"
+          ]
+        },
+        "reviewNotes": [
+          "This standalone Background adopts the 2014 5e Sailor source's Athletics, Perception, Navigator's Tools, Water Vehicles, Ship's Passage, and ordinary starting equipment without making a 2024 Sailor substitution.",
+          "The native Navigation Competency (competency.navigation) represents Navigator's Tools training. It does not imply a water-vehicle qualification, which is granted separately.",
+          "Water Vehicles is authored as a qualification-training vehicle category with vehicleType water, mirroring the independently approved Soldier Land Vehicles category. Do not invent a nonexistent water-vehicle Competency ID.",
+          "No additional language is granted. This is intentional, consistent with the source and with Upbringing's separate formative role.",
+          "Ship's Passage can benefit the Sailor and traveling companions without ordinary fare; it is subject to actual available ships, routes, sailing times, and reasonable shared shipboard labor. No guaranteed voyage, instant travel, ship ownership, crew command, or free cargo service is created.",
+          "Composite Athletics training does not separately train Climb, Jump, or Swim; composite Perception training does not separately train Listen or Spot.",
+          "A belaying pin can be treated as a club and the 50-foot silk rope and other possessions enter ordinary inventory. Item identity resolution and materialization await general integration.",
+          "Pirate is reserved as a distinct possible future Background with independently reviewed Bad Reputation mechanics; Sailor does not inherit Pirate and has no Pirate variant record.",
+          "No fixed ability score increases, Origin feat, automatic language, spellcasting, or inherited Species feature.",
+          "Native grant execution of vehicle categories, equipment identity, and duplicate training remain part of later integration and corpus-wide review."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/soldier.json",
+      "blobSha": "ba9f3b419ab32d16348dcd3dd89348c6773eb138",
+      "record": {
+        "id": "background.soldier",
+        "name": "Soldier",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have undergone military training and served in a fighting force, such as an army, militia, mercenary company, or comparable organization. Your experience does not prescribe your alignment, past allegiance, current occupation, or the age at which you entered service.",
+        "benefits": [
+          {
+            "id": "soldier-athletics",
+            "name": "Athletics Training",
+            "description": "Gain training in Athletics. Composite Athletics does not automatically train the separate Climb, Jump, or Swim facets.",
+            "skill": "skill.athletics",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "soldier-intimidation",
+            "name": "Intimidation Training",
+            "description": "Gain training in Intimidation.",
+            "skill": "skill.intimidation",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "soldier-gaming-set",
+            "name": "Gaming Set Training",
+            "description": "Choose one kind of gaming set and gain training with it.",
+            "grantType": "qualification-training",
+            "choiceCategory": "gaming-set",
+            "choiceCount": 1,
+            "qualificationCategory": "tool"
+          },
+          {
+            "id": "soldier-land-vehicles",
+            "name": "Land Vehicles Training",
+            "description": "Gain training with land vehicles, reflecting military transport and field service.",
+            "grantType": "qualification-training",
+            "qualificationCategory": "vehicle",
+            "vehicleType": "land"
+          },
+          {
+            "id": "soldier-military-rank",
+            "name": "Military Rank",
+            "description": "Your military rank or recognized standing can carry influence among members of a force that acknowledges it. When appropriate, you can request modest temporary equipment or mounts and may have access to friendly military encampments or fortifications. Recognition and cooperation depend on your relationship with the organization and its circumstances; the feature gives no automatic authority over unrelated forces.",
+            "grantType": "background-feature"
+          }
+        ],
+        "startingEquipment": {
+          "description": "An insignia of rank, a trophy from military service (such as a dagger, broken blade, or piece of a banner), a set of bone dice or a deck of cards, common clothes, and a pouch containing 10 gp. These are ordinary inventory possessions. The story behind the trophy is up to the player.",
+          "items": [
+            {
+              "name": "Insignia of rank",
+              "quantity": 1
+            },
+            {
+              "name": "Military trophy",
+              "quantity": 1,
+              "examples": [
+                "Dagger",
+                "Broken blade",
+                "Piece of a banner"
+              ]
+            },
+            {
+              "name": "Gaming set",
+              "quantity": 1,
+              "options": [
+                "Bone dice",
+                "Deck of cards"
+              ]
+            },
+            {
+              "name": "Common clothes",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 10
+          }
+        },
+        "suggestedSpecialties": [
+          "Officer",
+          "Scout",
+          "Infantry",
+          "Cavalry",
+          "Healer",
+          "Quartermaster",
+          "Standard Bearer",
+          "Support Staff"
+        ],
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "Military roles, personality traits, ideals, bonds, flaws, and service history are optional prompts. They do not restrict the character's history, morality, organization, or current profession.",
+          "prompts": [
+            "What kind of force did you serve, and what did you do for it?",
+            "Who taught you to endure military life or work with others?",
+            "What part of your service still influences your decisions?",
+            "Do you retain contact with your former unit or commanders?"
+          ]
+        },
+        "reviewNotes": [
+          "Native reconciliation adopts the 2014 5e Soldier Background rather than the 2024 Soldier source in working/backgrounds/soldier.json.",
+          "Athletics and Intimidation remain the two skill grants.",
+          "One gaming-set choice uses the native equipment qualification contract. The separate Land Vehicles qualification remains deferred pending vehicle/operator taxonomy.",
+          "Land vehicles are authored as a qualification category because a verified native standalone competency ID for land-vehicle training was not found; do not substitute Navigation or automatically invent a new universal competency identity.",
+          "Military Rank is a contextual social relationship/privilege, not blanket command of all military organizations.",
+          "No language grant is included. Upbringing normally supplies formative languages.",
+          "Equipment follows the 2014 package, is ordinary character inventory, and awaits later item-identity/materialization support.",
+          "The 2014 eight specialties and suggested characteristics are optional narrative aids, not mandatory mechanical subtypes.",
+          "The 2024 Savage Attacker Origin feat and fixed ability adjustments are not automatically granted.",
+          "Giant Foundling Upbringing and Soldier both grant Intimidation. Preserve the overlap for the corpus-wide duplicate-grant reconciliation rather than granting extra training or changing the approved skill list."
+        ],
+        "equipmentProficiencyGrants": {
+          "choices": [
+            {
+              "id": "soldier-gaming-set",
+              "count": 1,
+              "fromCategory": "tool",
+              "fromGroupIds": [
+                "equipment.group.tool.gaming-set"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/spy.json",
+      "blobSha": "5d8de9b6fd98f078ad111ee4be24410855822814",
+      "record": {
+        "id": "background.spy",
+        "name": "Spy",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have experience gathering, evaluating, concealing, or communicating information through covert work. You may have served an organization, government, individual, or your own interests. This Background does not require criminal activity, current agency employment, a particular allegiance, or a fixed cover identity.",
+        "benefits": [
+          {
+            "id": "spy-field-skills",
+            "name": "Intelligence Skills",
+            "description": "Choose two different Skills from Deception, Stealth, Investigation, Insight, Perception, and Persuasion, reflecting the methods used in your intelligence work.",
+            "grantType": "skill-training",
+            "chooseFrom": [
+              "skill.deception",
+              "skill.stealth",
+              "skill.investigation",
+              "skill.insight",
+              "skill.perception",
+              "skill.persuasion"
+            ],
+            "choiceCount": 2,
+            "distinctChoices": true
+          },
+          {
+            "id": "spy-tradecraft-competency",
+            "name": "Tradecraft Training Choice",
+            "description": "Choose one training choice reflecting your intelligence work: Disguise, Forgery, or Calligraphy Competency training, or the separate Thieves' Tools equipment qualification. This grant does not include ownership of the relevant equipment.",
+            "grantType": "benefit-choice",
+            "choiceCount": 1,
+            "options": [
+              {
+                "id": "disguise",
+                "name": "Disguise Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.disguise",
+                    "competencyTraining": {
+                      "ranks": 1,
+                      "proficient": false
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "forgery",
+                "name": "Forgery Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.forgery",
+                    "competencyTraining": {
+                      "ranks": 1,
+                      "proficient": false
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thieves-tools",
+                "name": "Thieves' Tools Proficiency",
+                "benefits": [
+                  {
+                    "grantType": "qualification-training",
+                    "qualificationCategory": "tool",
+                    "equipmentTypeId": "equipment.tool.thieves-tools"
+                  }
+                ],
+                "equipmentProficiencyGrants": {
+                  "fixed": [
+                    {
+                      "id": "spy-tradecraft-thieves-tools",
+                      "targetId": "equipment.tool.thieves-tools"
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "calligraphy",
+                "name": "Calligraphy Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.calligraphy",
+                    "competencyTraining": {
+                      "ranks": 1,
+                      "proficient": false
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "spy-operational-language",
+            "name": "Operational Language",
+            "description": "Learn one language of your choice that you used in intelligence work, with informants or contacts, or in operational communication. Common is valid where appropriate.",
+            "extraLanguages": 1,
+            "choiceConstraint": "used-in-intelligence-work-sources-contacts-or-communications"
+          },
+          {
+            "id": "spy-intelligence-sources",
+            "name": "Intelligence Sources",
+            "grantType": "background-feature",
+            "description": "You maintain at least one established source or intermediary connected to your past intelligence work. You know a discreet way to communicate with that contact and ask for leads about people, places, or events within their sphere of knowledge. They may share information they possess or identify another possible source, depending on their circumstances and willingness. This feature does not guarantee secrets, immediate replies, safe houses, cooperation, or access to intelligence organizations."
+          }
+        ],
+        "startingEquipment": {
+          "description": "Plain or work-appropriate clothing, a small notebook or set of notes from an earlier assignment, ink, a writing instrument, and a pouch containing 10 gp. These are ordinary inventory possessions. The notes are not guaranteed to contain useful secrets or grant a false identity.",
+          "items": [
+            {
+              "name": "Plain or work-appropriate clothing",
+              "quantity": 1
+            },
+            {
+              "name": "Small notebook or assignment notes",
+              "quantity": 1
+            },
+            {
+              "name": "Ink",
+              "quantity": 1
+            },
+            {
+              "name": "Writing instrument",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 10
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "An intelligence operative may be employed, retired, disavowed, freelance, or working for personal reasons. Espionage is not automatically a criminal activity, and the character need not maintain a cover persona.",
+          "prompts": [
+            "What kind of information did you seek or protect?",
+            "How did you establish trust with a source or intermediary?",
+            "Which past relationship remains available, and what limits its assistance?",
+            "What did you learn about the costs or risks of secrecy?"
+          ]
+        },
+        "reviewNotes": [
+          "Spy is an independent native Background, not a variant or inheriting subtype of Criminal.",
+          "Two distinct Skills are chosen from Deception, Stealth, Investigation, Insight, Perception, and Persuasion. The general native choice executor must eventually honor choiceCount 2 for this grant.",
+          "Choose exactly one tradecraft outcome: native Disguise, Forgery, or Calligraphy Competency training, or Thieves' Tools equipment proficiency. The Thieves' Tools grant is authored only under its selected option; origin choice authorization is needed before emitting that option as an executable source. Calligraphy does not automatically grant codebreaking.",
+          "Learn one language relevant to prior intelligence activity. It need not be foreign or secret and may be Common where justified.",
+          "Intelligence Sources is a bounded information-contact feature. It does not provide Criminal Contact's guaranteed channel into an underworld network, nor Sage's Researcher knowledge-source identification.",
+          "No automatic false identity or Charlatan feature, free disguises, cryptographic bypass, guaranteed infiltration, criminal allegiance, Origin feat, ability score increases, or class capabilities.",
+          "Starting equipment is ordinary inventory, with item identity and materialization deferred to later implementation.",
+          "Native consumer execution of multi-skill and competency choices, and general duplication and benefit balance review, are deferred.",
+          "The chosen Disguise, Forgery, or Calligraphy Competency grants one rank and no automatic proficiency. The Thieves' Tools alternative grants only its separate binary equipment qualification."
+        ]
+      }
+    }
+  ]
+}

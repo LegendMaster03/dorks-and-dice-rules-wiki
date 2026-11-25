@@ -1,0 +1,384 @@
+{
+  "coreCommit": "0baa466b7fc8f55e5d675b886f76e95f9a4b551f",
+  "records": [
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/aristocratic.json",
+      "blobSha": "fcbb352d2fbe7871c65853f640e9d4eab778b671",
+      "record": {
+        "id": "upbringing.aristocratic",
+        "name": "Aristocratic Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "Your formative environment exposed you to the customs, education, and social expectations of aristocratic households or communities. This Upbringing may reflect being raised among nobles, household attendants, tutors, or others familiar with such customs. It is available to any Species and does not require noble birth, a title, personal wealth, a royal court, servants, or a particular later Background.",
+        "benefits": [
+          {
+            "id": "aristocratic-community-language",
+            "name": "Household or Community Language",
+            "description": "Learn one language used in the household or aristocratic social environment that shaped your upbringing. Common is an appropriate choice where it was spoken there. This learned language is separate from Species traits and any language gained through a later Background.",
+            "extraLanguages": 1,
+            "choiceConstraint": "spoken-in-formative-aristocratic-household-or-community"
+          },
+          {
+            "id": "aristocratic-formative-skill",
+            "name": "Aristocratic Skill",
+            "grantType": "skill-training",
+            "description": "Choose one Skill reflecting the education and experience of your formative aristocratic environment: History, Insight, Persuasion, Deception, or Performance.",
+            "chooseOne": [
+              "skill.history",
+              "skill.insight",
+              "skill.persuasion",
+              "skill.deception",
+              "skill.performance"
+            ],
+            "choiceCount": 1
+          },
+          {
+            "id": "aristocratic-formative-competency",
+            "name": "Aristocratic Competency",
+            "grantType": "benefit-choice",
+            "choiceCount": 1,
+            "description": "Choose exactly one training benefit: one particular type of gaming set, or the native Calligraphy, Painting, or Cooking Competency. These choices reflect practices learned in your formative community and do not include equipment ownership or several unrelated training benefits.",
+            "options": [
+              {
+                "id": "gaming-set",
+                "name": "Gaming Set Proficiency",
+                "benefits": [
+                  {
+                    "grantType": "qualification-training",
+                    "choiceCategory": "gaming-set",
+                    "choiceCount": 1,
+                    "description": "Choose proficiency with one particular type of gaming set; do not gain every gaming set type.",
+                    "qualificationCategory": "tool"
+                  }
+                ],
+                "equipmentProficiencyGrants": {
+                  "choices": [
+                    {
+                      "id": "aristocratic-gaming-set",
+                      "count": 1,
+                      "fromCategory": "tool",
+                      "fromGroupIds": [
+                        "equipment.group.tool.gaming-set"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "calligraphy",
+                "name": "Calligraphy Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.calligraphy",
+                    "description": "Gain training in the native Calligraphy Competency, associated with Calligrapher's Supplies. The equipment association grants neither ownership nor a second equipment proficiency.",
+                    "competencyTraining": {
+                      "ranks": 0,
+                      "proficient": true
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "painting",
+                "name": "Painting Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.painting",
+                    "description": "Gain training in the native Painting Competency, associated with Painter's Supplies. The equipment association grants neither ownership nor a second equipment proficiency.",
+                    "competencyTraining": {
+                      "ranks": 0,
+                      "proficient": true
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "cooking",
+                "name": "Cooking Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.cooking",
+                    "description": "Gain training in the native Cooking Competency, associated with Cook's Utensils. The equipment association grants neither ownership nor a second equipment proficiency.",
+                    "competencyTraining": {
+                      "ranks": 0,
+                      "proficient": true
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "aristocratic-protocol",
+            "name": "Aristocratic Protocol",
+            "grantType": "upbringing-feature",
+            "description": "When dealing with aristocratic communities whose customs you know, you understand their ordinary titles, ranks, forms of address, etiquette, and customary ways to seek introductions or an audience. You can recall that familiar ordinary protocol without a check required solely to remember it. Customs that are unfamiliar, deliberately concealed, unusual, or uncertain may require inquiry or ordinary adjudication by the GM. Knowing the appropriate protocol does not guarantee admission, an audience, favorable treatment, a title, authority, wealth, property, influence over others, or recognition as a noble."
+          }
+        ],
+        "reviewNotes": [
+          "Approved independent Aristocratic Upbringing, representing formative exposure to aristocratic household and community practices; a character does not need noble parents, personal status, wealth, or the Noble Background.",
+          "One learned language used in the formative household or social setting; Common is eligible when used there, but not automatically required or inherited from Species.",
+          "Provisional initial balance baseline approved by owner after corpus review: choose exactly one Skill from History, Insight, Persuasion, Deception, or Performance, plus one training benefit from a specific Gaming Set equipment proficiency or Calligraphy, Painting, or Cooking Competency. Counts may be revisited in a broader balance pass.",
+          "The mixed proficiency choice uses one outer benefit-choice with four alternatives. Choosing a gaming set triggers one nested gaming-set category selection; choosing Calligraphy, Painting, or Cooking grants only that existing Competency.",
+          "Calligraphy, Painting, and Cooking are native Competencies with independently represented ranks and proficiency; the Gaming Set alternative is a distinct, binary equipment proficiency. Associated tools do not create extra training grants. Review the alternative outcomes together for balance.",
+          "Aristocratic Protocol grants reliable knowledge of ordinary protocol in aristocratic settings familiar to the character without an ordinary check solely to recall it. Unknown, secret, or foreign customs remain subject to normal adjudication.",
+          "Aristocratic Protocol does not grant social admission, authority, noble status, an audience, property, wealth, or the Noble Background's Position of Privilege.",
+          "No Upbringing startingEquipment package, fixed ability increases, Origin feat, household servants, instrument or kit items, or additional Background grants are provided.",
+          "Aristocratic Upbringing and Noble Background may be selected together without implying one from the other. Overlapping Skills, languages, or Gaming Set training await the single corpus-wide duplicate-grant policy.",
+          "Native mixed-benefit choice execution, Skill/Competency and language projection, parent/default selection, and cross-Species combinations remain deferred to common implementation.",
+          "The chosen Calligraphy, Painting, or Cooking Competency grants proficiency and no ranks. The Gaming Set alternative grants only its selected equipment qualification."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/dwarf/general.json",
+      "blobSha": "1145b3d7104a0c18795e3346fba027b671d835bc",
+      "record": {
+        "id": "upbringing.dwarf.general",
+        "name": "General Dwarf Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "benefits": [
+          {
+            "id": "dwarvish",
+            "description": "Learn Dwarvish.",
+            "language": "dwarvish"
+          },
+          {
+            "id": "stonecunning",
+            "description": "On qualifying Intelligence (History) checks concerning stonework and its origins, count as proficient for that check and apply twice your Proficiency Bonus instead of any ordinary proficiency contribution, even if you lack History proficiency. This does not grant general History proficiency or a Competency rank.",
+            "skill": "skill.history",
+            "ability": "intelligence",
+            "proficiencyBonusMultiplier": 2,
+            "scope": "stonework-history",
+            "proficiencyBonusApplication": "replace-normal-proficiency-contribution",
+            "appliesWithoutSkillProficiency": true,
+            "consideredProficientOnQualifyingCheck": true
+          },
+          {
+            "id": "crafting-tradition",
+            "description": "Choose one native crafting Competency and gain proficiency in it.",
+            "chooseOne": [
+              "competency.smithing",
+              "competency.brewing",
+              "competency.stonemasonry"
+            ],
+            "grantType": "competency-training",
+            "choiceCount": 1,
+            "competencyTraining": {
+              "ranks": 0,
+              "proficient": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/elf/drow.json",
+      "blobSha": "020f85acdffab12735aa2731ced8990d96fb670c",
+      "record": {
+        "id": "upbringing.elf.drow",
+        "name": "Drow Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "benefits": [
+          {
+            "id": "undercommon",
+            "description": "Learn Undercommon.",
+            "language": "undercommon"
+          },
+          {
+            "id": "subterranean-survival",
+            "description": "Gain +2 to Survival checks for underground navigation, tracking, foraging and identifying subterranean hazards. The activity must qualify, not merely the location.",
+            "skill": "skill.survival",
+            "bonus": 2,
+            "scope": [
+              "underground-navigation",
+              "underground-tracking",
+              "underground-foraging",
+              "subterranean-hazards"
+            ],
+            "stacksWithTraining": true
+          }
+        ],
+        "parent": "upbringing.elf.general"
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/elf/general.json",
+      "blobSha": "262779f03d74138a859deb468b879a67d779d3a8",
+      "record": {
+        "id": "upbringing.elf.general",
+        "name": "General Elf Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": false,
+        "benefits": [
+          {
+            "id": "elvish",
+            "description": "Learn Elvish.",
+            "language": "elvish"
+          },
+          {
+            "id": "cultural-training",
+            "description": "Choose one skill training.",
+            "chooseOne": [
+              "skill.insight",
+              "skill.perception",
+              "skill.survival"
+            ],
+            "grantType": "skill-training",
+            "choiceCount": 1
+          }
+        ],
+        "reviewNotes": [
+          "Inheritance-only cultural foundation. High Elf, Wood Elf and Drow Upbringings inherit Elvish and this one Skill choice once; General Elf is not an independent Upbringing selection."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/elf/high.json",
+      "blobSha": "6998872a22f59461368ff923b0e8636f5ad3da4f",
+      "record": {
+        "id": "upbringing.elf.high",
+        "name": "High Elf Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "benefits": [
+          {
+            "id": "traditional-weapons",
+            "description": "Gain proficiency with longsword, shortsword, shortbow and longbow.",
+            "grantType": "qualification-training",
+            "qualificationCategory": "weapon"
+          },
+          {
+            "id": "additional-language",
+            "description": "Learn one additional language of choice without replacing Elvish learned through the General Elf Upbringing.",
+            "extraLanguages": 1
+          }
+        ],
+        "parent": "upbringing.elf.general",
+        "equipmentProficiencyGrants": {
+          "fixed": [
+            {
+              "id": "traditional-weapons-longsword",
+              "targetId": "equipment.weapon.longsword"
+            },
+            {
+              "id": "traditional-weapons-shortsword",
+              "targetId": "equipment.weapon.shortsword"
+            },
+            {
+              "id": "traditional-weapons-shortbow",
+              "targetId": "equipment.weapon.shortbow"
+            },
+            {
+              "id": "traditional-weapons-longbow",
+              "targetId": "equipment.weapon.longbow"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/elf/wood.json",
+      "blobSha": "89583e57d0038307ee468befd795ce288ba1f6e4",
+      "record": {
+        "id": "upbringing.elf.wood",
+        "name": "Wood Elf Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "benefits": [
+          {
+            "id": "woodland-archery",
+            "description": "Gain proficiency with shortbow and longbow.",
+            "grantType": "qualification-training",
+            "qualificationCategory": "weapon"
+          },
+          {
+            "id": "woodland-fieldcraft",
+            "description": "Gain +2 to Survival checks for forest navigation, tracking, foraging and identifying natural woodland hazards. The activity must qualify, not merely the location.",
+            "skill": "skill.survival",
+            "bonus": 2,
+            "scope": [
+              "forest-navigation",
+              "forest-tracking",
+              "forest-foraging",
+              "natural-woodland-hazards"
+            ],
+            "stacksWithTraining": true
+          }
+        ],
+        "parent": "upbringing.elf.general",
+        "equipmentProficiencyGrants": {
+          "fixed": [
+            {
+              "id": "woodland-archery-shortbow",
+              "targetId": "equipment.weapon.shortbow"
+            },
+            {
+              "id": "woodland-archery-longbow",
+              "targetId": "equipment.weapon.longbow"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/giant-foundling.json",
+      "blobSha": "b5f3ade0f8f90525524bec1dcdcb369302a985d2",
+      "record": {
+        "id": "upbringing.giant-foundling",
+        "name": "Giant Foundling Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You spent your formative years living among or being raised by giants. This upbringing is available to any Species, including Goliaths, without changing inherited Species or Ancestry powers.",
+        "benefits": [
+          {
+            "id": "giant-language",
+            "name": "Giant Language",
+            "description": "Learn Giant from the people who raised you.",
+            "language": "giant"
+          },
+          {
+            "id": "foundling-additional-language",
+            "name": "Additional Language",
+            "description": "Learn one additional language of your choice, representing the wider community or circumstances of your childhood.",
+            "extraLanguages": 1
+          },
+          {
+            "id": "foundling-intimidation",
+            "name": "Intimidation Training",
+            "description": "Gain training in Intimidation from navigating relationships and social expectations among giants.",
+            "skill": "skill.intimidation",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "foundling-survival",
+            "name": "Survival Training",
+            "description": "Gain training in Survival from growing up in environments and surroundings shaped by giants.",
+            "skill": "skill.survival",
+            "grantType": "skill-training"
+          }
+        ],
+        "reviewNotes": [
+          "Adapted from the non-SRD Giant Foundling Background. The native Upbringing retains learned Skills and languages; no bonus feat is awarded.",
+          "Strike of the Giants is non-SRD and excluded from first-wave Feat content. This Upbringing does not grant it or any other feat, combat-use pool, or inherited giant power.",
+          "For a Goliath this replaces, rather than combines with, the suggested General Goliath Upbringing. Gol-Kaa is therefore not automatic when Giant Foundling is selected.",
+          "No non-Goliath gains Goliath Giant Ancestry or Large Form from this Upbringing. Being raised among giants does not force an actual size increase.",
+          "Original source background equipment and personal-origin table are retained as research, not independent ancestry or additional starting-inventory grants.",
+          "This record is independent of all six Goliath ancestry types and has no parent Upbringing. Specific giant communities can shape a character's narrative without six separate Upbringing records."
+        ]
+      }
+    }
+  ]
+}
