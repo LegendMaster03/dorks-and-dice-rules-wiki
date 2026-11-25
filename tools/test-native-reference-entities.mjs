@@ -5,13 +5,16 @@ import path from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
 import { JSDOM } from "jsdom";
 import { createRulesContext } from "../src/RulesWiki.Web/wwwroot/rules-context.js";
-import { createPresentationInput, createRulesetReader } from "../src/RulesWiki.Web/wwwroot/native-presentation.js";
+import { createNativeRendererRegistry, createPresentationInput, createRulesetReader } from "../src/RulesWiki.Web/wwwroot/native-presentation.js";
+import { registerNativeRenderers } from "../src/RulesWiki.Web/wwwroot/native-renderers-reference.js";
 import { createWikiNativeRendererRegistry, renderNativeDetail } from "../src/RulesWiki.Web/wwwroot/native-rule-detail.js";
 
 const dom = new JSDOM("<main></main>", { url: "https://wiki.example.test/tools/rules-wiki/" });
 for (const key of ["window", "document", "Node", "Element", "HTMLElement", "Event"]) globalThis[key] = dom.window[key];
 const main = document.querySelector("main");
 const registry = createWikiNativeRendererRegistry();
+const referenceRegistry = createNativeRendererRegistry();
+registerNativeRenderers(referenceRegistry);
 const records = new Map();
 const identity = (system, id) => JSON.stringify([system, id]);
 for (const directory of ["multi-system", "native-entities"]) {
@@ -192,7 +195,11 @@ assert.ok(scopedLink(competencyCategory, first, "competency.smithing"));
 const feat = show(modern, "feat.ability-score-improvement", "reference.feat");
 assert.equal(summary(feat, "Repeatable"), "Yes");
 assert.match(feat.textContent, /Prerequisites/);
-show(modern, "optional-feature.agonizing-blast", "reference.text");
+// Workstream D owns class-specific options when its adapter is integrated.
+const invocation = makeInput(modern, fixture(modern, "optional-feature.agonizing-blast")).input;
+assert.equal(referenceRegistry.select(invocation).id, "reference.text");
+const classIntegrated = fs.existsSync(new URL("../src/RulesWiki.Web/wwwroot/native-class-presentation-model.js", import.meta.url));
+show(modern, "optional-feature.agonizing-blast", classIntegrated ? "class.imported-option" : "reference.text");
 show(modern, "trap.collapsing-roof", "reference.text");
 show(modern, "glossary.ability-check", "reference.text");
 show(old, "language.abyssal", "reference.text");

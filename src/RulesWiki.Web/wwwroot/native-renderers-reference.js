@@ -127,7 +127,7 @@ function sourceDisclosure(input, title, value) {
 }
 function publisherText(title, value, expanded = false) {
     return element("details", { className: "rules-core-structured-section", attributes: expanded ? { open: "" } : {} },
-        element("summary", { text: title }), element("pre", { className: "text-wrap", text: value }));
+        element("summary", { text: title }), element("pre", { className: "overflow-auto", text: value }));
 }
 // Native sections are explicit projections for reading, not replacement
 // records. Unconsumed fields remain visible, including unknown nested shapes.
