@@ -327,7 +327,7 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
                     const metadata = Object.fromEntries(Object.entries(other).filter(([key]) => metadataKeys.has(key)));
                     if (Object.keys(mechanics).length) {
                         if (reference) content.append(node("details", { className: "native-class-technical-details" },
-                            node("summary", { text: "Additional source and feature data" }), renderValue(mechanics));
+                            node("summary", { text: "Additional source and feature data" }), renderValue(mechanics)));
                         else content.append(renderValue(mechanics));
                     }
                     if (Object.keys(metadata).length) content.append(node("details", { className: "native-class-technical-details" },
