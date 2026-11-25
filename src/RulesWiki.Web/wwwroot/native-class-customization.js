@@ -222,6 +222,13 @@ function appendRuleLink(container, id, { node, hrefForRule }) {
     container.append(node("a", { className: "native-class-rule-link", text: "View full reference", attributes: { href: hrefForRule(id) } }));
 }
 
+// A hosted class may be detached while its private read is in flight. Preserve
+// direct detached fixture behavior but never commit to a formerly mounted view.
+const mountedRead = element => {
+    const mounted = element.isConnected === true;
+    return () => !mounted || element.isConnected;
+};
+
 function renderOption(option, dependencies) {
     if (dependencies.compactOverview) {
         const { node, hrefForRule } = dependencies;
@@ -249,7 +256,9 @@ function renderOption(option, dependencies) {
             if (!disclosure.open || requested) return;
             requested = true;
             detail.replaceChildren(node("p", { text: "Loading native option…" }));
+            const current = mountedRead(disclosure);
             Promise.resolve().then(() => getRule(id)).then(result => {
+                if (!current()) return;
                 const loaded = unwrapRule(result, id);
                 const title = displayName.querySelector?.("strong");
                 if (title) title.textContent = loaded.name;
@@ -260,6 +269,7 @@ function renderOption(option, dependencies) {
                     renderClassOptionContent({ id, name: loaded.name, kind: loaded.kind,
                         definition: loaded.definition }, { ...dependencies, embedded: true }));
             }).catch(() => {
+                if (!current()) return;
                 requested = false;
                 detail.replaceChildren(node("p", { text:
                     "Option detail unavailable. Close and reopen to retry, or open the full native rule." }));
@@ -422,11 +432,14 @@ function renderSystem(system, dependencies) {
             if (!wrapper.open || requested) return;
             requested = true;
             body.replaceChildren(node("p", { text: "Loading related native options…" }));
+            const current = mountedRead(wrapper);
             Promise.resolve().then(() => dependencies.discoverOptions(system.category)).then(options => {
+                if (!current()) return;
                 show(system.name, options, system.properties);
                 if (!options.length) body.append(node("p", { className: "native-class-help",
                     text: "No independently authored options were found for this class." }));
             }).catch(() => {
+                if (!current()) return;
                 requested = false;
                 body.replaceChildren(node("p", { text:
                     "Related options could not be loaded. Close and reopen this section to retry." }));
@@ -440,7 +453,9 @@ function renderSystem(system, dependencies) {
             if (!wrapper.open || requested || typeof getRule !== "function") return;
             requested = true;
             body.replaceChildren(node("p", { text: "Loading native customization system…" }));
+            const current = mountedRead(wrapper);
             Promise.resolve().then(() => getRule(system.id)).then(result => {
+                if (!current()) return;
                 const loaded = unwrapRule(result, system.id);
                 const source = loaded.definition;
                 const fromSource = systemFromObject(loaded.name, source);
@@ -451,6 +466,7 @@ function renderSystem(system, dependencies) {
                 }
                 show(loaded.name, fromSource.options.length ? fromSource.options : system.options, properties);
             }).catch(() => {
+                if (!current()) return;
                 requested = false;
                 body.replaceChildren(node("p", { text:
                     "System details unavailable. Close and reopen to retry, or open the full native rule." }));
@@ -483,12 +499,15 @@ function renderPreset(preset, dependencies) {
             if (!disclosure.open || requested || !getRule) return;
             requested = true;
             content.replaceChildren(node("p", { text: "Loading native preset…" }));
+            const current = mountedRead(disclosure);
             Promise.resolve().then(() => getRule(preset.id)).then(result => {
+                if (!current()) return;
                 const loaded = unwrapRule(result, preset.id);
                 title.textContent = loaded.name;
                 content.replaceChildren(renderValue(loaded.definition));
                 appendRuleLink(content, preset.id, dependencies);
             }).catch(() => {
+                if (!current()) return;
                 requested = false;
                 content.replaceChildren(node("p", { text:
                     "Preset details unavailable. Close and reopen to retry, or open the full native rule." }));

@@ -555,3 +555,10 @@
     gap: .5rem;
     padding: .75rem;
 }
+
+/* Native imported class surfaces reuse the existing reading layout. */
+.native-class-reference .native-class-table caption { caption-side: top; text-align: start; font-weight: 600; }
+.native-class-reference .native-class-table-scroll + .native-class-table-scroll { margin-block-start: 1rem; }
+.native-class-reference .native-class-section > section { margin-block: 1rem; }
+.native-class-reference .native-class-trait dd { min-width: 0; overflow-wrap: anywhere; }
+.native-class-reference .native-class-section li > .native-class-rule-link { text-transform: none; }

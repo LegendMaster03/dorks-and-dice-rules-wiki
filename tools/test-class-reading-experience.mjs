@@ -271,3 +271,4 @@ for (const record of records.filter(record => ["patron", "pact", "invocation"].i
 }
 console.log("Hosted class reading: compact catalogs, Pact rules, shared direct routes, repeated grants, resource columns, real click propagation and Back history passed.");
 dom.window.close();
+await import("./test-multi-system-classes.mjs");
