@@ -1,0 +1,8 @@
+{
+  "id": "skill.perform-act",
+  "name": "Perform (Act)",
+  "kind": "skill",
+  "family": "skill.perform",
+  "independentlyRanked": true,
+  "defaultAbility": "charisma"
+}
