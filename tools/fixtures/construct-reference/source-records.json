@@ -322,6 +322,110 @@
       "operationalOriginTraitIds": [
         "trait.construct.ordinary-ground-movement"
       ]
+    },
+    "designs.json": [
+      {
+        "id": "construct-design.reinforced-frame",
+        "kind": "construct-design",
+        "name": "Reinforced frame",
+        "rulesStatus": "candidate design; recipe and functional effects provisional",
+        "description": "Strengthens an assembly's structural implementation without assuming its material, dimensions, or limb count.",
+        "compatibleComponentCapabilities": [
+          "structural-support",
+          "articulation"
+        ],
+        "provides": [
+          "reinforced-structure"
+        ],
+        "craftingRecipeId": "crafting-recipe.construct-design.reinforced-frame",
+        "powerDemand": 0
+      },
+      {
+        "id": "construct-design.wheeled-drive",
+        "kind": "construct-design",
+        "name": "Wheeled drive arrangement",
+        "rulesStatus": "provisional starting-playtest option; recipe and power are candidates; gameplay effects need integration",
+        "description": "Mounts rotating wheels for suitable ground movement; wheel count, traction, clearance, and walking speed remain governed by actual component and movement rules.",
+        "compatibleComponentCapabilities": [
+          "locomotion-interface"
+        ],
+        "provides": [
+          "wheeled-drive-arrangement"
+        ],
+        "craftingRecipeId": "crafting-recipe.construct-design.wheeled-drive",
+        "powerDemand": 0
+      }
+    ],
+    "enhancements.json": [
+      {
+        "id": "construct-enhancement.reinforced-mount",
+        "kind": "construct-enhancement",
+        "name": "Reinforced mounting",
+        "rulesStatus": "candidate enhancement; recipe and mechanical effects provisional",
+        "description": "Strengthens a compatible mounting interface; does not itself grant a new attack.",
+        "compatibleComponentCapabilities": [
+          "equipment-mount",
+          "structural-support"
+        ],
+        "provides": [
+          "reinforced-mount"
+        ],
+        "craftingRecipeId": "crafting-recipe.construct-enhancement.reinforced-mount",
+        "powerDemand": 0
+      }
+    ],
+    "components/power/power-source-housing.json": {
+      "name": "Power-source housing",
+      "rulesStatus": "candidate physical design; recipe quantities and operating values provisional",
+      "description": "A configurable housing for a selected power-source mechanism. Housing and source are separate installed definitions.",
+      "provides": [
+        "power-housing",
+        "power-distribution"
+      ],
+      "powerSourceSlot": true,
+      "powerDemand": 0,
+      "materialSlots": [
+        "housing"
+      ],
+      "craftingRecipeId": "crafting-recipe.construct-component.power-source-housing"
     }
+  },
+  "constructMethod": {
+    "id": "construct-assembly",
+    "name": "Construct assembly",
+    "description": "Construct Assembly evaluates installed physical components and their ordinary crafting recipes. The starting allowance purchases authorized ingredients, not finished component prices. Magical Animation and other supernatural origination processes remain distinct.",
+    "initialConstructionCostModel": "recipe-inputs",
+    "costPolicyStatus": "provisional 200-point starting playtest allowance; ingredient valuations and advanced content remain unbalanced",
+    "constructIntrinsics": {
+      "creatureType": "construct"
+    },
+    "startingResourceUnitCosts": {
+      "construct-material.steel": 4,
+      "construct-material.darkwood": 7,
+      "construct-material.stone": 2,
+      "construct-material.crystal": 6,
+      "construct-material.alchemical-fiber": 5,
+      "construct-material.wood": 2,
+      "construct-material.cloth": 1,
+      "construct-material.iron": 3,
+      "crafting-material.alchemical-reagent": 5,
+      "crafting-material.fine-mechanisms": 6,
+      "crafting-material.optical-elements": 5,
+      "crafting-material.arcane-catalyst": 12,
+      "crafting-material.sealing-compound": 5,
+      "crafting-material.soul-essence": 20,
+      "crafting-material.infernal-reagent": 18,
+      "construct-material.clay": 2,
+      "construct-material.terracotta": 3,
+      "construct-material.ceramic": 4,
+      "construct-material.glass": 4,
+      "construct-material.bone": 3,
+      "construct-material.preserved-tissue": 3,
+      "construct-material.amber": 5,
+      "construct-material.wax": 2,
+      "construct-material.paper": 1,
+      "construct-material.wicker": 2
+    },
+    "initialConstructionAllowance": 200
   }
 }

@@ -6,7 +6,7 @@ const dom = new JSDOM("<!doctype html><body></body>", { url: "https://example.in
 globalThis.document = dom.window.document;
 globalThis.Node = dom.window.Node;
 const { loadConstructIndex, renderConstructReference, supportsConstructReference,
-    renderConstructNavigation, registerConstructRenderers, CONSTRUCT_TABS } =
+    renderConstructNavigation, registerConstructRenderers, renderConstructIndex, renderConstructIngredientLink, CONSTRUCT_TABS } =
     await import("../src/RulesWiki.Web/wwwroot/native-construct-reference.js");
 const { createRulesContext, ruleRoute, createRenderLifecycle } =
     await import("../src/RulesWiki.Web/wwwroot/rules-context.js");
@@ -24,13 +24,32 @@ assert.ok(component, "Actual captured locomotion configuration");
 let calls = [];
 const reader = { context, originReferenceContractVersion: 1,
     async originHierarchy(family) { calls.push(family); const value = envelopes.find(e => e.family === family); assert.ok(value); return value; },
-    async originComponent(id) { calls.push(id); assert.equal(id, component.componentId); return component; },
+    async originComponent(id) {
+        calls.push(id);
+        if (id === component.componentId) return component;
+        // Synthetic discovery envelopes with real native definitions. Not Core capture.
+        const row = envelopes.find(e => e.family === "construct-components").rows.find(r => r.id === id);
+        const sourceName = Object.keys(source.records).find(path => path.endsWith("/" + id.split(".").at(-1) + ".json"));
+        assert.ok(row && sourceName);
+        const definition = { ...source.records[sourceName], id, kind: row.kind, componentCategory: row.componentCategory };
+        return { rulesetId: context.rulesetId, fingerprint: context.fingerprint, contractVersion: 1,
+            componentId: id, componentCategory: row.componentCategory, definition,
+            configuration: { definitionId: id, designs: [], enhancements: [], powerSources: [], issues: [] },
+            recipes: [], materialAssignmentOptions: [], materialCompatibilityAvailable: false };
+    },
+    async search(filters) {
+        calls.push(filters);
+        // Synthetic ordinary search envelope over exact source ingredient records.
+        const rows = source.records["crafting-ingredients.json"];
+        return { ...context, offset: filters.offset, limit: filters.limit, total: rows.length,
+            rules: rows.slice(filters.offset, filters.offset + filters.limit) };
+    },
     async originComponentSources(id) {
         calls.push(id);
         // Actual capture when present; otherwise a deliberately synthetic empty
         // reverse response to exercise authored detail independent of discovery.
         return envelopes.find(e => e.targetId === id) ??
-            { rulesetId: context.rulesetId, fingerprint: context.fingerprint, targetId: id, complete: true, sources: [], recipes: [], output: null };
+            { rulesetId: context.rulesetId, fingerprint: context.fingerprint, targetId: id, contractVersion: 1, complete: true, sources: [], recipes: [], output: null };
     }
 };
 function input(record, kind = record.kind, id = record.id, refs = reader) {
@@ -86,6 +105,41 @@ for (const recipe of source.records["crafting-recipes.json"]) {
         assert.ok(hasLink(article, "crafting-material.activated-medium"));
     }
 }
+for (const file of ["designs.json", "enhancements.json"]) {
+    for (const option of source.records[file]) {
+        const article = await renderConstructReference(input(option));
+        assert.ok(article.textContent.includes(option.rulesStatus));
+        assert.ok(hasLink(article, option.craftingRecipeId));
+    }
+}
+for (const id of ["construct-component.structural-frame", "construct-component.armblade-mount", "construct-component.power-source-housing"]) {
+    const row = envelopes.find(e => e.family === "construct-components").rows.find(r => r.id === id);
+    const path = Object.keys(source.records).find(p => p.endsWith("/" + id.split(".").at(-1) + ".json"));
+    const record = { ...source.records[path], id, kind: row.kind, componentCategory: row.componentCategory };
+    const article = await renderConstructReference(input(record));
+    assert.ok(article.textContent.includes(record.rulesStatus));
+    assert.ok(hasLink(article, record.craftingRecipeId));
+    if (id.endsWith("structural-frame")) assert.ok(hasLink(article, "crafting-recipe.construct-component.structural-frame.medium"));
+    if (id.endsWith("armblade-mount")) assert.match(article.textContent, /No weapon damage is granted/);
+}
+const ingredientPage = await loadConstructIndex(reader, "crafting-material", null, { offset: 2, limit: 3 });
+assert.equal(ingredientPage.rows.length, 3);
+assert.equal(ingredientPage.complete, false);
+assert.deepEqual(calls.at(-1), { category: "crafting-material", offset: 2, limit: 3 });
+const grouped = await loadConstructIndex(reader, "construct-component");
+const indexNode = renderConstructIndex(locomotionInput, grouped, component.componentId);
+assert.equal(indexNode.querySelectorAll("a").length, grouped.rows.length);
+assert.equal(indexNode.querySelector("[aria-current=page]").getAttribute("href"), "/wiki" + ruleRoute(context.rulesetId, component.componentId));
+assert.equal(renderConstructIngredientLink(reader, "/wiki").getAttribute("href"), "/wiki/rulesets/first-party-001/types/crafting-material");
+const mismatchedReader = { ...reader, context: { ...context, fingerprint: "other" } };
+assert.equal(supportsConstructReference({ ...locomotionInput, references: mismatchedReader }), false);
+const wrongTarget = { ...reader, async originComponent() { return { ...component, componentId: "construct-component.structural-frame" }; } };
+await assert.rejects(renderConstructReference({ ...locomotionInput, references: wrongTarget }), /identity mismatch/);
+const malformedFamily = { ...reader, async originHierarchy(family) {
+    const result = envelopes.find(e => e.family === family);
+    return { ...result, rows: result.rows.map(row => ({ ...row, componentCategory: null })) };
+}};
+await assert.rejects(loadConstructIndex(malformedFamily, "construct-component"), /category is unavailable/);
 const ingredient = source.records["crafting-ingredients.json"][0];
 const ingredientArticle = await renderConstructReference(input(ingredient));
 assert.match(ingredientArticle.textContent, /does not yet provide reverse recipe-input/);
@@ -99,6 +153,11 @@ const lifecycle = createRenderLifecycle();
 const lease = lifecycle.begin(context, component.componentId);
 const staleReader = { ...reader, async originComponent() { lifecycle.cancel(); return component; } };
 assert.equal(await renderConstructReference({ ...locomotionInput, references: staleReader, lifecycle: lease }), null);
+const denied = { ...reader, async originComponent() { throw new Error("denied"); } };
+await assert.rejects(renderConstructReference({ ...locomotionInput, references: denied }), /denied/);
+const staleErrorLease = lifecycle.begin(context, component.componentId);
+const staleError = { ...reader, async originComponent() { lifecycle.cancel(); throw new Error("denied"); } };
+assert.equal(await renderConstructReference({ ...locomotionInput, references: staleError, lifecycle: staleErrorLease }), null);
 const staleIndexLease = lifecycle.begin(context, component.componentId);
 const staleIndexReader = { ...reader, async originHierarchy(family) {
     lifecycle.cancel(); return envelopes.find(e => e.family === family);

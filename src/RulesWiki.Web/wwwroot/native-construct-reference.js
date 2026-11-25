@@ -20,6 +20,8 @@ const object = value => value !== null && typeof value === "object" && !Array.is
 const available = reader => reader?.context?.rulesetId === DEFAULT_RULESET_ID &&
     reader.originReferenceContractVersion === 1 && reader.context.campaignId == null;
 const current = lease => !lease || lease.isCurrent();
+const sameContext = (a, b) => ["rulesetId", "fingerprint", "campaignId", "campaignRevisionId"]
+    .every(key => (a?.[key] ?? null) === (b?.[key] ?? null));
 const requireReader = reader => {
     if (!available(reader)) throw new Error("Construct Assembly reference contract is unavailable.");
 };
@@ -29,14 +31,31 @@ const compare = (a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.i
  * Missing categories are a contract error, not inferred from a path or label.
  * The owning surface must use its existing lease and qualified routing.
  */
-export async function loadConstructIndex(reader, kind, lease) {
+export async function loadConstructIndex(reader, kind, lease, { offset = 0, limit = 50 } = {}) {
     requireReader(reader);
-    if (!CONSTRUCT_TABS.some(tab => tab.kind === kind)) throw new Error("Invalid Construct Assembly tab.");
+    if (!kinds.has(kind)) throw new Error("Invalid Construct Assembly tab.");
+    if (kind === "crafting-material" && (!Number.isInteger(offset) || offset < 0 ||
+        !Number.isInteger(limit) || limit < 1 || limit > 100)) throw new Error("Invalid ingredient page.");
     if (!current(lease)) return null;
     try {
+        // Ingredients are not part of A's complete families. Use the ordinary
+        // authorized category search, preserving its page boundary.
+        if (kind === "crafting-material") {
+            const page = await reader.search({ category: kind, offset, limit });
+            if (!current(lease)) return null;
+            assertSnapshot(reader.context, page);
+            if (page.offset !== offset || page.limit !== limit || !Number.isInteger(page.total) ||
+                page.total < 0 || !Array.isArray(page.rules) ||
+                page.rules.length !== Math.min(limit, Math.max(0, page.total - offset)) ||
+                !page.rules.every(row => row.kind === kind && validId(row.id) && typeof row.name === "string"))
+                throw new Error("Invalid ingredient reference page.");
+            return { kind, rows: page.rules, groups: [{ category: kind, rows: page.rules }],
+                offset, limit, total: page.total, complete: offset === 0 && page.rules.length === page.total };
+        }
         const family = kind === "construct-component" ? "construct-components" : "construct-options";
-        const response = assertSnapshot(reader.context, await reader.originHierarchy(family));
+        const response = await reader.originHierarchy(family);
         if (!current(lease)) return null;
+        assertSnapshot(reader.context, response);
         if (response.complete !== true || response.family !== family || !Array.isArray(response.rows))
             throw new Error("Incomplete Construct Assembly family.");
         const rows = response.rows.filter(row => row.kind === kind).sort(compare);
@@ -48,7 +67,7 @@ export async function loadConstructIndex(reader, kind, lease) {
             if (!groups.has(category)) groups.set(category, []);
             groups.get(category).push(row);
         }
-        return { kind, rows, groups: [...groups].sort(([a], [b]) => a.localeCompare(b))
+        return { kind, rows, offset: 0, total: rows.length, complete: true, groups: [...groups].sort(([a], [b]) => a.localeCompare(b))
             .map(([category, rows]) => ({ category, rows })) };
     } catch (error) {
         if (!current(lease)) return null;
@@ -69,14 +88,61 @@ export function renderConstructNavigation(reader, selectedKind, toolBasePath = "
     for (const tab of CONSTRUCT_TABS) {
         const link = node("a", tab.label, "btn btn-sm btn-outline-secondary");
         link.href = toolBasePath.replace(/\/$/, "") + categoryRoute(reader.context.rulesetId, tab.kind);
-        if (tab.kind === selectedKind) link.setAttribute("aria-current", "page");
+        if (tab.kind === selectedKind || (selectedKind === "crafting-material" && tab.kind === "construct-material"))
+            link.setAttribute("aria-current", "page");
         nav.append(link);
     }
     return nav;
 }
 
+/** Secondary link within Materials, not a seventh primary tab. B may render
+ * this link in its existing Materials view and preserve its own back state. */
+export function renderConstructIngredientLink(reader, toolBasePath = "") {
+    requireReader(reader);
+    const link = node("a", "Crafting ingredients");
+    link.href = toolBasePath.replace(/\/$/, "") + categoryRoute(reader.context.rulesetId, "crafting-material");
+    return link;
+}
+
+/** Detached grouped index; B may instead use the returned data in its own
+ * resizable workspace. Selection is always an exact qualified rule route. */
+export function renderConstructIndex(input, index, selectedId = null) {
+    if (!index || !available(input.references) || !sameContext(input.context, input.references.context))
+        throw new Error("Construct index context is unavailable.");
+    const root = node("div", undefined, "native-construct-index");
+    if (index.kind === "construct-material" || index.kind === "crafting-material") {
+        const link = node("a", index.kind === "construct-material" ? "Crafting ingredients" : "Construct materials");
+        const target = index.kind === "construct-material" ? "crafting-material" : "construct-material";
+        // Derive the hosted base from the existing qualified route, never from source data.
+        const sample = input.hrefForRule("rule.creature-origination");
+        const suffix = "/rulesets/" + input.context.rulesetId + "/rules/rule.creature-origination";
+        if (typeof sample === "string" && sample.startsWith("/") && !sample.startsWith("//") && sample.endsWith(suffix)) {
+            link.href = sample.slice(0, -suffix.length) + categoryRoute(input.context.rulesetId, target);
+            root.append(link);
+        }
+    }
+    if (!index.rows.length) root.append(node("p", "No records found."));
+    for (const group of index.groups) {
+        const part = node("section", undefined, "mb-3");
+        if (index.kind === "construct-component") part.append(node("h3", humanizeKey(group.category), "h6"));
+        const list = node("ul", undefined, "list-unstyled");
+        for (const row of group.rows) {
+            const item = node("li", undefined, "mb-2");
+            const link = reference(input, row.id, row.name);
+            if (row.id === selectedId && link.tagName === "A") link.setAttribute("aria-current", "page");
+            item.append(link);
+            const status = row.rulesStatus ?? row.status;
+            if (status != null) item.append(node("div", status, "small text-muted"));
+            list.append(item);
+        }
+        part.append(list);
+        root.append(part);
+    }
+    return root;
+}
+
 const explicitKeys = new Set(["craftingRecipeId", "recipeId", "defaultRecipeId", "producesDefinitionId",
-    "competencyId", "materialId", "operationalOriginTraitIds"]);
+    "competencyId", "materialId", "operationalOriginTraitIds", "catalogReferences"]);
 const validId = id => {
     try { nativeRuleIdentity(id); return true; } catch { return false; }
 };
@@ -88,13 +154,16 @@ const reference = (input, id, label = id) => validId(id)
  * fields. Only schema-declared native references receive qualified links.
  * Local variant IDs, capability strings and stage IDs remain ordinary text.
  */
-function renderValue(input, value, key = "") {
+function renderValue(input, value, key = "", depth = 0) {
+    if (depth > 80) return node("span", "[Content nesting limit reached]");
+    if (object(value) && typeof value.rulesetId === "string" && value.rulesetId !== input.context.rulesetId)
+        return renderStructuredContent(value); // foreign-scoped source has no local link authority
     if (explicitKeys.has(key) && typeof value === "string") return reference(input, value);
     if (Array.isArray(value)) {
         const list = node("ol", undefined, "mb-2");
         for (const entry of value) {
             const item = node("li");
-            item.append(renderValue(input, entry, key));
+            item.append(renderValue(input, entry, key, depth + 1));
             list.append(item);
         }
         if (!value.length) return renderStructuredContent("None listed.", { input });
@@ -106,7 +175,7 @@ function renderValue(input, value, key = "") {
             const name = field === "reviewNotes" ? "Historical review notes (not operative rules)" : humanizeKey(field);
             fields.append(node("dt", name));
             const detail = node("dd");
-            detail.append(renderValue(input, entry, field));
+            detail.append(renderValue(input, entry, field, depth + 1));
             fields.append(detail);
         }
         return fields;
@@ -121,12 +190,15 @@ function section(article, heading, body) {
     article.append(part);
 }
 function linkedRows(input, rows) {
+    if (!Array.isArray(rows)) return node("p", "Not supplied by the reference projection.");
     if (!rows.length) return node("p", "None listed.");
     const list = node("ul");
     for (const row of rows) {
         const li = node("li");
         li.append(reference(input, row.id ?? row.sourceId, row.name ?? row.id ?? row.sourceId));
         if (row.relation) li.append(document.createTextNode(" — " + humanizeKey(row.relation)));
+        // Source-qualified JSON pointers remain in the transport; do not display
+        // repository paths, commit IDs or raw pointer metadata as gameplay rules.
         list.append(li);
     }
     return list;
@@ -194,7 +266,7 @@ function appendConfiguration(article, input, projection) {
         ["Compatible designs", cfg.designs], ["Compatible enhancements", cfg.enhancements],
         ["Compatible power sources", cfg.powerSources], ["Manufacturing recipes", projection.recipes],
         ["Material assignment candidates", projection.materialAssignmentOptions]
-    ]) section(article, label, linkedRows(input, rows ?? []));
+    ]) section(article, label, linkedRows(input, rows));
     if (projection.materialCompatibilityAvailable === false)
         section(article, "Material suitability", node("p", "Physical suitability and load support are not established by these assignment candidates."));
     const omitted = new Set(["definitionId", "name", "designs", "enhancements", "powerSources", "issues"]);
@@ -216,7 +288,8 @@ function appendReverse(article, input, projection) {
         node("p", "Core does not yet provide reverse recipe-input relationships for this material. Assignment candidates do not establish physical suitability."));
 }
 export function supportsConstructReference(input) {
-    return input.context.rulesetId === DEFAULT_RULESET_ID && available(input.references) &&
+    return input?.context?.rulesetId === DEFAULT_RULESET_ID && available(input.references) &&
+        sameContext(input.context, input.references.context) && validId(input.rule?.id) &&
         kinds.has(input.rule.kind) && object(input.record) &&
         (input.record.id === undefined || input.record.id === input.rule.id) &&
         (input.record.kind === undefined || input.record.kind === input.rule.kind);
@@ -239,18 +312,32 @@ export async function renderConstructReference(input) {
         if (!current(lease)) return null;
         throw error;
     }
-    if (projection) assertSnapshot(input.context, projection);
+    if (input.rule.kind !== "crafting-material") {
+        assertSnapshot(input.context, projection);
+        if (projection.contractVersion !== 1)
+            throw new Error("Unsupported Construct Assembly projection version.");
+        if (input.rule.kind === "construct-component") {
+            if (projection.componentId !== input.rule.id || projection.definition?.id !== input.rule.id ||
+                projection.configuration?.definitionId !== input.rule.id ||
+                typeof projection.componentCategory !== "string" || !projection.componentCategory.trim())
+                throw new Error("Construct component projection identity mismatch.");
+        } else if (projection.targetId !== input.rule.id || projection.complete !== true ||
+            !Array.isArray(projection.sources) || !Array.isArray(projection.recipes))
+            throw new Error("Construct reverse reference projection identity mismatch.");
+    }
     // Selected component's authoritative loader-projected definition supplies
     // path-identified identity and category. The original reader record is retained.
     const authored = projection && input.rule.kind === "construct-component" ? projection.definition : record;
     const article = authoredDetail(input, authored, projection?.componentCategory ?? null);
+    if (input.rule.kind === "construct-component" && input.record.id !== undefined &&
+        authored.kind !== input.rule.kind) throw new Error("Construct component kind mismatch.");
     if (input.rule.kind === "construct-component") appendConfiguration(article, input, projection);
     else if (projection) appendReverse(article, input, projection);
     else if (input.rule.kind === "crafting-material") section(article, "Recipe input references",
         node("p", "Core does not yet provide reverse recipe-input relationships for crafting ingredients."));
     if (record !== authored) {
         const extra = Object.fromEntries(Object.entries(record).filter(([key]) => !Object.hasOwn(authored, key)
-            && !["source", "sourcePackage", "reviewNotes"].includes(key)));
+            && !["source", "sourcePackage"].includes(key)));
         if (Object.keys(extra).length) section(article, "Additional record fields", renderValue(input, extra));
     }
     if (record !== input.record) {
