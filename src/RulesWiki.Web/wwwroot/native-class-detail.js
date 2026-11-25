@@ -110,7 +110,7 @@ function renderSummary(definition, presentation, renderValue) {
     if (presentation) {
         const grid = node("dl", { className: "native-class-traits" });
         for (const field of presentation.identityFields) grid.append(node("div", { className: "native-class-trait" },
-            node("dt", { text: field.label }), node("dd", {}, renderValue(field.value))));
+            node("dt", { text: field.label }), node("dd", {}, field.label === "Hit Die" ? valueLabel(field.value) : renderValue(field.value))));
         return section("native-class-traits", "Class traits", grid);
     }
     const traits = CORE_FIELDS.filter(([, key]) => definition[key] !== undefined && definition[key] !== null);
@@ -307,8 +307,10 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
         card.addEventListener("toggle", () => {
             if (!card.open || requested || !current()) return;
             requested = true;
+            const wasConnected = card.isConnected === true;
+            const requestCurrent = () => current() && (!wasConnected || card.isConnected);
             Promise.resolve().then(() => getRule(id)).then(result => {
-                if (!current()) return;
+                if (!requestCurrent()) return;
                 const rule = result?.rule;
                 if (!rule || (!reference && rule.id !== id)) throw new Error("The requested feature was not returned.");
                 const featureDefinition = rule.definition?.definition ?? rule.definition;
@@ -323,13 +325,17 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
                         "alpha", "alphaVersion", "rulesStatus", "selectionStatus", "sourcePackage"]);
                     const mechanics = Object.fromEntries(Object.entries(other).filter(([key]) => !metadataKeys.has(key)));
                     const metadata = Object.fromEntries(Object.entries(other).filter(([key]) => metadataKeys.has(key)));
-                    if (Object.keys(mechanics).length) content.append(renderValue(mechanics));
+                    if (Object.keys(mechanics).length) {
+                        if (reference) content.append(node("details", { className: "native-class-technical-details" },
+                            node("summary", { text: "Additional source and feature data" }), renderValue(mechanics));
+                        else content.append(renderValue(mechanics));
+                    }
                     if (Object.keys(metadata).length) content.append(node("details", { className: "native-class-technical-details" },
                         node("summary", { text: "Additional feature data" }), renderValue(metadata)));
                 }
                 content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(rule.id) } }));
             }).catch(() => {
-                if (!current()) return;
+                if (!requestCurrent()) return;
                 requested = false;
                 content.replaceChildren(node("p", { text: reference
                     ? "Feature relationship unavailable. Close and reopen to retry." :
@@ -338,6 +344,7 @@ function renderFeature(id, level, firstLevel, inline, getRule, hrefForRule, rend
             });
         });
     }
+    if (reference && !getRule) content.append(node("p", { text: "Feature retrieval unavailable in this reading context." }));
     if (!inlineFeature && !reference) {
         content.append(node("a", { text: "View full feature reference", className: "native-class-rule-link", attributes: { href: hrefForRule(id) } }));
     }
@@ -469,6 +476,7 @@ export function renderNativeClass(rule, {
     const returnState = createClassReturnState(root, { classId: rule.id, fingerprint: catalogFingerprint, context, lifecycle });
     const classSnapshot = context ? readingKey(context, rule.id, "class") : null;
     root.nativeClassReadingKey = classSnapshot;
+    root.addEventListener("native-class-section-ready", () => returnState.restore());
     const current = () => !lifecycle || (lifecycle.isCurrent() && root.isConnected);
     const header = node("header", { className: "native-class-header" },
         node("span", { className: "native-class-eyebrow", text: presentation?.kind === "subclass" ? "Subclass" : "Base class" }),
@@ -490,8 +498,9 @@ export function renderNativeClass(rule, {
     const ruleRequests = new Map();
     const loadRule = getRule && (id => {
         if (!ruleRequests.has(id)) {
+            const wasConnected = root.isConnected === true;
             const request = Promise.resolve().then(() => getRule(id)).then(response => {
-                if (!current()) throw new Error("Class reading context changed.");
+                if (!current() || (wasConnected && !root.isConnected)) throw new Error("Class reading context changed.");
                 if (catalogFingerprint && response?.fingerprint !== catalogFingerprint) {
                     throw new Error("The native ruleset changed while this class was open.");
                 }

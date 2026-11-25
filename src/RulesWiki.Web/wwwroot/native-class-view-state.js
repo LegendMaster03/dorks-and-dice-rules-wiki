@@ -51,7 +51,9 @@ export function createClassReturnState(root, { classId, fingerprint, context = n
             detail.open = saved.details?.includes(key) ?? false;
         }
         const waiting = saved.systems?.some(index => panels[index]
-            && panels[index].getAttribute("data-options-ready") !== "true");
+            && panels[index].getAttribute("data-options-ready") !== "true") ||
+            (context && [...root.querySelectorAll("[data-class-lazy][id]")].some(panel =>
+                saved.details?.includes(panel.id) && panel.getAttribute("data-options-ready") !== "true"));
         if (!waiting && !scrolled) {
             scrolled = true;
             const applyScroll = () => {

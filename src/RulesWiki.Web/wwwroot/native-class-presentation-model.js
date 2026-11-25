@@ -16,7 +16,7 @@ export function importedClassKind(record) {
 export function nativeClassReferences(record, prefix) {
     return [...new Set(list(record?.catalogReferences).map(validId).filter(id => id?.startsWith(prefix + ".")))];
 }
-function parseFeature(value, kind, index) {
+function parseFeature(value, kind) {
     const subclass = kind === "subclass";
     const raw = typeof value === "string" ? value : value?.[subclass ? "subclassFeature" : "classFeature"];
     if (typeof raw !== "string") return null;
@@ -24,7 +24,8 @@ function parseFeature(value, kind, index) {
     const level = Number(fields[subclass ? 5 : 3]);
     if (!fields[0] || !fields[1] || !Number.isInteger(level) || level < 1) return null;
     // The key is strictly a local presentation occurrence, not a native ID.
-    return { key: "imported-feature-" + index, raw, name: fields[0], className: fields[1],
+    const escaped = Array.from(raw, char => /^[a-zA-Z0-9.-]$/.test(char) ? char : "~" + char.codePointAt(0).toString(16) + "~").join("");
+    return { key: "imported-feature-" + escaped, raw, name: fields[0], className: fields[1],
         classSource: fields[2], level, kind: subclass ? "subclass-feature" : "class-feature",
         subclassShortName: subclass ? fields[3] : null, subclassSource: subclass ? fields[4] : null,
         source: fields[subclass ? 6 : 4] || null,
@@ -34,8 +35,13 @@ export function createImportedClassPresentation(record) {
     const kind = importedClassKind(record);
     if (!kind) return null;
     const references = (kind === "class" ? record.classFeatures : record.subclassFeatures)
-        .map((item, index) => parseFeature(item, kind, index));
-    const features = references.filter(Boolean);
+        .map(item => parseFeature(item, kind));
+    const occurrences = new Map();
+    const features = references.filter(Boolean).map(feature => {
+        const count = (occurrences.get(feature.key) ?? 0) + 1;
+        occurrences.set(feature.key, count);
+        return count === 1 ? feature : { ...feature, key: feature.key + "~occurrence-" + count };
+    });
     const tables = progressionSurfaces(record);
     const levels = new Set(features.map(feature => feature.level));
     // Index-based levels are already supplied by the existing class-family table model.

@@ -44,6 +44,20 @@
       "sourceFile": "data/rulesets/dnd-5-5e/native/classes/wizard.json",
       "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
       "blobSha": "26e48abd42aff7381030b34e7f85cdfb2f956c88"
+    },
+    {
+      "file": "dnd-5e--options.json",
+      "rulesetId": "dnd-5e",
+      "sourceFile": "data/rulesets/dnd-5e/native/feats-and-optional-features.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+      "blobSha": "33e2f4d98fa7ee36170ae48b4a851f1eb5ec70c3"
+    },
+    {
+      "file": "dnd-5-5e--options.json",
+      "rulesetId": "dnd-5-5e",
+      "sourceFile": "data/rulesets/dnd-5-5e/native/feats-and-optional-features.json",
+      "sourceRevision": "6a300933435c633b51f1d446fca09b9810dceb9e",
+      "blobSha": "22de66b5adcd8343cbe4b56b60e42c3ac82e0877"
     }
   ]
 }

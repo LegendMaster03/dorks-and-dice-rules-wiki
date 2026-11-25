@@ -3,6 +3,7 @@
 import { nativeClassReferences } from "./native-class-presentation-model.js";
 import { validateNativeEnvelope, nativeRuleIdentity } from "./rules-context.js";
 import { renderStructuredContent } from "./native-presentation.js";
+import { classReturnLink } from "./native-class-view-state.js";
 
 const n = (tag, text, cls) => {
     const el = document.createElement(tag);
@@ -55,14 +56,20 @@ async function catalogRecords(input, category, current) {
     }
     return results;
 }
-function lazyCatalog(input, title, category, predicate, render) {
+function lazyCatalog(input, title, category, predicate, render, key) {
     const details = n("details", undefined, "native-class-disclosure");
+    details.id = "native-class-catalog-" + key;
+    details.setAttribute("data-class-lazy", "true");
     details.append(n("summary", title));
     const body = n("div", undefined, "native-class-feature-content");
     body.append(n("p", "Expand to load related references."));
     details.append(body);
     let loaded = false;
     const current = () => details.isConnected && (!input.lifecycle || input.lifecycle.isCurrent());
+    const ready = () => {
+        details.setAttribute("data-options-ready", "true");
+        details.dispatchEvent(new Event("native-class-section-ready", { bubbles: true }));
+    };
     details.addEventListener("toggle", async () => {
         if (!details.open || loaded || !current()) return;
         loaded = true;
@@ -77,18 +84,28 @@ function lazyCatalog(input, title, category, predicate, render) {
                 field(item, "Prerequisites", rule.definition.prerequisite ?? rule.definition.prerequisites, render);
                 body.append(item);
             }
+            ready();
         } catch {
             if (!current()) return;
             loaded = false;
             body.replaceChildren(n("p", "Related references unavailable. Close and reopen to retry."));
+            ready();
         }
     });
     return details;
 }
+function progressionTable(value, render) {
+    if (Array.isArray(value)) return render({ type: "table", colLabels: ["Level", "Progression value"],
+        rows: value.map((entry, index) => [index + 1, entry]) });
+    if (value && typeof value === "object" && Object.keys(value).every(key => /^\d+$/.test(key)))
+        return render({ type: "table", colLabels: ["Level", "Progression value"], rows: Object.entries(value) });
+    return render(value);
+}
 export function importedClassSections(input, model) {
     const record = model.record, render = value => renderStructuredContent(value, input);
     const sections = [];
-    const overview = section("overview", "Starting equipment and prerequisites");
+    const overview = section("overview", "Overview, equipment and prerequisites");
+    field(overview, "Class rules", record.entries, render);
     field(overview, "Starting equipment", record.startingEquipment?.entries ?? record.startingEquipment?.default ?? record.startingEquipment, render);
     if (record.startingEquipment?.goldAlternative !== undefined)
         field(overview, "Gold alternative", record.startingEquipment.goldAlternative, render);
@@ -112,44 +129,68 @@ export function importedClassSections(input, model) {
     if (model.kind === "class" && record.subclassTitle) {
         specialization.append(n("h4", record.subclassTitle));
         if (input.references) specialization.append(lazyCatalog(input, "Browse subclasses", "subclass", rule =>
-            nativeClassReferences(rule.definition, "class").includes(input.rule.id) && rule.definition.className === record.name, render));
+            nativeClassReferences(rule.definition, "class").includes(input.rule.id) && rule.definition.className === record.name, render, "subclasses"));
     }
     if (model.kind === "subclass") {
-        for (const id of model.parentIds) specialization.append(classRuleLink(input, id, "Parent class: " + record.className));
+        for (const id of model.parentIds) {
+            const back = classReturnLink(id, input.context.fingerprint, input.context);
+            const link = classRuleLink(input, id, back?.label ?? "Parent class: " + record.className);
+            if (back) link.setAttribute("href", back.href);
+            specialization.append(link);
+        }
     }
     const classIds = model.kind === "class" ? [input.rule.id] : model.parentIds;
-    for (const group of array(record.optionalfeatureProgression)) {
+    for (const [index, group] of array(record.optionalfeatureProgression).entries()) {
         const panel = n("section");
-        panel.append(n("h4", group.name || "Optional feature progression"), render(group.progression ?? group));
+        panel.append(n("h4", group.name || "Optional feature progression"), progressionTable(group.progression ?? group, render));
         if (input.references && array(group.featureType).length) panel.append(lazyCatalog(input, "Browse " + (group.name || "optional features"), "optional-feature", rule => {
             const option = rule.definition;
             const owners = nativeClassReferences(option, "class"), subclasses = nativeClassReferences(option, "subclass");
             return array(option.featureType).some(type => group.featureType.includes(type)) &&
                 (!owners.length || owners.some(id => classIds.includes(id))) &&
                 (!subclasses.length || subclasses.includes(input.rule.id));
-        }, render));
+        }, render, "optional-" + index));
         specialization.append(panel);
     }
-    for (const group of array(record.featProgression)) {
+    for (const [index, group] of array(record.featProgression).entries()) {
         const panel = n("section");
-        panel.append(n("h4", group.name || "Feat progression"), render(group.progression ?? group));
+        panel.append(n("h4", group.name || "Feat progression"), progressionTable(group.progression ?? group, render));
         if (input.references && array(group.category).length) panel.append(lazyCatalog(input, "Browse " + (group.name || "feats"), "feat", rule =>
-            group.category.includes(rule.definition.category), render));
+            group.category.includes(rule.definition.category), render, "feat-" + index));
         specialization.append(panel);
     }
     if (specialization.children.length > 1) sections.push(specialization);
 
     if (model.spellList.length) {
         const spells = section("spells", "Class spell list");
-        for (const group of model.spellList) {
+        for (const [index, group] of model.spellList.entries()) {
             const details = n("details", undefined, "native-class-disclosure");
+            details.id = "native-class-spell-group-" + index;
             details.append(n("summary", group.level === 0 ? "Cantrips" : "Spell level " + group.level));
             const list = n("ul");
+            const links = new Map();
             for (const id of group.spellIds) {
                 const item = n("li");
-                item.append(classRuleLink(input, id));
+                const link = classRuleLink(input, id);
+                links.set(id, link);
+                item.append(link);
                 list.append(item);
             }
+            let loaded = false;
+            const current = () => details.isConnected && (!input.lifecycle || input.lifecycle.isCurrent());
+            details.addEventListener("toggle", async () => {
+                if (!details.open || loaded || !current() || !input.references) return;
+                loaded = true;
+                try {
+                    for (let start = 0; start < group.spellIds.length; start += 6) {
+                        if (!current()) return;
+                        const records = await Promise.all(group.spellIds.slice(start, start + 6).map(async id =>
+                            validateNativeEnvelope(input.context, id, await input.references.resolve(id)).rule));
+                        if (!current()) return;
+                        for (const rule of records) if (rule.kind === "spell") links.get(rule.id).textContent = rule.name;
+                    }
+                } catch { if (current()) loaded = false; /* Keep exact ID links when labels are unavailable. */ }
+            });
             details.append(list);
             spells.append(details);
         }
