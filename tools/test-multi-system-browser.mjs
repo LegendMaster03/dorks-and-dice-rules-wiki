@@ -17,7 +17,7 @@ const allowed = new Set(catalogs.keys());
 const fingerprints = new Map([...allowed].map((id, i) => [id, String(i+1).repeat(64)]));
 const base = "/tools/rules-wiki";
 const dom = new JSDOM('<main id="tool-root" data-tool-context-url="/context"></main>', {url: "https://site.test" + base, pretendToBeVisual: true});
-for (const key of ["window", "document", "Element", "HTMLElement", "Node", "Event", "KeyboardEvent"]) globalThis[key] = dom.window[key];
+for (const key of ["window", "document", "Element", "HTMLElement", "Node", "NodeFilter", "Event", "KeyboardEvent"]) globalThis[key] = dom.window[key];
 window.dorksAndDiceToolHost = {setContentLayout() {}};
 const calls = [];
 let release;

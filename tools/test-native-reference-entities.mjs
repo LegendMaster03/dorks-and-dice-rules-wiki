@@ -10,7 +10,7 @@ import { registerNativeRenderers } from "../src/RulesWiki.Web/wwwroot/native-ren
 import { createWikiNativeRendererRegistry, renderNativeDetail } from "../src/RulesWiki.Web/wwwroot/native-rule-detail.js";
 
 const dom = new JSDOM("<main></main>", { url: "https://wiki.example.test/tools/rules-wiki/" });
-for (const key of ["window", "document", "Node", "Element", "HTMLElement", "Event"]) globalThis[key] = dom.window[key];
+for (const key of ["window", "document", "Node", "NodeFilter", "Element", "HTMLElement", "Event"]) globalThis[key] = dom.window[key];
 const main = document.querySelector("main");
 const registry = createWikiNativeRendererRegistry();
 const referenceRegistry = createNativeRendererRegistry();
