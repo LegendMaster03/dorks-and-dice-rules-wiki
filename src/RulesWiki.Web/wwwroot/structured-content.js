@@ -4,7 +4,7 @@ const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefine
 const add=(n,...c)=>{n.append(...c);return n;};
 const own=(o,k)=>Object.hasOwn(o,k);
 const label=k=>String(k).replace(/([a-z0-9])([A-Z])/g,"$1 $2").replace(/[_-]+/g," ").replace(/^./,x=>x.toUpperCase());
-const refs=new Set("spell item condition skill creature class feat race species background action sense language status variantrule classfeature subclassfeature subclass optfeature book table quickref filter reward object vehicle".split(" "));
+const refs=new Set("spell item condition skill creature class feat race species background action sense language status variantrule classfeature subclassfeature subclass optfeature book table quickref filter reward object vehicle itemproperty itemmastery hazard disease trap".split(" "));
 const markers={h:"Hit: ",acttrigger:"Trigger: ",actresponse:"Response: ",actsavefail:"Failure: ",actsavesuccess:"Success: ",actsavefailorsuccess:"Failure or Success: ",actsavesuccessorfail:"Success or Failure: "};
 const attacks={mw:"Melee Weapon Attack",rw:"Ranged Weapon Attack",ms:"Melee Spell Attack",rs:"Ranged Spell Attack",m:"Melee Attack",r:"Ranged Attack"};
 const abilities={str:"Strength",dex:"Dexterity",con:"Constitution",int:"Intelligence",wis:"Wisdom",cha:"Charisma"};
@@ -24,7 +24,7 @@ export function rendererTagText(tag,payload){
     if(t==="quickref")return p[4]||v;
     if(t==="classfeature")return p[5]||v;
     if(t==="subclassfeature")return p[7]||v;
-    if(t==="filter")return v;
+    if(t==="filter"||t==="book")return v;
     if(refs.has(t))return p[2]||v;
     if(own(formatting,t))return payload;
     return payload||"{@"+tag+"}";
@@ -80,6 +80,73 @@ export function renderInlineContent(value,options={},depth=0){
     });
     return root;
 }
+
+// Source tags are display labels, not IDs. A caller may request a conservative
+// exact mapping of tags to Core's explicit references; no name-based catalog
+// search, slug construction, foreign read or speculative link is permitted.
+const referenceKinds = {
+    spell:["spell"], item:["item","baseitem"], condition:["condition"], creature:["monster"],
+    class:["class"], feat:["feat"], race:["race","species"], species:["species"], background:["background"],
+    skill:["skill"], action:["action"], language:["language"], sense:["sense"], status:["status","condition"],
+    variantrule:["rule","variantrule"], hazard:["hazard"], disease:["disease"], trap:["trap"],
+    itemproperty:["item-property"], itemmastery:["item-mastery"], table:["table"]
+};
+const edition = value => {
+    const key=String(value??"").toLowerCase().replace(/[^a-z0-9]/g,"");
+    return key==="srd51"?"srd51":key==="srd52"||key==="srd521"?"srd52":null;
+};
+const normalizeName=value=>String(value??"").trim().replace(/\s+/g," ").toLowerCase();
+/** Optional asynchronous preparation. Return an empty map on a stale lease;
+ * adapters must still honor their own lease before mounting rendered nodes. */
+export async function resolveSourceReferenceIds(input,value=input?.record){
+    const result=new Map(), context=input?.context, reader=input?.references, lease=input?.lifecycle;
+    if(!context||!reader||typeof reader.resolve!=="function"||
+       ["rulesetId","fingerprint","campaignId","campaignRevisionId"].some(k=>(context[k]??null)!==(reader.context?.[k]??null)))return result;
+    const current=()=>!lease||lease.isCurrent();
+    if(!current())return result;
+    const release=edition(input.source?.release);
+    const ids=new Set([...(Array.isArray(input.record?.catalogReferences)?input.record.catalogReferences:[]),
+        ...(Array.isArray(input.record?.definition?.catalogReferences)?input.record.definition.catalogReferences:[])]);
+    const tokens=new Map();
+    function walk(v,d=0){
+        if(d>80||v==null)return;
+        if(typeof v==="string")scan(v,()=>{},(tag,payload,token)=>{
+            if(own(formatting,tag)){walk(payload,d+1);return;}
+            if(!own(referenceKinds,tag))return;
+            const [name,source]=payload.split("|");
+            const requested=source?edition(source):release;
+            // An explicit unknown release is not treated as an unspecified one.
+            if((source&&!requested)||!requested||requested!==release)return;
+            tokens.set(token,{name:normalizeName(name),requested,kinds:referenceKinds[tag]});
+        });
+        else if(Array.isArray(v))for(const x of v)walk(x,d+1);
+        else if(typeof v==="object")for(const [key,x] of Object.entries(v))if(!technical.has(key)&&!key.startsWith("_"))walk(x,d+1);
+    }
+    walk(value);
+    if(!tokens.size||!ids.size)return result;
+    const candidates=[];
+    // Bound work per view. Excessive reference lists remain readable without
+    // links instead of issuing hundreds of private transport requests.
+    const relevant=[...ids].filter(id=>typeof id==="string"&&[...tokens.values()].some(t=>t.kinds.includes(id.split(".")[0])));
+    if(relevant.length>64)return result;
+    for(const id of relevant){
+        if(!current())return new Map();
+        try{
+            nativeRuleIdentity(id);
+            const response=await reader.resolve(id);
+            if(!current())return new Map();
+            if(response.rulesetId!==context.rulesetId||response.fingerprint!==context.fingerprint||response.rule?.id!==id)continue;
+            const rule=response.rule,record=rule.definition;
+            candidates.push({id,kind:rule.kind,name:normalizeName(rule.name),release:edition(record?.source?.release??record?.definition?.source?.release)});
+        }catch{ /* Unresolved or denied references stay text. */ }
+    }
+    for(const [token,t] of tokens){
+        const matches=candidates.filter(c=>t.kinds.includes(c.kind)&&t.name===c.name&&t.requested===c.release);
+        if(matches.length===1)result.set(token,matches[0].id);
+    }
+    return current()?result:new Map();
+}
+
 const bodyKeys=["headerEntries","entries","entry","items","attackEntries","hitEntries","footerEntries"];
 const technical=new Set("source sourcePackage officialTextLayout structuredSource structuredStatus colStyles style id kind type page srd basicRules hasToken hasFluff hasFluffImages tokenUrl otherSources additionalSources".split(" "));
 function pairs(entries,o,d){
