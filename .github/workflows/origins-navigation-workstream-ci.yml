@@ -1,0 +1,28 @@
+name: Origins Navigation Workstream CI
+
+on:
+  push:
+    branches: [ feature/wiki-origins-navigation ]
+
+permissions:
+  contents: read
+
+jobs:
+  navigation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node tools/test-origins-navigation.mjs
+      - run: node tools/test-origins-navigation-mounted.mjs
+      - name: Smoke test local preview routes
+        run: |
+          node tools/preview-origins-navigation.mjs &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8765/context && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8765/tools/rules-wiki/rulesets/first-party-001/origins/overview | grep -q "Local fixture preview"
+          curl -fsS http://127.0.0.1:8765/assets/app.js | grep -q "installWikiExperience"

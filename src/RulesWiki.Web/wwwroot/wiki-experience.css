@@ -107,3 +107,20 @@
 .wiki-experience .rules-core-library-detail { overscroll-behavior-y: contain; }
 
 .wiki-ruleset-selector { width: auto; max-width: min(100%, 18rem); min-width: 8rem; }
+
+/* Origins is presentation navigation, not a new ruleset or native entity. */
+.wiki-origins-menu-heading { display: block; padding: .6rem .7rem .15rem; border-top: 1px solid var(--wiki-border); font-size: .8rem; font-weight: 700; color: var(--bs-secondary-color, #536168); }
+.wiki-ribbon-menu:has(.wiki-origins-menu-heading) > .wiki-ribbon-items { width: min(21rem, 90vw); }
+.wiki-experience .rules-core-main[data-rules-view="origins"] { overflow: auto; margin-top: 0 !important; }
+.wiki-origins-breadcrumb, .wiki-origins-sections { display: flex; flex-wrap: wrap; gap: .65rem; margin: .5rem 0 1rem; }
+.wiki-origins-sections a { display: inline-block; padding: .55rem .65rem; border: 1px solid var(--wiki-border); border-radius: .35rem; }
+.wiki-origins-sections a[aria-current] { background: var(--bs-primary-bg-subtle, #e2eefb); font-weight: 650; }
+.wiki-origins-records { display: grid; gap: .5rem; padding-inline-start: 1.35rem; overflow-wrap: anywhere; }
+.wiki-origin-method { margin-top: 1rem; overflow-wrap: anywhere; }
+.wiki-origin-method dt { margin-top: .5rem; }
+.wiki-origins .wiki-home-category h2 { margin-top: 0; }
+@media (max-width: 560px) {
+    .wiki-ribbon-menu:has(.wiki-origins-menu-heading) > .wiki-ribbon-items { width: auto; }
+    .wiki-origins { padding: 1rem; }
+    .wiki-origins-sections a, .wiki-origins-records a { min-height: 2.5rem; padding-block: .45rem; }
+}

@@ -9,6 +9,7 @@ import { authorizedRulesetDescriptors } from "./rules-reference-api.js";
 import { cancelNativeDetailRender } from "./rules-browser-detail.js";
 import { getEntityBrowserConfig } from "./rules-browser-config.js";
 import { renderPackageAttribution, packageDisplayName } from "./package-attribution.js";
+import { ORIGIN_KINDS, originsEnabled, originRoute, originMenu, renderOriginsWorkspace, cancelOriginsWorkspace } from "./origins-navigation.js";
 
 export const WIKI_GROUPS = [
     { name: "Characters", description: "Classes, choices, skills, and competencies", types: [
@@ -44,7 +45,7 @@ export function installWikiExperience(app) {
     const routeIsHome = () => {
         const route = parseToolRoute(currentToolRoute(app));
         const params = new URLSearchParams(window.location.search);
-        return (currentToolRoute(app) === "/" || (route.qualified && !route.entityType && !route.conceptKey))
+        return !route.originsView && (currentToolRoute(app) === "/" || (route.qualified && !route.entityType && !route.conceptKey))
             && !params.get("q") && params.get("browse") !== "1";
     };
     const resetSelection = (route, view = {}) => {
@@ -73,6 +74,16 @@ export function installWikiExperience(app) {
         await app.render();
     };
     app.navigateWikiHome = () => go("/");
+    app.navigateOrigins = async (view, section = null) => {
+        if (!originsEnabled(app.rulesetReader)) return;
+        resetPageScroll();
+        const destination = originRoute(view, section);
+        const base = (app.hostContext.toolBasePath ?? "/tools/rules-wiki").replace(/\/$/, "");
+        window.history.pushState({}, "", base + destination);
+        resetSelection(parseToolRoute(destination));
+        app.activeView = "library";
+        await app.render();
+    };
     const navigate = app.navigateRuleFamily.bind(app);
     app.navigateRuleFamily = async type => {
         resetPageScroll();
@@ -83,6 +94,7 @@ export function installWikiExperience(app) {
     let bindingRoute = null;
     const clearContext = () => {
         cancelNativeDetailRender(app);
+        cancelOriginsWorkspace(app);
         app.rulesContext = null;
         app.rulesetReader = null;
         app.wikiIndex = null;
@@ -136,6 +148,7 @@ export function installWikiExperience(app) {
     const renderApp = app.render.bind(app);
     app.render = async (...args) => {
         const serial = ++generation;
+        cancelOriginsWorkspace(app);
         const route = parseToolRoute(currentToolRoute(app));
         const scope = new URLSearchParams(window.location.search).get("scope");
         const switching = route.unsupportedRulesContext || (scope && scope !== "global")
@@ -218,9 +231,15 @@ export function installWikiExperience(app) {
     // tracked in the workstream integration requirements.
     app.decorateBrowserRows = null;
     const availableGroups = () => {
+        const origins = originsEnabled(app.rulesetReader);
         const groups = WIKI_GROUPS.map(group => ({ ...group,
-            types: group.types.filter(([type]) => app.wikiKinds?.has(type)) })).filter(group => group.types.length);
+            types: group.types.filter(([type]) => app.wikiKinds?.has(type) && !(origins && ORIGIN_KINDS.has(type))) })).filter(group => group.types.length);
         const configured = new Set(groups.flatMap(group => group.types.map(([type]) => type)));
+        if (origins) {
+            for (const kind of ORIGIN_KINDS) configured.add(kind);
+            const characterIndex = groups.findIndex(group => group.name === "Characters");
+            groups.splice(characterIndex + 1, 0, { name: "Origins", description: "Origination, Heritage, Manifestations and Life Experiences", origins: true, types: [] });
+        }
         const extra = [...(app.wikiKinds ?? [])].filter(type => !configured.has(type))
             .sort().map(type => [type, getEntityBrowserConfig(type).label]);
         if (extra.length) groups.push({ name: "Other categories", description: "Additional native reference categories", types: extra });
@@ -244,15 +263,26 @@ export function installWikiExperience(app) {
         for (const group of availableGroups()) {
             const menu = el("details", { className: "wiki-ribbon-menu" }, el("summary", { text: group.name }));
             const items = el("div", { className: "wiki-ribbon-items" });
+            if (group.origins) items.append(originMenu(app, parseToolRoute(currentToolRoute(app)).originsView));
             for (const [type, title] of group.types) items.append(el("button", { type: "button", text: title,
                 attributes: { ...(app.browserFilters.entityType === type ? { "aria-current": "page" } : {}) },
                 onClick: () => app.navigateRuleFamily(type) }));
             menu.append(items);
+            menu.addEventListener("keydown", event => {
+                if (event.key !== "Escape" || !menu.open) return;
+                event.preventDefault(); event.stopPropagation();
+                menu.open = false; menu.querySelector("summary")?.focus();
+            });
             menu.addEventListener("toggle", () => { if (menu.open) for (const other of groups.children) if (other !== menu) other.open = false; });
             groups.append(menu);
         }
         const browse = el("details", { className: "wiki-mobile-menu" }, el("summary", { text: "Browse sections" }), groups);
         browse.open = window.innerWidth > 560;
+        browse.addEventListener("keydown", event => {
+            if (event.key !== "Escape" || window.innerWidth > 560 || !browse.open) return;
+            event.preventDefault(); event.stopPropagation();
+            browse.open = false; browse.querySelector("summary")?.focus();
+        });
         nav.append(browse, el("button", { type: "button", text: "Search all rules", disabled: !app.rulesContext, onClick: () => go("/all") }));
         return nav;
     };
@@ -269,7 +299,15 @@ export function installWikiExperience(app) {
             return;
         }
         const reader = app.rulesetReader;
-        if (routeIsHome()) {
+        const activeRoute = parseToolRoute(currentToolRoute(app));
+        if (activeRoute.originsView) {
+            // The existing browser hotkeys belong to its mounted index only.
+            if (app.browserKeyboard) Object.assign(app.browserKeyboard, { focusSearch: null, selectRelative: null, returnToList: null });
+            await renderOriginsWorkspace(app, container, activeRoute);
+            if (!container.isConnected || reader !== app.rulesetReader) return;
+            const workspace = container.querySelector(".rules-core-library-workspace");
+            if (workspace) installPaneDivider(workspace);
+        } else if (routeIsHome()) {
             container.dataset.rulesView = "home";
             const [recent, playtests] = await Promise.all([loadRecents(reader), loadPlaytests(reader)]);
             if (!container.isConnected || reader !== app.rulesetReader) return;
@@ -343,6 +381,7 @@ export function installWikiExperience(app) {
         for (const group of availableGroups()) {
             const card = el("section", { className: "wiki-home-category" }, el("h3", { text: group.name }), el("p", { text: group.description }));
             const links = el("div", { className: "wiki-home-links" });
+            if (group.origins) links.append(el("button", { type: "button", text: "Character Origins Overview", onClick: () => app.navigateOrigins("overview") }));
             for (const [type, title] of group.types) links.append(el("button", { type: "button", text: title, onClick: () => app.navigateRuleFamily(type) }));
             card.append(links); grid.append(card);
         }
