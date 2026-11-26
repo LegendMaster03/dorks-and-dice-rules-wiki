@@ -1,4 +1,6 @@
 import { originsEnabled, originWorkspaceForRule, originRoute, originTitle } from "./origins-navigation.js";
+import { readOriginOccurrenceRoute } from "./origin-workspace-composition.js";
+import { currentToolRoute } from "./rules-browser-routing.js";
 /**
  * Coordinates selected-rule detail rendering. Native rule views use the native
  * renderer; versioned references retain effective/variation comparison tabs.
@@ -86,8 +88,9 @@ export async function renderRuleDetailPane(
             validateNativeEnvelope(context, referenceIdentity, detail.native);
             const token = lifecycle.begin(context, referenceIdentity);
             const lease = Object.freeze({ ...token, isCurrent: () => token.isCurrent() && isCurrent() });
+            const originOccurrence = readOriginOccurrenceRoute(currentToolRoute(app), window.location.search, context, detail.native.rule);
             const mounted = await renderNativeDetail(container, detail.native, onBackToList, app,
-                { context, reader, lifecycle: lease, ruleId: referenceIdentity });
+                { context, reader, lifecycle: lease, ruleId: referenceIdentity, originOccurrence });
             if (mounted && lease.isCurrent()) {
                 appendOriginWorkspaceReturn(app, container, detail.native.rule);
                 app.presentRenderedFragment?.(container);

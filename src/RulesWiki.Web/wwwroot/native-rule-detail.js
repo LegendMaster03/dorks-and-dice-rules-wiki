@@ -53,7 +53,7 @@ export function renderNativeDetail(container, detail, onBack, app = null, option
     const reader = options.reader ?? (app?.api?.getNativeRule && app?.api?.searchNativeRules
         ? createRulesetReader(app.api, context, context.rulesetId === DEFAULT_RULESET_ID ? app.wikiIndex?.packageDescriptor : null) : null);
     const input = createPresentationInput(context, detail, reader, {
-        toolBasePath: app?.hostContext?.toolBasePath ?? "", onBack, lifecycle,
+        toolBasePath: app?.hostContext?.toolBasePath ?? "", onBack, lifecycle, originOccurrence: options.originOccurrence ?? null,
         renderSource: app?.renderNativeSource ? value => app.renderNativeSource(value) : null
     });
     const registry = app

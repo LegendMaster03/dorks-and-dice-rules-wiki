@@ -124,3 +124,12 @@
     .wiki-origins { padding: 1rem; }
     .wiki-origins-sections a, .wiki-origins-records a { min-height: 2.5rem; padding-block: .45rem; }
 }
+
+/* Origins reuses the shared pane divider; compact readers stack both panes. */
+.wiki-origins .wiki-origin-split { display:grid; grid-template-columns:minmax(0,32%) minmax(0,1fr); min-height:0; height:auto; gap:0; }
+.wiki-origins .wiki-origin-split:has(> .wiki-pane-divider) { grid-template-columns:minmax(0,var(--wiki-list-width,32%)) 10px minmax(0,1fr); }
+.wiki-origins .wiki-origin-index, .wiki-origins .wiki-origin-detail { display:block; min-width:0; padding:.65rem; overflow-wrap:anywhere; max-height:70vh; overflow:auto; }
+@container rules-wiki-browser (max-width:900px) {
+    .wiki-origins .wiki-origin-split:has(> .wiki-pane-divider), .wiki-origins .wiki-origin-split { grid-template-columns:minmax(0,1fr); }
+    .wiki-origins .wiki-origin-index, .wiki-origins .wiki-origin-detail { max-height:none; }
+}

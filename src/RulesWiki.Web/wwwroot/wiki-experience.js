@@ -34,7 +34,10 @@ export function rememberRule(rule) {
     save("rulesWikiRecent", [{ id: rule.id, name: rule.name, kind: rule.kind }, ...recentRules().filter(e => e.id !== rule.id)].slice(0, 8));
 }
 
+import { createOriginWorkspaceRenderers } from "./origin-workspace-composition.js";
+
 export function installWikiExperience(app) {
+    app.originWorkspaceRenderers = createOriginWorkspaceRenderers();
     app.root.classList.add("wiki-experience");
     const style = el("link", { attributes: { rel: "stylesheet", href: new URL("./wiki-experience.css", import.meta.url).href } });
     document.head.append(style);

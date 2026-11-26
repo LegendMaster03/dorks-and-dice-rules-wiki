@@ -335,5 +335,6 @@ export async function renderLifeExperience(input) {
     return article;
 }
 export function registerLifeExperienceRenderers(registry) {
-    registry.register({ id: "origins.life-experiences", priority: 50, supports, render: renderLifeExperience });
+    registry.register({ id: "origins.life-experiences", priority: 50,
+        supports: input => supports(input) && (input.rule.kind !== "upbringing" || input.references?.originReferenceContractVersion === 1), render: renderLifeExperience });
 }

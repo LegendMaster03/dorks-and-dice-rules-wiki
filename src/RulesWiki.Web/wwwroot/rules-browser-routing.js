@@ -119,6 +119,7 @@ export function browserHref(app, toolRelativePath, scopeValue = app.browserScope
     const parameters = new URLSearchParams(window.location.search);
     parameters.delete("browse");
     parameters.delete("category");
+    for (const key of ["originSelected", "originSource", "originPath", "originRecord"]) parameters.delete(key);
     const destination = parseToolRoute(relative);
     if (destination.qualified && destination.conceptKey && destination.rulesetId === id) {
         const category = app.browserFilters?.entityType ?? "";

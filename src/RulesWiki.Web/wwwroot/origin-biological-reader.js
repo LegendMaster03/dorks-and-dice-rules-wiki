@@ -248,6 +248,15 @@ export function renderBiologicalDetail(model, input) {
                 ? renderStructuredReference(occurrence.canonicalTraitId, input, name)
                 : node("span", name + " (inline source definition)"));
             item.append(heading, node("p", row.name + (occurrence.inherited ? " — Inherited reference occurrence" : " — Own authored occurrence")));
+            if (occurrence.canonicalTraitId && heading.firstChild?.tagName === "A") {
+                const configured = renderStructuredReference(occurrence.canonicalTraitId, input, "Read this source occurrence");
+                if (configured.tagName === "A") {
+                    configured.href += "?" + new URLSearchParams({
+                        originSelected: selected.id, originSource: row.id, originPath: occurrence.path
+                    }).toString();
+                    item.append(configured);
+                }
+            }
             const { reviewNotes, ...content } = trait;
             item.append(format(content, input));
             if (occurrence.bindings.length) item.append(disclosure("Configured source bindings", offerTable(occurrence.bindings, model, input)));

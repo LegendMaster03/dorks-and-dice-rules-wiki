@@ -55,6 +55,7 @@ export function originWorkspaceForRule(rule) {
     if (rule.kind === "background") return ["backgrounds", null];
     const component = CONSTRUCT_SECTIONS.find(row => row[2] === rule.kind);
     if (component) return ["construct-assembly", component[0]];
+    if (rule.kind === "crafting-material") return ["construct-assembly", "materials"];
     if (rule.id === "rule.creature-origination") return ["methods", null];
     if (rule.id === "rule.species-subspecies-upbringing") return ["overview", null];
     return null;
@@ -104,7 +105,10 @@ export async function renderOriginsWorkspace(app, container, route) {
         app.rulesetReader === reader && app.rulesContext === reader.context && container.isConnected;
     const base = (app.hostContext.toolBasePath ?? "/tools/rules-wiki").replace(/\/$/, "");
     const input = Object.freeze({
-        reader, context: reader.context, view, section,
+        reader, context: reader.context, view, section, toolBasePath: base,
+        selectedId: new URLSearchParams(window.location.search).get("originRecord"),
+        remember: rule => app.rememberNativeReference?.(reader.context, rule),
+        renderSource: app.renderNativeSource ? value => app.renderNativeSource(value) : null,
         lifecycle: Object.freeze({ ...lease, isCurrent: current }),
         hrefForRule: (id, kind = null) => base + ruleRoute(reader.context.rulesetId, id) +
             (kind ? "?" + new URLSearchParams({ category: kind }).toString() : ""),
