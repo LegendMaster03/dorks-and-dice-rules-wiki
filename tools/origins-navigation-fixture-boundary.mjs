@@ -14,6 +14,20 @@ for (const response of Object.values(captures)) {
 for (const response of Object.values(captures)) {
     for (const row of response.lineage ?? []) first.set(row.id, { id: row.id, name: row.name, kind: row.kind, definition: row.definition });
 }
+// Use exact recorded characteristic and Construct source values where available.
+// Their ordinary native-detail envelopes are synthetic transport wrappers, not HTTP captures.
+const characteristicRecords = read("./fixtures/origin-characteristic/records.json");
+for (const fixture of characteristicRecords.fixtures) {
+    for (const definition of Array.isArray(fixture.record) ? fixture.record : [fixture.record]) {
+        first.set(definition.id,{id:definition.id,name:definition.name,kind:definition.kind,definition});
+    }
+}
+const constructRecords = read("./fixtures/construct-reference/source-records.json");
+for (const value of Object.values(constructRecords.records)) {
+    for (const definition of Array.isArray(value) ? value : [value]) {
+        if (definition?.id && definition?.kind) first.set(definition.id,{id:definition.id,name:definition.name,kind:definition.kind,definition});
+    }
+}
 for (const name of ["creature-origination", "species-subspecies-upbringing"]) {
     const definition = read("./fixtures/origin-navigation/" + name + ".json");
     first.set(definition.id, { id: definition.id, name: definition.name, kind: definition.kind, definition });
@@ -56,6 +70,18 @@ const handle = async (url, options = {}, toolRoute = "/") => {
         const key = (op === "getNativeOriginHierarchy" ? "hierarchy-" : "methods-") + target + ".json";
         assert.ok(captures[key], key);
         return reply(captures[key]);
+    }
+    const originPrefixes = {
+        getNativeOriginSource:"source-",
+        getNativeOriginTraitSources:"trait-sources-",
+        getNativeOriginComponent:"component-",
+        getNativeOriginComponentSources:"component-sources-"
+    };
+    if (Object.hasOwn(originPrefixes,op)) {
+        assert.equal(id,manifest.rulesetId);
+        assert.equal(parameter,manifest.fingerprint);
+        const key = originPrefixes[op] + target + ".json";
+        return captures[key] ? reply(captures[key]) : reply({error:"Missing captured projection: " + key},404);
     }
     if (op === "getNativeRule") {
         const rule = rows.find(row => row.id === parameter && row.definition);

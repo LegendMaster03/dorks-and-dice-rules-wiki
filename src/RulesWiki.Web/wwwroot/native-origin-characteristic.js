@@ -224,6 +224,8 @@ export async function renderOriginCharacteristic(input,{occurrence = null} = {})
     root.append(renderNativeAttribution(input));
     return root;
 }
-export function registerOriginCharacteristicRenderer(registry) {
-    registry.register({id:"origins.characteristic",priority:40,supports:supportsOriginCharacteristic,render:input=>renderOriginCharacteristic(input,{occurrence:input.originOccurrence ?? null})});
+export function registerOriginCharacteristicRenderer(registry, {requireCapability = false} = {}) {
+    registry.register({id:"origins.characteristic",priority:40,
+        supports:input=>supportsOriginCharacteristic(input) && (!requireCapability || input.references?.originReferenceContractVersion === 1),
+        render:input=>renderOriginCharacteristic(input,{occurrence:input.originOccurrence ?? null})});
 }

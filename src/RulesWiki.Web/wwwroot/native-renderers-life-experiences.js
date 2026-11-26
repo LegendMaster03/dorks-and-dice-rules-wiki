@@ -334,7 +334,7 @@ export async function renderLifeExperience(input) {
     // The existing native-rule-detail decorator owns the package notice.
     return article;
 }
-export function registerLifeExperienceRenderers(registry) {
+export function registerLifeExperienceRenderers(registry, {requireCapability = false} = {}) {
     registry.register({ id: "origins.life-experiences", priority: 50,
-        supports: input => supports(input) && (input.rule.kind !== "upbringing" || input.references?.originReferenceContractVersion === 1), render: renderLifeExperience });
+        supports: input => supports(input) && (!requireCapability || input.references?.originReferenceContractVersion === 1), render: renderLifeExperience });
 }

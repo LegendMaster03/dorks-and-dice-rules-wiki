@@ -22,8 +22,8 @@ export function createRegisteredNativeRenderers(renderLegacy) {
     registerCreatures(registry);
     registerReferences(registry);
     registerBiologicalRenderer(registry);
-    registerOriginCharacteristicRenderer(registry);
+    registerOriginCharacteristicRenderer(registry, {requireCapability: true});
     registerConstructRenderers(registry);
-    registerLifeExperienceRenderers(registry);
+    registerLifeExperienceRenderers(registry, {requireCapability: true});
     return registry;
 }

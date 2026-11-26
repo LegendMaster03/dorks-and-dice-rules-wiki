@@ -88,7 +88,10 @@ export async function renderRuleDetailPane(
             validateNativeEnvelope(context, referenceIdentity, detail.native);
             const token = lifecycle.begin(context, referenceIdentity);
             const lease = Object.freeze({ ...token, isCurrent: () => token.isCurrent() && isCurrent() });
-            const originOccurrence = readOriginOccurrenceRoute(currentToolRoute(app), window.location.search, context, detail.native.rule);
+            const query = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+            const originOccurrence = ["originSelected", "originSource", "originPath"].some(key => query.has(key))
+                ? readOriginOccurrenceRoute(currentToolRoute(app), query, context, detail.native.rule) : null;
+            if (originOccurrence && !originsEnabled(reader)) throw new Error("Characteristic occurrence reference unavailable.");
             const mounted = await renderNativeDetail(container, detail.native, onBackToList, app,
                 { context, reader, lifecycle: lease, ruleId: referenceIdentity, originOccurrence });
             if (mounted && lease.isCurrent()) {
