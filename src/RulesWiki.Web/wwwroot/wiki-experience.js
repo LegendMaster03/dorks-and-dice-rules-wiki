@@ -425,7 +425,7 @@ export function installPaneDivider(workspace) {
     const setRatio = value => {
         const width = workspace.getBoundingClientRect().width;
         const min = width > 0 ? Math.max(.22, 240 / width) : .22;
-        const max = width > 0 ? Math.min(.55, 1 - 370 / width) : .55;
+        const max = width > 0 ? Math.max(.22, Math.min(.55, 1 - 370 / width)) : .55;
         ratio = Math.max(Math.min(min, max), Math.min(max, value));
         workspace.style.setProperty("--wiki-list-width", `${ratio * 100}%`);
         divider.setAttribute("aria-valuenow", String(Math.round(ratio * 100)));

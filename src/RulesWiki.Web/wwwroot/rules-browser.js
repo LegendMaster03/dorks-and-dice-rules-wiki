@@ -9,6 +9,9 @@ import {
     formatDate,
     DEFAULT_PAGE_SIZE
 } from "./ui.js";
+import {
+    createReferenceBrowserPanes, focusCompactReferenceDetail, focusReferenceIndex, isCompactLibraryViewport
+} from "./rules-reference-browser-layout.js";
 import { cancelNativeDetailRender, renderRuleDetailPane } from "./rules-browser-detail.js";
 import { restoreMountedClassFragment } from "./native-class-navigation.js";
 import { DEFAULT_RULESET_ID } from "./rules-context.js";
@@ -53,9 +56,10 @@ export { RULE_FAMILY_TABS } from "./rules-browser-index.js";
 
 const DORKS_MODE = "dorks-and-dice";
 const PAGE_SIZE = DEFAULT_PAGE_SIZE;
-const COMPACT_BROWSER_WIDTH = 900;
 
 /** Bind the reference view and history handlers to the hosted application. */
+export { isCompactRulesBrowserWidth } from "./rules-reference-browser-layout.js";
+
 export function installResolvedRulesBrowser(app) {
     installReferenceBrowserStylesheet();
     app.canBrowseRules = app.hostContext.siteMode === DORKS_MODE;
@@ -206,7 +210,7 @@ async function renderRulesBrowser(app, container) {
     const boundReader = app.rulesetReader;
     const currentSurface = () => container.isConnected && app.rulesContext === boundContext && app.rulesetReader === boundReader;
 
-    const shell = element("section", { className: "rules-core-library-shell" });
+    const { shell, workspace, index, detail } = createReferenceBrowserPanes();
     const headingTitle = element("h2", {
         className: "rules-core-library-title",
         text: libraryTitle(app.browserFilters.entityType)
@@ -365,11 +369,6 @@ async function renderRulesBrowser(app, container) {
     filterAvailability,
     clearFilters);
 
-    const workspace = element("div", { className: "rules-core-library-workspace" });
-    const index = element("section", {
-        className: "rules-core-library-index",
-        ariaLabel: "Rules index"
-    });
     const indexHeader = element("div", { className: "rules-core-library-index-header" });
     const list = element("div", {
         className: "rules-core-library-index-list",
@@ -379,15 +378,8 @@ async function renderRulesBrowser(app, container) {
     const indexFooter = element("div", { className: "rules-core-library-index-footer" });
     index.append(searchGroup, activeFilterSummary, filterBar, indexHeader, list, indexFooter);
 
-    const detail = element("section", {
-        className: "rules-core-library-detail",
-        ariaLabel: "Selected rule",
-        attributes: { tabindex: "-1" }
-    });
     detail.append(renderEmptyDetail("Select a rule from the list."));
-
-    workspace.append(index, detail);
-    shell.append(heading, controls, workspace);
+    shell.prepend(heading, controls);
     container.append(shell);
 
     // Index and detail requests can overlap when the scope, search, or selection
@@ -716,8 +708,7 @@ async function renderRulesBrowser(app, container) {
         pushToolRoute(app, catalogRouteForEntity(app.browserFilters.entityType, app), app.browserScope);
         const selectedRow = rowByConceptKey.get(app.browserSelectedConceptKey);
         if (selectedRow) {
-            selectedRow.scrollIntoView?.({ block: "nearest" });
-            selectedRow.focus?.({ preventScroll: true });
+            focusReferenceIndex(selectedRow);
         } else {
             search.focus?.({ preventScroll: true });
         }
@@ -749,10 +740,8 @@ async function renderRulesBrowser(app, container) {
 
         if (!currentSurface() || serial !== detailSerial) return;
         mountedSelection = detail.querySelector(".rules-core-library-detail-body") ? conceptKey : null;
-        if (isCompactLibraryViewport(shell)) {
-            detail.focus({ preventScroll: true });
-            if (!app.nativeReferenceOnly) detail.scrollIntoView({ block: "start" });
-        }
+        if (focusCompactReferenceDetail(shell, detail) && !app.nativeReferenceOnly)
+            detail.scrollIntoView({ block: "start" });
     };
 
     const refreshListState = () => {
@@ -1161,18 +1150,6 @@ async function renderRulesBrowser(app, container) {
     });
 
     await load({ keepSelection: true });
-}
-
-export function isCompactRulesBrowserWidth(width) {
-    const numericWidth = Number(width);
-    return Number.isFinite(numericWidth) && numericWidth <= COMPACT_BROWSER_WIDTH;
-}
-
-function isCompactLibraryViewport(shell) {
-    const containerWidth = shell?.getBoundingClientRect?.().width
-        || shell?.clientWidth
-        || window.innerWidth;
-    return isCompactRulesBrowserWidth(containerWidth);
 }
 
 function isEditableTarget(target) {

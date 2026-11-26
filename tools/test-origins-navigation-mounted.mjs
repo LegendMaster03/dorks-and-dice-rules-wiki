@@ -51,6 +51,9 @@ try {
     red.dispatchEvent(new window.MouseEvent("click",{bubbles:true,cancelable:true,button:0}));
     await wait(() => root.querySelector(".origin-biological-detail"), "composed biological selection");
     assert.match(window.location.search,/originRecord=ancestry.dragonborn.red/);
+    const reader = root.querySelector(".wiki-origins .rules-core-library-shell");
+    assert.ok(reader?.querySelector(".rules-core-library-workspace.has-selection"));
+    assert.equal(document.activeElement?.dataset.originRecord, "ancestry.dragonborn.red");
     assert.equal(calls.slice(start).filter(c=>c[0]==="getNativeOriginSource").length,1);
     const configured = root.querySelector('a[href*="/rules/trait.breath-weapon?originSelected=ancestry.dragonborn.red"]');
     assert.ok(configured);
@@ -105,6 +108,23 @@ try {
     await wait(() => root.querySelector(".wiki-origin-detail")?.textContent.includes("Open canonical reference"), "composed Construct selection");
     assert.equal(calls.slice(start).filter(c=>c[0]==="getNativeOriginComponent").length,1);
     assert.equal(calls.slice(start).filter(c=>c[0]==="getNativeRule").length,1);
+    assert.equal(document.activeElement?.dataset.originRecord, "construct-component.locomotion-unit");
+
+    // Compact readers put focus on the detail and return to the same record.
+    const wideWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { value: 390, configurable: true });
+    await open("Species and Ancestries");
+    const searchLineage = root.querySelector(".origin-biological-index input");
+    searchLineage.value = "Red Dragonborn";
+    searchLineage.dispatchEvent(new Event("input", { bubbles: true }));
+    root.querySelector('[data-origin-record="ancestry.dragonborn.red"]').click();
+    await wait(() => root.querySelector(".wiki-origin-detail .origin-biological-detail"), "compact biological detail");
+    assert.equal(document.activeElement, root.querySelector(".wiki-origin-detail"));
+    root.querySelector(".wiki-origin-detail .rules-core-library-mobile-back").click();
+    await wait(() => root.querySelector(".wiki-origin-index") && !root.querySelector(".wiki-origin-detail .origin-biological-detail"), "compact return to index");
+    assert.equal(document.activeElement?.dataset.originRecord, "ancestry.dragonborn.red");
+    assert.equal(root.querySelector(".origin-biological-index input").value, "Red Dragonborn");
+    Object.defineProperty(window, "innerWidth", { value: wideWidth, configurable: true });
     await open("Upbringings");
     const culture = root.querySelector('a[href*="/rules/upbringing.elf.wood"]');
     assert.ok(culture);

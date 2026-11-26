@@ -1,3 +1,38 @@
+import { element } from "./ui.js";
+
+export function createReferenceBrowserPanes() {
+    const shell = element("section", { className: "rules-core-library-shell" });
+    const workspace = element("div", { className: "rules-core-library-workspace" });
+    const index = element("section", { className: "rules-core-library-index", ariaLabel: "Rules index" });
+    const detail = element("section", {
+        className: "rules-core-library-detail", ariaLabel: "Selected rule", attributes: { tabindex: "-1" }
+    });
+    workspace.append(index, detail);
+    shell.append(workspace);
+    return { shell, workspace, index, detail };
+}
+
+export function isCompactRulesBrowserWidth(width) {
+    const numericWidth = Number(width);
+    return Number.isFinite(numericWidth) && numericWidth <= 900;
+}
+
+export function isCompactLibraryViewport(shell) {
+    return isCompactRulesBrowserWidth(shell?.getBoundingClientRect?.().width
+        || shell?.clientWidth || window.innerWidth);
+}
+
+export function focusReferenceIndex(target) {
+    target?.scrollIntoView?.({ block: "nearest" });
+    target?.focus?.({ preventScroll: true });
+}
+
+export function focusCompactReferenceDetail(shell, detail) {
+    if (!isCompactLibraryViewport(shell)) return false;
+    detail.focus({ preventScroll: true });
+    return true;
+}
+
 /**
  * Move reference-browser context controls as soon as the shell is rendered,
  * before the first asynchronous catalog read finishes.

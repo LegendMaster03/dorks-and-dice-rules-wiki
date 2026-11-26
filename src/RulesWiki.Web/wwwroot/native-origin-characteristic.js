@@ -145,15 +145,17 @@ function renderOccurrence(root,input,context,canonical) {
     const {source,selected,occurrence,candidates,directReferenceAvailable} = context;
     const body = node("div");
     body.append(append(node("p"),node("strong","Selected lineage: "),renderStructuredReference(selected.id,input,selected.name)));
-    body.append(append(node("p"),node("strong","Defining source: "),renderStructuredReference(source.id,input,source.name),
-        node("span"," · " + occurrence.path)));
+    body.append(append(node("p"),node("strong","Defining source: "),renderStructuredReference(source.id,input,source.name)));
     if (source.inheritedSource) body.append(node("p","Inherited source occurrence; not an active character manifestation."));
     if (candidates.length) {
         for (const c of candidates) {
-            const candidate = node("div");
-            candidate.append(node("h4","Source offer"+(has(c.slot) ? " — "+c.slot : ""),"h6"));
-            candidate.append(fields(Object.fromEntries(Object.entries(c).filter(([k]) => !["sourceId","path","slot"].includes(k))),input));
-            body.append(candidate);
+            if (object(c.authoredParameters) && Object.keys(c.authoredParameters).length)
+                body.append(fields(c.authoredParameters, input));
+            const offer = Object.fromEntries(Object.entries(c).filter(([key]) =>
+                !["sourceId", "path", "slot", "authoredParameters"].includes(key)));
+            if (Object.keys(offer).length)
+                body.append(append(node("details", undefined, "rules-core-secondary-details"),
+                    node("summary", c.slot ? "Source offer — " + label(c.slot) : "Source offer"), fields(offer, input)));
         }
     } else body.append(node("p",directReferenceAvailable ?
         "No exact configured offer supplied for this occurrence. Parameters remain unresolved." :
@@ -195,12 +197,13 @@ export async function renderOriginCharacteristic(input,{occurrence = null} = {})
     const operational = trait.requiresOperationalComponent === true ||
         relationships?.sources.some(s => s.relation === "construct-operational-reference");
     const root = renderStructuredRule(r,{nativeTitle:input.rule.name,renderContent:v=>renderStructuredContent(v,{input})},{
-        summary:[["Reference type", operational ? "Construct operational characteristic" : "Canonical characteristic"],
+        summary:[["Reference type", configured ? "Configured characteristic" : operational ? "Construct operational characteristic" : "Canonical characteristic"],
             ["Rules status", r.rulesStatus ?? r.status ?? trait.rulesStatus ?? trait.status]],
         sections:[]});
     root.classList.add("card","card-body","mb-3","native-reference-article","native-origin-characteristic");
+    if (configured) renderOccurrence(root, input, configured, trait);
     root.append(node("p","Reference only. This view does not establish ownership, eligibility or activation."));
-    if (has(trait.description)) section(root,"Description",renderStructuredContent(trait.description,{input}));
+    if (has(trait.description)) section(root, configured ? "Canonical rules" : "Description", renderStructuredContent(trait.description, {input}));
     const used = new Set(["id","name","description","reviewNotes"]);
     for (const [title,keys] of groups) {
         const entries = keys.filter(k=>own(trait,k)&&has(trait[k])).map(k=>[k,trait[k]]);
@@ -209,8 +212,7 @@ export async function renderOriginCharacteristic(input,{occurrence = null} = {})
             entries.push(["authoredComposition",r.originComposition]);
         fieldGroup(root,title,entries,input);
     }
-    if (configured) renderOccurrence(root,input,configured,trait);
-    else if (object(trait.originBindings) && Object.keys(trait.originBindings).length)
+    if (!configured && object(trait.originBindings) && Object.keys(trait.originBindings).length)
         section(root,"Configuration",node("p","Source-bound parameters are unresolved in this canonical reference."));
     fieldGroup(root,"Additional characteristic fields",Object.entries(trait).filter(([k])=>!used.has(k)),input);
     const remaining = Object.entries(r).filter(([k])=>!metadata.has(k)&&!["trait","originComposition","reviewNotes"].includes(k));
