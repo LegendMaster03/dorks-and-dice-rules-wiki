@@ -125,11 +125,31 @@
     .wiki-origins-sections a, .wiki-origins-records a { min-height: 2.5rem; padding-block: .45rem; }
 }
 
-/* Origins reuses the shared pane divider; compact readers stack both panes. */
-.wiki-origins .wiki-origin-split { display:grid; grid-template-columns:minmax(0,32%) minmax(0,1fr); min-height:0; height:auto; gap:0; }
-.wiki-origins .wiki-origin-split:has(> .wiki-pane-divider) { grid-template-columns:minmax(0,var(--wiki-list-width,32%)) 10px minmax(0,1fr); }
-.wiki-origins .wiki-origin-index, .wiki-origins .wiki-origin-detail { display:block; min-width:0; padding:.65rem; overflow-wrap:anywhere; max-height:70vh; overflow:auto; }
-@container rules-wiki-browser (max-width:900px) {
-    .wiki-origins .wiki-origin-split:has(> .wiki-pane-divider), .wiki-origins .wiki-origin-split { grid-template-columns:minmax(0,1fr); }
-    .wiki-origins .wiki-origin-index, .wiki-origins .wiki-origin-detail { max-height:none; }
+/* Specialized indexes use the same split workspace and compact detail navigation. */
+.wiki-origins:has(> .wiki-origin-reader) { width: 100%; margin: 0; padding: .75rem 1rem; }
+.wiki-origins:has(> .wiki-origin-reader) > h1 { font-size: clamp(1.35rem, 2vw, 1.8rem); }
+.wiki-origins:has(> .wiki-origin-reader) > .wiki-origins-breadcrumb { margin: 0 0 .4rem; }
+.wiki-origin-reader { height: min(70vh, 56rem); }
+.wiki-origin-reader .wiki-origin-index { display: block; overflow: auto; padding: .65rem; }
+.wiki-origin-reader .wiki-origin-detail { padding: .65rem; overflow-wrap: anywhere; }
+.wiki-origin-reader .wiki-origin-detail h2 { margin-top: 0; }
+.wiki-origin-index [aria-current="page"] {
+    background: var(--bs-primary-bg-subtle, #e2eefb);
+    font-weight: 700;
+    border-radius: .2rem;
+}
+.wiki-origin-canonical { display: inline-block; margin-bottom: .65rem; }
+.wiki-origin-reader .rules-core-library-mobile-back { margin-bottom: .75rem; }
+@container rules-wiki-browser (max-width: 900px) {
+    .wiki-origin-reader .has-selection > .wiki-origin-index { display: none; }
+}
+
+.wiki-origin-reader .native-construct-index ul { list-style: none; padding: 0; margin: 0 0 .75rem; }
+.wiki-origin-reader .native-construct-index li { margin: 0; border-bottom: 1px solid var(--wiki-border); }
+.wiki-origin-reader .native-construct-index li a { display: block; padding: .45rem .55rem; }
+.wiki-origin-reader .native-construct-index li a:hover { background: var(--bs-tertiary-bg, #f1f5f5); }
+.wiki-origin-reader .native-construct-index h3 {
+    color: var(--bs-secondary-color, #536168);
+    font-size: .9rem;
+    margin: .8rem 0 .2rem;
 }

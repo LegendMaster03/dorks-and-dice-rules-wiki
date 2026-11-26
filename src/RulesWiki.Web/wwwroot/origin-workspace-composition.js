@@ -3,6 +3,7 @@ import { DEFAULT_RULESET_ID, nativeRuleIdentity, parseQualifiedRoute } from "./r
 import { createPresentationInput } from "./native-presentation.js";
 import { createBiologicalReader, supportsBiologicalReader, renderBiologicalIndex, renderBiologicalDetail, renderBiologicalExplanation } from "./origin-biological-reader.js";
 import { loadConstructIndex, renderConstructIndex, renderConstructReference, CONSTRUCT_TABS } from "./native-construct-reference.js";
+import { createReferenceBrowserPanes } from "./rules-reference-browser-layout.js";
 import { element as el } from "./ui.js";
 
 const biologicalKinds = new Set(["species", "ancestry", "subspecies"]);
@@ -38,22 +39,37 @@ export function readOriginOccurrenceRoute(path, search, context, rule) {
     return {context, canonicalTraitId:rule.id, selectedSourceId, sourceId, path:occurrencePath};
 }
 
-function split(input,index,detail) {
-    const root = el("div",{className:"rules-core-library-workspace wiki-origin-split"});
-    root.append(el("div",{className:"rules-core-library-index wiki-origin-index"},index),
-        el("div",{className:"rules-core-library-detail wiki-origin-detail"},detail));
-    return root;
+function split(input, indexContent, detailContent) {
+    const { shell, workspace, index, detail } = createReferenceBrowserPanes();
+    shell.classList.add("wiki-origin-reader");
+    index.classList.add("wiki-origin-index");
+    detail.classList.add("wiki-origin-detail");
+    index.append(indexContent);
+    if (input.selectedId !== null) {
+        workspace.classList.add("has-selection");
+        detail.append(el("button", {
+            type: "button", className: "rules-core-library-mobile-back btn btn-sm btn-outline-secondary",
+            text: "Back to " + input.title, onClick: () => navigateSelection(input, null)
+        }));
+    }
+    detail.append(detailContent);
+    return shell;
 }
-function selectionLink(input,id) {
-    return input.hrefForWorkspace(input.view,input.section ?? null) + "?" + new URLSearchParams({originRecord:id});
-}
-function navigateSelection(input,id) {
+function navigateSelection(input, id) {
     if (!input.lifecycle.isCurrent()) return;
-    window.history.pushState({}, "", selectionLink(input,id));
+    const href = input.hrefForWorkspace(input.view, input.section);
+    const query = id === null ? "" : "?" + new URLSearchParams({ originRecord: id });
+    window.history.pushState({}, "", href + query);
     window.dispatchEvent(new window.PopStateEvent("popstate"));
 }
 function selectionPrompt() { return el("p",{text:"Select a reference to read its authored details."}); }
-function canonicalLink(input,id) { return el("a",{text:"Open canonical reference",attributes:{href:input.hrefForRule(id)}}); }
+function selectedDetail(input, id, article) {
+    article.querySelector("h2")?.after(el("a", {
+        className: "wiki-origin-canonical", text: "Open canonical reference",
+        attributes: { href: input.hrefForRule(id) }
+    }));
+    return article;
+}
 
 // Only UI search/expansion state is retained, keyed by the exact authorized reader.
 const biologicalStates = new WeakMap();
@@ -72,7 +88,7 @@ async function biological(input) {
         if (id !== null) {
             const model = await controller.select(id);
             if (!model || !input.lifecycle.isCurrent()) return null;
-            detail = el("div",{},canonicalLink(input,id),renderBiologicalDetail(model,presentation));
+            detail = selectedDetail(input, id, renderBiologicalDetail(model, presentation));
             input.remember?.(model.selected);
         }
         return split(input,index,detail);
@@ -91,6 +107,7 @@ async function construct(input) {
     for (const anchor of list.querySelectorAll("a")) {
         const target = links.get(anchor.getAttribute("href"));
         if (!target) continue;
+        anchor.dataset.originRecord = target;
         anchor.addEventListener("click",event=>{
             if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
             event.preventDefault(); navigateSelection(input,target);
@@ -105,7 +122,7 @@ async function construct(input) {
             toolBasePath:input.toolBasePath,lifecycle:input.lifecycle,renderSource:input.renderSource});
         const article = await renderConstructReference(presentation);
         if (!input.lifecycle.isCurrent()) return null;
-        detail = el("div",{},canonicalLink(input,id),article);
+        detail = selectedDetail(input, id, article);
         input.remember?.(envelope.rule);
     }
     return split(input,list,detail);

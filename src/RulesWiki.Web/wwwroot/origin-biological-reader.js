@@ -157,6 +157,7 @@ export function renderBiologicalIndex(tree, input, { selectedId = null, onNaviga
             for (const row of rows.filter(x => shown.has(x.id))) {
                 const li = node("li");
                 const link = renderStructuredReference(row.id, input, row.name);
+                if (link.tagName === "A") link.dataset.originRecord = row.id;
                 if (row.id === selectedId) link.setAttribute("aria-current", "page");
                 if (onNavigate && link.tagName === "A") link.addEventListener("click", event => {
                     if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
@@ -196,9 +197,14 @@ function offerTable(offers, model, input, fixed = false) {
     const list = node("dl");
     for (const offer of offers) {
         const origin = model.lineage.find(x => x.id === offer.sourceId);
-        const title = node("dt", label(offer.slot ?? "Characteristic") + " — " + (origin?.name ?? offer.sourceId));
+        const slot = offer.slot === "walkingSpeedFeet" ? "Walking speed" : label(offer.slot ?? "Characteristic");
+        const title = node("dt", slot + " — " + (origin?.name ?? offer.sourceId));
         const body = node("dd");
-        if (fixed) body.append(format(offer.value, input));
+        if (fixed) {
+            const value = offer.slot?.endsWith("SpeedFeet") && typeof offer.value === "number"
+                ? offer.value + " ft." : offer.value;
+            body.append(format(value, input));
+        }
         else {
             for (const key of ["offeredValue", "authoredParameters", "requiredChoices", "unresolvedEvidence", "sourceRestriction"])
                 if (offer[key] != null) body.append(node("h5", label(key)), format(offer[key], input));
@@ -219,16 +225,17 @@ export function renderBiologicalDetail(model, input) {
         if (index) breadcrumb.append(node("span", " / "));
         breadcrumb.append(renderStructuredReference(row.id, input, row.name));
     });
-    article.append(breadcrumb, node("h2", selected.name), node("p", status(selected)),
-        node("p", "Status: " + text(selected.rulesStatus ?? selected.status)),
-        node("p", "Reference only. Authored source offers and inherited reference values are not effective character grants or eligibility."));
+    article.append(node("h2", selected.name), breadcrumb, node("p", status(selected)));
+    const rulesStatus = selected.rulesStatus ?? selected.status;
+    if (rulesStatus && rulesStatus !== "selected-native") article.append(node("p", text(rulesStatus), "small text-muted"));
     if (definition.description != null) article.append(format(definition.description, input));
     if (model.direct) {
-        article.append(section("Fixed intrinsic reference offers", offerTable(model.direct.fixedValues, model, input, true)),
-            section("Source offers, bindings, restrictions and choices", offerTable(model.direct.candidates, model, input)));
+        article.append(section("Inherent characteristics", offerTable(model.direct.fixedValues, model, input, true)),
+            disclosure("Source options and restrictions", offerTable(model.direct.candidates, model, input)));
         if (model.direct.issues?.length) article.append(section("Unresolved reference issues", format(model.direct.issues, input)));
     } else article.append(section("Direct reference", node("p", "No direct reference projection is supplied for this record. Authored source evidence remains readable.")));
-    const sourceSection = section("Authored lineage and characteristics");
+    const sourceSection = section("Authored lineage and characteristics",
+        node("p", "Reference only. Authored characteristics do not establish a character’s grants or eligibility."));
     for (const row of model.lineage) {
         const block = node("section");
         block.append(node("h4", row.name + (row.inheritedSource ? " — Inherited source" : " — Selected source")));
@@ -252,7 +259,7 @@ export function renderBiologicalDetail(model, input) {
                 const configured = renderStructuredReference(occurrence.canonicalTraitId, input, "Read this source occurrence");
                 if (configured.tagName === "A") {
                     configured.href += "?" + new URLSearchParams({
-                        originSelected: selected.id, originSource: row.id, originPath: occurrence.path
+                        originSelected: selected.id, originSource: row.id, originPath: occurrence.path, category: "origin-trait"
                     }).toString();
                     item.append(configured);
                 }
@@ -268,11 +275,10 @@ export function renderBiologicalDetail(model, input) {
         block.append(renderNativeAttribution(referenceInput(input, row)));
         sourceSection.append(block);
     }
-    article.append(sourceSection);
     const upbringing = selected.defaultUpbringingId
         ? renderStructuredReference(selected.defaultUpbringingId, input)
         : node("p", "No suggested Upbringing is authored for this record.");
-    article.append(section("Suggested Upbringing", upbringing),
+    article.append(section("Suggested Upbringing", upbringing), sourceSection,
         section("Biological Origination and inheritance",
             node("p", "A Species/Ancestry definition lineage is not an individual's Heritage. Direct reference selection and mixed biological inheritance are distinct; inherited instances are not automatically expressed Manifestations."),
             renderStructuredReference("rule.creature-origination", input, "Creature Origination, biological transmission and transformation"),

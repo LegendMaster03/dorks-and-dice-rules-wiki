@@ -85,6 +85,7 @@ let before=calls.length;
 const red=await show("trait.breath-weapon",{occurrence:redRequest});
 assert.deepEqual(calls.slice(before).map(c=>c[0]),["reverse","source"]);
 const redConfig=section(red,"Configured source occurrence");
+assert.ok(redConfig.compareDocumentPosition(section(red,"Canonical rules")) & Node.DOCUMENT_POSITION_FOLLOWING);
 match(redConfig,/fire/i); match(redConfig,/30 ft\./); match(redConfig,/5 ft\./); match(redConfig,/Inherited source occurrence/);
 assert.ok(qualified(red,"ancestry.dragonborn.red")); assert.ok(qualified(red,"species.dragonborn"));
 const root=await show("trait.breath-weapon",{occurrence:{...redRequest,selectedSourceId:"species.dragonborn"}});

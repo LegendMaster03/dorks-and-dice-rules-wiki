@@ -271,7 +271,7 @@ function addReferenceHeading(app, container) {
     if (!selectedName) return;
 
     for (const renderer of container.querySelectorAll(".rules-core-structured-rule")) {
-        if (renderer.querySelector(":scope > .rules-wiki-reference-heading")) continue;
+        if (renderer.querySelector(":scope > .rules-wiki-reference-heading, :scope > h2")) continue;
         renderer.prepend(element("header", { className: "rules-wiki-reference-heading" },
             element("h3", { className: "rules-wiki-reference-title", text: selectedName })));
     }

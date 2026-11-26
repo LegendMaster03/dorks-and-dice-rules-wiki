@@ -1,5 +1,6 @@
 /** Presentation routes only. Native identity and authority remain in Rules Core. */
 import { DEFAULT_RULESET_ID, catalogRoute, categoryRoute, ruleRoute, createRenderLifecycle } from "./rules-context.js";
+import { focusCompactReferenceDetail, focusReferenceIndex } from "./rules-reference-browser-layout.js";
 import { element as el } from "./ui.js";
 import { renderStructuredContent } from "./structured-content.js";
 import { renderPackageAttribution } from "./package-attribution.js";
@@ -74,6 +75,32 @@ export function originMenu(app, active, { grouped = true } = {}) {
 }
 
 const lives = new WeakMap();
+const indexStateByReader = new WeakMap();
+
+function restoreOriginPanes(shell, input) {
+    if (!shell.classList.contains("wiki-origin-reader")) return;
+    if (!indexStateByReader.has(input.reader)) indexStateByReader.set(input.reader, new Map());
+    const views = indexStateByReader.get(input.reader);
+    const key = input.hrefForWorkspace(input.view, input.section);
+    if (!views.has(key)) views.set(key, { scrollTop: 0, selectedId: null });
+    const state = views.get(key);
+    const index = shell.querySelector(".wiki-origin-index");
+    const detail = shell.querySelector(".wiki-origin-detail");
+    const id = input.selectedId ?? state.selectedId;
+    index.scrollTop = state.scrollTop;
+    index.addEventListener("scroll", () => {
+        if (input.lifecycle.isCurrent() && index.clientHeight) state.scrollTop = index.scrollTop;
+    });
+    const selected = Array.from(index.querySelectorAll("[data-origin-record]"))
+        .find(row => row.dataset.originRecord === id);
+    if (input.selectedId !== null) {
+        state.selectedId = input.selectedId;
+        if (focusCompactReferenceDetail(shell, detail)) return;
+    } else {
+        state.selectedId = null;
+    }
+    if (id !== null) focusReferenceIndex(selected ?? index.querySelector("input"));
+}
 export function cancelOriginsWorkspace(app) {
     lives.get(app)?.cancel();
     lives.delete(app);
@@ -105,7 +132,7 @@ export async function renderOriginsWorkspace(app, container, route) {
         app.rulesetReader === reader && app.rulesContext === reader.context && container.isConnected;
     const base = (app.hostContext.toolBasePath ?? "/tools/rules-wiki").replace(/\/$/, "");
     const input = Object.freeze({
-        reader, context: reader.context, view, section, toolBasePath: base,
+        reader, context: reader.context, view, section, title: originTitle(view), toolBasePath: base,
         selectedId: new URLSearchParams(window.location.search).get("originRecord"),
         remember: rule => app.rememberNativeReference?.(reader.context, rule),
         renderSource: app.renderNativeSource ? value => app.renderNativeSource(value) : null,
@@ -119,7 +146,7 @@ export async function renderOriginsWorkspace(app, container, route) {
     container.replaceChildren(el("p", { className: "wiki-home", text: "Loading Origins reference…" }));
     try {
         const page = el("section", { className: "wiki-home wiki-origins" });
-        page.append(el("nav", { className: "wiki-origins-breadcrumb", ariaLabel: "Origins navigation" },
+        if (view !== "overview") page.append(el("nav", { className: "wiki-origins-breadcrumb", ariaLabel: "Origins navigation" },
             link("Character Origins Overview", input.hrefForWorkspace("overview"))));
         page.append(el("h1", { text: originTitle(view) }));
         if (view === "construct-assembly") {
@@ -144,6 +171,7 @@ export async function renderOriginsWorkspace(app, container, route) {
         if (!current()) return;
         page.append(body, renderPackageAttribution(reader.context, reader.packageDescriptor));
         container.replaceChildren(page);
+        restoreOriginPanes(body, input);
     } catch {
         if (!current()) return;
         container.replaceChildren(el("section", { className: "wiki-home" },
@@ -160,21 +188,19 @@ async function renderFallback(input) {
         // Resolve the authored rules, not a cached copy or historical review note.
         const rules = await Promise.all(["rule.creature-origination", "rule.species-subspecies-upbringing"]
             .map(id => reader.resolve(id)));
-        body.append(el("p", { text: "Origination describes how a character comes into existence. Heritage identifies the sources of inherent characteristics; Manifestations describe their expression. Life Experiences cover Upbringings and Backgrounds." }),
-            el("p", { text: "Biological Origination and Construct Assembly are distinct families. This is a reference to authored rules and options, not a character builder or a guarantee that every method is executable." }),
-            el("h2", { text: "Rules reference" }),
-            el("ul", {}, ...rules.map(({ rule }) => el("li", {}, link(rule.name, hrefForRule(rule.id, rule.kind))))));
+        body.append(el("p", { text: "Origination describes how a character comes into existence. Heritage identifies the sources of inherent characteristics; Manifestations describe their expression. Life Experiences cover Upbringings and Backgrounds." }));
         const grid = el("div", { className: "wiki-home-grid" });
         for (const group of ORIGIN_GROUPS.filter(group => group.label)) grid.append(
             el("section", { className: "wiki-home-category" }, el("h2", { text: group.label }),
                 el("ul", {}, ...group.views.map(([id, title]) => el("li", {}, link(title, hrefForWorkspace(id)))))));
-        body.append(grid);
+        body.append(grid, el("h2", { text: "Supporting rules" }),
+            el("ul", {}, ...rules.map(({ rule }) => el("li", {}, link(rule.name, hrefForRule(rule.id, rule.kind))))));
         return body;
     }
     if (view === "methods" || view === "inheritance-and-transformation") {
         const envelope = await reader.originMethods();
         const rows = view === "methods" ? envelope.methods : envelope.methods.filter(m => m.createsNewIndividual === false);
-        body.append(el("p", { text: "Authored method references only. Defaults and support descriptors do not establish executable availability. Unspecified fields remain unspecified." }),
+        body.append(el("p", { text: "Authored default availability and method support describe the reference. They do not establish whether the method can be used in play." }),
             link("Creature Origination rules", hrefForRule("rule.creature-origination")));
         if (view === "inheritance-and-transformation") body.append(el("p", { text: "This list contains only methods explicitly marked as changing an existing individual." }),
             link("Species, Ancestries and Upbringing rules", hrefForRule("rule.species-subspecies-upbringing")));
@@ -185,12 +211,16 @@ async function renderFallback(input) {
                 ["Operation", method.operation], ["Support", method.support],
                 ["Authored default availability", method.defaultAvailability], ["Specializes", method.specializes]
             ];
-            const details = el("dl");
-            for (const [label, value] of fields) details.append(el("dt", { text: label }),
-                el("dd", {}, value == null ? el("span", { text: "Not specified" }) : renderStructuredContent(value)));
+            const details = el("dl", { className: "rules-core-inline-details" });
+            for (const [label, value] of fields) {
+                if (value == null && label !== "Creates a new individual") continue;
+                const display = typeof value === "boolean" ? (value ? "Yes" : "No") : value;
+                details.append(el("dt", { text: label }),
+                    el("dd", {}, display == null ? "Not specified" : renderStructuredContent(display)));
+            }
             if (method.definingCreatureTypeId) details.append(el("dt", { text: "Defining creature type" }),
                 el("dd", {}, link(method.definingCreatureTypeId, hrefForRule(method.definingCreatureTypeId))));
-            body.append(el("section", { className: "wiki-home-category wiki-origin-method" },
+            body.append(el("section", { className: "rules-core-structured-section wiki-origin-method" },
                 el("h2", { text: method.name ?? method.reference.methodId }), details));
         }
         return body;

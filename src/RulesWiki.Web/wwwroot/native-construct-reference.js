@@ -4,6 +4,7 @@
  */
 import { DEFAULT_RULESET_ID, assertSnapshot, categoryRoute, nativeRuleIdentity } from "./rules-context.js";
 import { renderStructuredContent, renderStructuredReference, renderNativeAttribution } from "./native-presentation.js";
+import { renderStructuredRule } from "./rule-renderers-specialized.js";
 import { humanizeKey } from "./rule-renderer-support.js";
 
 export const CONSTRUCT_TABS = Object.freeze([
@@ -127,8 +128,6 @@ export function renderConstructIndex(input, index, selectedId = null, { toolBase
             const link = reference(input, row.id, row.name);
             if (row.id === selectedId && link.tagName === "A") link.setAttribute("aria-current", "page");
             item.append(link);
-            const status = row.rulesStatus ?? row.status;
-            if (status != null) item.append(node("div", status, "small text-muted"));
             list.append(item);
         }
         part.append(list);
@@ -233,19 +232,25 @@ const groupsByKind = {
     ]
 };
 
-function authoredDetail(input, record, category) {
-    const article = node("article", undefined, "card card-body mb-3 native-reference-article");
-    article.append(node("h2", input.rule.name));
-    if (category) article.append(node("p", humanizeKey(category)));
+function authoredDetail(input, record, category, component) {
+    const article = renderStructuredRule({}, {
+        nativeTitle: input.rule.name, renderContent: value => renderValue(input, value)
+    }, { summary: [["Category", category ? humanizeKey(category) : null],
+        ["Power demand", record.powerDemand], ["Power output", record.powerOutput]] });
+    article.classList.add("card", "card-body", "mb-3", "native-reference-article");
+    if (Object.hasOwn(record, "description")) article.append(renderValue(input, record.description));
     const used = new Set(["id", "kind", "name", "source", "sourcePackage", "componentCategory", "description", "status", "rulesStatus", "reviewNotes"]);
-    for (const key of ["status", "rulesStatus"]) {
-        if (Object.hasOwn(record, key)) section(article, humanizeKey(key), renderValue(input, record[key], key));
+    for (const key of ["rulesStatus", "status"]) {
+        if (record[key] && record[key] !== "selected-native")
+            article.append(node("p", record[key], "small text-muted"));
     }
-    if (Object.hasOwn(record, "description")) section(article, "Description", renderValue(input, record.description));
+    if (input.rule.kind === "construct-component" && record.craftingRecipeId)
+        article.append(reference(input, record.craftingRecipeId, "Manufacturing recipe"));
     for (const [heading, keys] of groupsByKind[input.rule.kind]) {
         const fields = Object.fromEntries(keys.filter(key => Object.hasOwn(record, key)).map(key => [key, record[key]]));
         keys.forEach(key => used.add(key));
         if (Object.keys(fields).length) section(article, heading, renderValue(input, fields));
+        if (component && heading === "Capabilities and requirements") appendConfiguration(article, input, component);
     }
     const remaining = Object.fromEntries(Object.entries(record).filter(([key]) => !used.has(key)));
     if (Object.keys(remaining).length) section(article, "Additional authored fields", renderValue(input, remaining));
@@ -323,12 +328,12 @@ export async function renderConstructReference(input) {
     }
     // Selected component's authoritative loader-projected definition supplies
     // path-identified identity and category. The original reader record is retained.
-    const authored = projection && input.rule.kind === "construct-component" ? projection.definition : record;
-    const article = authoredDetail(input, authored, projection?.componentCategory ?? null);
-    if (input.rule.kind === "construct-component" && authored.kind !== input.rule.kind) throw new Error("Construct component kind mismatch.");
-    if (input.rule.kind === "construct-component") appendConfiguration(article, input, projection);
-    else if (projection) appendReverse(article, input, projection);
-    else if (input.rule.kind === "crafting-material") section(article, "Recipe input references",
+    const component = input.rule.kind === "construct-component" ? projection : null;
+    const authored = component?.definition ?? record;
+    if (component && authored.kind !== input.rule.kind) throw new Error("Construct component kind mismatch.");
+    const article = authoredDetail(input, authored, component?.componentCategory, component);
+    if (projection && !component) appendReverse(article, input, projection);
+    if (input.rule.kind === "crafting-material") section(article, "Recipe input references",
         node("p", "Core does not yet provide reverse recipe-input relationships for crafting ingredients."));
     if (record !== authored) {
         const extra = Object.fromEntries(Object.entries(record).filter(([key]) => !Object.hasOwn(authored, key)

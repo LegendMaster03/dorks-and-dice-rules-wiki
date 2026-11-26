@@ -1,5 +1,6 @@
 /** Workstream F: first-party Life Experiences reference presentation only. */
 import { DEFAULT_RULESET_ID, nativeRuleIdentity, validateNativeEnvelope } from "./rules-context.js";
+import { renderStructuredRule } from "./rule-renderers-specialized.js";
 import { renderNativeAttribution, renderStructuredContent, renderStructuredReference } from "./native-presentation.js";
 
 const kinds = new Set(["upbringing", "background"]);
@@ -250,14 +251,30 @@ function extraRecord(parent, record, state) {
     // The complete record preserves unknown nested fields and exact local IDs.
     details(parent, "Original authored record", record, state.input);
 }
-function baseArticle(input, r) {
-    const article = node("article", null, "card card-body mb-3 native-reference-article life-experience-reader");
+function baseArticle(input, r, lineage) {
+    const benefits = lineage.flatMap(row => Array.isArray(row.definition.benefits) ? row.definition.benefits : []);
+    const hasChoices = benefit => [benefit.choiceCount, benefit.chooseOne, benefit.chooseFrom, benefit.options].some(present);
+    const names = entries => entries.map(entry => object(entry) ? entry.name : entry)
+        .filter(name => typeof name === "string" && name.length).join(", ");
+    const localEquipment = Array.isArray(r.startingEquipment?.items) ? r.startingEquipment.items : [];
+    let selectability = null;
+    if (r.selectable === true) selectability = "Selectable";
+    if (r.selectable === false) selectability = r.kind === "upbringing" ? "Inheritance only" : "Not selectable";
+    const article = renderStructuredRule({}, {
+        nativeTitle: input.rule.name, renderContent: value => renderStructuredContent(value, { input: null })
+    }, { summary: [
+        ["Reference type", label(input.rule.kind)],
+        ["Selectability", selectability],
+        ["Training and features", names(benefits.filter(benefit => benefit && !hasChoices(benefit)))],
+        ["Choices", names(benefits.filter(benefit => benefit && hasChoices(benefit)))],
+        ["Starting equipment", names(localEquipment)]
+    ] });
+    article.classList.add("card", "card-body", "mb-3", "native-reference-article", "life-experience-reader");
     article.style.overflowWrap = "anywhere";
     article.style.minWidth = "0";
-    article.append(node("h2", input.rule.name), node("p", label(input.rule.kind), "text-muted"));
-    for (const key of ["status", "rulesStatus"])
-        if (present(r[key])) article.append(node("p", label(key) + ": " + r[key], "small"));
-    article.append(node("p", "Selectable: " + (r.selectable === true ? "Yes" : r.selectable === false ? "No" : "Not supplied"), "small"));
+    for (const key of ["rulesStatus", "status"]) {
+        if (r[key] && r[key] !== "selected-native") article.append(node("p", r[key], "small"));
+    }
     if (present(r.description)) article.append(renderStructuredContent(r.description, { input: null }));
     return article;
 }
@@ -282,7 +299,7 @@ export async function renderLifeExperience(input) {
     const state = { input, resolved: await resolveLinks(input, lineage.map(row => row.definition)),
         authoritative: new Set([...lineage.map(row => row.id), ...suggestions.map(row => row.id)]) };
     if (!current(input)) return node("article");
-    const article = baseArticle(input, r);
+    const article = baseArticle(input, r, lineage);
     if (upbringing) {
         const chain = section(article, "Parent lineage");
         const list = node("ol");

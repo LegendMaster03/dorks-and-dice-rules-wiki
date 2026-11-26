@@ -95,7 +95,7 @@ export async function renderRuleDetailPane(
             const mounted = await renderNativeDetail(container, detail.native, onBackToList, app,
                 { context, reader, lifecycle: lease, ruleId: referenceIdentity, originOccurrence });
             if (mounted && lease.isCurrent()) {
-                appendOriginWorkspaceReturn(app, container, detail.native.rule);
+                appendOriginWorkspaceReturn(app, container, detail.native.rule, originOccurrence);
                 app.presentRenderedFragment?.(container);
             }
             return;
@@ -557,12 +557,16 @@ function humanizeEntityType(entityType) {
 }
 
 /** Return from any canonical native detail, including search and recent history. */
-function appendOriginWorkspaceReturn(app, container, rule) {
+function appendOriginWorkspaceReturn(app, container, rule, occurrence) {
     if (!originsEnabled(app.rulesetReader)) return;
     const target = originWorkspaceForRule(rule);
     const tabs = container.querySelector(".rules-core-version-tabs");
     if (!target || !tabs) return;
     const base = (app.hostContext.toolBasePath ?? "/tools/rules-wiki").replace(/\/$/, "");
+    const href = occurrence
+        ? originRoute("species-and-ancestries") + "?" + new URLSearchParams({ originRecord: occurrence.selectedSourceId })
+        : originRoute(...target);
     tabs.prepend(element("a", { className: "wiki-context-back",
-        text: "Back to " + originTitle(target[0]), attributes: { href: base + originRoute(...target) } }));
+        text: occurrence ? "Back to source lineage" : "Back to " + originTitle(target[0]),
+        attributes: { href: base + href } }));
 }
