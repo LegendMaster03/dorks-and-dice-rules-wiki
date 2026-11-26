@@ -177,8 +177,14 @@ export function replaceToolRoute(app, toolRelativePath, scopeValue = app.browser
 
 function updateToolRoute(app, toolRelativePath, scopeValue, replace) {
     let href = browserHref(app, toolRelativePath || "/", scopeValue);
-    // Same-record query normalization must not discard a reading fragment.
-    if (replace && href.split("?")[0] === window.location.pathname) href += window.location.hash;
+    // Same-record normalization must not discard a source occurrence or reading fragment.
+    if (replace && href.split("?")[0] === window.location.pathname) {
+        const currentParams = new URLSearchParams(window.location.search);
+        const next = new URL(href,window.location.origin);
+        for (const key of ["originSelected","originSource","originPath","originRecord"])
+            for (const value of currentParams.getAll(key)) next.searchParams.append(key,value);
+        href = next.pathname + next.search + window.location.hash;
+    }
     const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     if (current === href) return;
     if (replace) {

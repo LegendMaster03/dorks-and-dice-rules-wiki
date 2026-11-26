@@ -28,6 +28,11 @@ for (const value of Object.values(constructRecords.records)) {
         if (definition?.id && definition?.kind) first.set(definition.id,{id:definition.id,name:definition.name,kind:definition.kind,definition});
     }
 }
+for (const name of ["upbringings-1","upbringings-2","backgrounds-1","backgrounds-2"]) {
+    const pack = read("./fixtures/life-experiences/" + name + ".json");
+    for (const {record:definition} of pack.records)
+        first.set(definition.id,{id:definition.id,name:definition.name,kind:definition.kind,definition});
+}
 for (const name of ["creature-origination", "species-subspecies-upbringing"]) {
     const definition = read("./fixtures/origin-navigation/" + name + ".json");
     first.set(definition.id, { id: definition.id, name: definition.name, kind: definition.kind, definition });
@@ -81,7 +86,12 @@ const handle = async (url, options = {}, toolRoute = "/") => {
         assert.equal(id,manifest.rulesetId);
         assert.equal(parameter,manifest.fingerprint);
         const key = originPrefixes[op] + target + ".json";
-        return captures[key] ? reply(captures[key]) : reply({error:"Missing captured projection: " + key},404);
+        if (captures[key]) return reply(captures[key]);
+        // Explicit synthetic empty reverse envelope for the configured Breath Weapon
+        // mounted test; its selected-source projection is the actual A HTTP capture.
+        if (op === "getNativeOriginTraitSources" && target === "trait.breath-weapon")
+            return reply({contractVersion:1,rulesetId:id,fingerprint,traitId:target,complete:true,sources:[]});
+        return reply({error:"Missing captured projection: " + key},404);
     }
     if (op === "getNativeRule") {
         const rule = rows.find(row => row.id === parameter && row.definition);

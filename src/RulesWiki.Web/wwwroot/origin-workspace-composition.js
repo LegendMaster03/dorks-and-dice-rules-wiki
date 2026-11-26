@@ -55,15 +55,19 @@ function navigateSelection(input,id) {
 function selectionPrompt() { return el("p",{text:"Select a reference to read its authored details."}); }
 function canonicalLink(input,id) { return el("a",{text:"Open canonical reference",attributes:{href:input.hrefForRule(id)}}); }
 
+// Only UI search/expansion state is retained, keyed by the exact authorized reader.
+const biologicalStates = new WeakMap();
 async function biological(input) {
     const presentation = asPresentation(input);
+    if (!biologicalStates.has(input.reader)) biologicalStates.set(input.reader,{});
+    const state = biologicalStates.get(input.reader);
     const controller = createBiologicalReader({reader: input.reader,isCurrent: input.lifecycle.isCurrent});
     try {
         const tree = await controller.hierarchy();
         if (!tree || !input.lifecycle.isCurrent()) return null;
         const id = input.selectedId;
         if (id !== null && !tree.rows.has(id)) throw new Error("Unknown biological reference.");
-        const index = renderBiologicalIndex(tree,presentation,{selectedId:id,onNavigate:id=>navigateSelection(input,id)});
+        const index = renderBiologicalIndex(tree,presentation,{selectedId:id,state,onNavigate:id=>navigateSelection(input,id)});
         let detail = selectionPrompt();
         if (id !== null) {
             const model = await controller.select(id);

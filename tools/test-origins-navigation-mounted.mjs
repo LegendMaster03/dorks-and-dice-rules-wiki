@@ -52,7 +52,16 @@ try {
     await wait(() => root.querySelector(".origin-biological-detail"), "composed biological selection");
     assert.match(window.location.search,/originRecord=ancestry.dragonborn.red/);
     assert.equal(calls.slice(start).filter(c=>c[0]==="getNativeOriginSource").length,1);
-    assert.ok(root.querySelector('a[href*="originSelected=ancestry.dragonborn.red"]'));
+    const configured = root.querySelector('a[href*="/rules/trait.breath-weapon?originSelected=ancestry.dragonborn.red"]');
+    assert.ok(configured);
+    start = calls.length;
+    navigate(configured.getAttribute("href"));
+    await wait(() => root.querySelector(".native-origin-characteristic"), "configured characteristic from C to D");
+    assert.match(root.querySelector(".native-origin-characteristic").textContent,/Configured source occurrence/);
+    assert.match(root.querySelector(".native-origin-characteristic").textContent,/fire/i);
+    assert.match(window.location.search,/originPath=%2Ftraits%2F2/);
+    assert.deepEqual(calls.slice(start).filter(c=>c[0].startsWith("getNativeOrigin")).map(c=>c[0]),
+        ["getNativeOriginTraitSources","getNativeOriginSource"]);
     const workspaceUrl = base + originRoute("species-and-ancestries");
     navigate(workspaceUrl);
     await wait(() => heading("Species and Ancestries") && !root.querySelector(".origin-biological-detail"), "unselected workspace");
@@ -86,6 +95,24 @@ try {
     assert.ok(calls.some(c => c[0] === "searchNativeRules" && c[2]?.category === "ancestry"));
     navigate(base + "/subspecies/missing-historical-record");
     await wait(() => root.textContent.includes("No replacement has been assumed."), "legacy missing identity explanation");
+
+    // Compose the actual captured Construct component and actual cultural lineage.
+    await open("Construct Assembly");
+    const component = root.querySelector('a[href$="/rules/construct-component.locomotion-unit"]');
+    assert.ok(component);
+    start = calls.length;
+    component.dispatchEvent(new window.MouseEvent("click",{bubbles:true,cancelable:true,button:0}));
+    await wait(() => root.querySelector(".wiki-origin-detail")?.textContent.includes("Open canonical reference"), "composed Construct selection");
+    assert.equal(calls.slice(start).filter(c=>c[0]==="getNativeOriginComponent").length,1);
+    assert.equal(calls.slice(start).filter(c=>c[0]==="getNativeRule").length,1);
+    await open("Upbringings");
+    const culture = root.querySelector('a[href*="/rules/upbringing.elf.wood"]');
+    assert.ok(culture);
+    start = calls.length;
+    navigate(culture.getAttribute("href"));
+    await wait(() => root.querySelector(".life-experience-reader"), "composed Life Experiences detail");
+    assert.equal(calls.slice(start).filter(c=>c[0]==="getNativeOriginSource").length,1);
+    assert.equal(calls.slice(start).filter(c=>c[0]==="getNativeOriginHierarchy").length,1);
 
     // Mobile disclosure state and keyboard dismissal are mounted behavior.
     Object.defineProperty(window, "innerWidth", { value: 500, configurable: true });

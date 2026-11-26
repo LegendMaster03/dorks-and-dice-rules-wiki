@@ -60,6 +60,8 @@ export function renderNativeDetail(container, detail, onBack, app = null, option
         ? (app.nativeRendererRegistry ??= createWikiNativeRendererRegistry(app))
         : createWikiNativeRendererRegistry();
     const selected = registry.select(input);
+    if (input.originOccurrence && selected.id !== "origins.characteristic")
+        throw new Error("Characteristic occurrence reference unavailable.");
     const result = mountNativePresentation(container, { render: value => selected.render(value) }, input, {
         decorate: content => {
             if (selected.id === LEGACY_NATIVE_RENDERER) return content;
