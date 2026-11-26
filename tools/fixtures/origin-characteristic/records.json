@@ -1,0 +1,515 @@
+{
+  "sourceRevision": "0baa466b7fc8f55e5d675b886f76e95f9a4b551f",
+  "sourceRepository": "LegendMaster03/dorks-and-dice-rules-core",
+  "description": "Exact native Core JSON records (not captured HTTP envelopes). Construct source file is an array. Source paths and Git blob SHAs retained for verification.",
+  "fixtures": [
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.breath-weapon.json",
+      "blobSha": "b3ebf831097e6493d1fb2e225607a35af18fc30c",
+      "record": {
+        "id": "trait.breath-weapon",
+        "name": "Breath Weapon",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "breath-weapon",
+          "description": "On your turn when you take the Attack action, you can replace one of the attacks with your Breath Weapon. Targets in the area defined by your dragon ancestry make a Dexterity saving throw against DC 8 + your Proficiency Bonus + your Constitution modifier. A failed save deals damage of your dragon ancestry's type; a successful save takes half damage. Uses equal Proficiency Bonus and all expended uses return after a Long Rest.",
+          "activation": {
+            "action": "attack",
+            "replaces": "one-attack",
+            "timing": "on-your-turn"
+          },
+          "uses": {
+            "value": "proficiency-bonus",
+            "recharge": "long-rest"
+          },
+          "savingThrow": {
+            "ability": "dexterity",
+            "dc": "8 + proficiency-bonus + constitution-modifier",
+            "onSuccess": "half-damage"
+          },
+          "damage": {
+            "typeFrom": "selected-dragonborn-leaf",
+            "progression": [
+              {
+                "characterLevel": 1,
+                "dice": "1d10"
+              },
+              {
+                "characterLevel": 5,
+                "dice": "2d10"
+              },
+              {
+                "characterLevel": 11,
+                "dice": "3d10"
+              },
+              {
+                "characterLevel": 17,
+                "dice": "4d10"
+              }
+            ]
+          },
+          "areaFrom": "selected-dragonborn-family-or-leaf",
+          "originBindings": {
+            "damageType": {
+              "lookup": "leaf",
+              "sourceField": "damageType"
+            },
+            "area": {
+              "lookup": "nearest",
+              "sourceField": "breathWeaponArea"
+            }
+          }
+        },
+        "originComposition": {
+          "recombinableParameters": [
+            "damageType",
+            "area"
+          ],
+          "notes": "Player-directed inheritance may choose the complete ordinary Breath Weapon area and its damage type from eligible configured contributor offers. Preserve one complete action, damage progression, save, and use pool. This does not independently authorize a mixed trait grant or confer resistance, warding, or other Dragonborn adaptations."
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.stonebound-tremorsense.json",
+      "blobSha": "b5599074a99c9144857a34bec7c7e3cd7a861360",
+      "record": {
+        "id": "trait.stonebound-tremorsense",
+        "name": "Stonebound Tremorsense",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "stonebound-tremorsense",
+          "description": "While in contact with a configured material, activate Tremorsense at the configured range for 10 minutes as a Bonus Action. Uses equal Proficiency Bonus per Long Rest.",
+          "sense": "tremorsense",
+          "activation": "bonus-action",
+          "durationMinutes": 10,
+          "uses": {
+            "value": "proficiency-bonus",
+            "recharge": "long-rest"
+          },
+          "originBindings": {
+            "subTrait": {
+              "lookup": "nearest",
+              "sourceField": "tremorsenseSubTrait"
+            }
+          }
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.human-determination.json",
+      "blobSha": "23af17489b3f0e7d2bebd0f70714c23f0abe33bd",
+      "record": {
+        "id": "trait.human-determination",
+        "name": "Human Determination",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "human-determination",
+          "name": "Human Determination",
+          "description": "Before making an attack roll, ability check, or saving throw, you may choose to make that roll with Advantage. You can use this ability once per Short or Long Rest. You must declare its use before rolling; it does not stack with existing Advantage, consume an Action or Reaction, or grant an ability-score increase.",
+          "rollAdvantage": {
+            "eligibleRollTypes": [
+              "attack-roll",
+              "ability-check",
+              "saving-throw"
+            ],
+            "declarationTiming": "before-roll",
+            "outcome": "advantage",
+            "stacksWithExistingAdvantage": false,
+            "actionCost": "none"
+          },
+          "uses": {
+            "value": 1,
+            "recharge": "short-or-long-rest"
+          }
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.level-based-vitality.json",
+      "blobSha": "b10683b74f31343727cba350e87ce814c6f620bb",
+      "record": {
+        "id": "trait.level-based-vitality",
+        "name": "Level-Based Vitality",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "level-based-vitality",
+          "description": "Increase maximum hit points by 1 for each character level.",
+          "hitPointsPerCharacterLevel": 1
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.adaptable-learning.json",
+      "blobSha": "c5bb2d43103e852c180e4e0b8db03bac4f7fc34f",
+      "record": {
+        "id": "trait.adaptable-learning",
+        "name": "Adaptable Learning",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "adaptable-learning",
+          "name": "Adaptable Learning",
+          "description": "Gain four additional skill ranks to allocate at character level 1. At each subsequent character level, gain one additional skill rank to allocate. These ranks supplement normal advancement and are allocated by the player under the usual skill-rank limits.",
+          "additionalRanksAtCharacterLevel1": 4,
+          "additionalRanksPerSubsequentCharacterLevel": 1,
+          "allocation": "player-choice",
+          "obeysNormalSkillRankLimits": true
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.darkness.json",
+      "blobSha": "32a791fbc17e8f69d2b7b448af2bded9679da901",
+      "record": {
+        "id": "trait.darkness",
+        "name": "Darkness",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "darkness",
+          "originBindings": {
+            "spellcastingAbility": {
+              "lookup": "manifested-intrinsic",
+              "intrinsicSlot": "spellcastingAbility",
+              "scope": "source"
+            }
+          },
+          "description": "At character level 5, gain Darkness. Cast it once without a spell slot per Long Rest, or with an appropriate spell slot. This does not grant the ability to see through magical Darkness.",
+          "spell": "darkness",
+          "level": 5,
+          "freeUses": 1,
+          "recharge": "long-rest",
+          "slotCasting": true,
+          "name": "Darkness"
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.natural-trickster.json",
+      "blobSha": "af368d42ba2e75c7a5bce49b549e0b54488e7a57",
+      "record": {
+        "id": "trait.natural-trickster",
+        "name": "Natural Trickster",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "natural-trickster",
+          "description": "Choose one of Disguise Self, Silent Image, or Ventriloquism as an innate spell at character creation. Cast the chosen first-level illusion once without a spell slot per Long Rest. This trait does not itself grant spell slots or slot casting.",
+          "spellChoices": [
+            "disguise-self",
+            "silent-image",
+            "ventriloquism"
+          ],
+          "level": 1,
+          "freeUses": 1,
+          "recharge": "long-rest",
+          "slotCasting": false,
+          "originBindings": {
+            "spellcastingAbility": {
+              "lookup": "manifested-intrinsic",
+              "intrinsicSlot": "spellcastingAbility",
+              "scope": "source"
+            }
+          }
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.arcane-cantrip.json",
+      "blobSha": "d5436d0fd1bf6ff5a7d1a4a8b3f73f1532309db3",
+      "record": {
+        "id": "trait.arcane-cantrip",
+        "name": "Arcane Cantrip",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "arcane-cantrip",
+          "originBindings": {
+            "spellcastingAbility": {
+              "lookup": "manifested-intrinsic",
+              "intrinsicSlot": "spellcastingAbility",
+              "scope": "source"
+            }
+          },
+          "description": "Know one Wizard cantrip; replace it with another Wizard cantrip after each Long Rest.",
+          "spellList": "wizard",
+          "level": 1,
+          "replacement": "after-long-rest"
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.damage-type-resistance.json",
+      "blobSha": "d17ad7c5db0f09c76b01918931bfa1eeeccc971c",
+      "record": {
+        "id": "trait.damage-type-resistance",
+        "name": "Damage Type Resistance",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "damage-type-resistance",
+          "description": "You have 50 percent resistance to the damage type configured from the selected ancestry or other verified lineage source.",
+          "damageResistance": {
+            "percent": 50,
+            "damageTypeFrom": "selected-dragonborn-leaf"
+          },
+          "originBindings": {
+            "damageType": {
+              "lookup": "nearest",
+              "sourceField": "damageType"
+            }
+          }
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.born-of-ice.json",
+      "blobSha": "d472f3a4e7dab8575a98f13be84c963bf7ddf8c8",
+      "record": {
+        "id": "trait.born-of-ice",
+        "name": "Born of Ice",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "born-of-ice",
+          "name": "Born of Ice",
+          "requiredCharacterLevel": 4,
+          "description": "You have 50 percent resistance to Cold damage.",
+          "damageResistance": {
+            "percent": 50,
+            "damageType": "cold"
+          }
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.versatile.json",
+      "blobSha": "0864477b9193d3f78cee7fe5d32a292e4ef4225a",
+      "record": {
+        "id": "trait.versatile",
+        "name": "Versatile",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "versatile",
+          "name": "Versatile",
+          "description": "At character creation, choose one additional Origin feat. This choice is in addition to any feat granted by your other character-creation selections.",
+          "grantType": "feat-choice",
+          "featCategory": "origin",
+          "choiceCount": 1,
+          "when": "character-creation"
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/genes/trait.low-light-vision.json",
+      "blobSha": "41bb3cace4144d8a6fc89976b3b9b5fcc51d9ba7",
+      "record": {
+        "id": "trait.low-light-vision",
+        "name": "Low-Light Vision",
+        "kind": "origin-trait",
+        "trait": {
+          "id": "low-light-vision",
+          "name": "Low-Light Vision",
+          "description": "You perceive Dim Light as Bright Light, without a separate range limit. This does not permit you to see through Darkness.",
+          "rule": "rule.low-light-vision"
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/construct-assembly/origin-traits.json",
+      "blobSha": "5cef7d48522c5d1e10a647f861043b3956fa1909",
+      "record": [
+        {
+          "id": "trait.construct.ordinary-optical-sight",
+          "name": "Construct Optical Sight",
+          "kind": "origin-trait",
+          "rulesStatus": "candidate physical functional trait; nonvisual conditions apply; no special vision or bonus",
+          "trait": {
+            "id": "ordinary-optical-sight",
+            "name": "Ordinary Optical Sight",
+            "description": "While the installed eye is operational and exposed to sufficient visible light, its user can see through that optical interface. This does not grant darkvision, low-light vision, blindsight, or an independent Perception bonus.",
+            "sense": "ordinary-vision",
+            "requiresOperationalComponent": true
+          }
+        },
+        {
+          "id": "trait.construct.physical-manipulation",
+          "name": "Construct Physical Manipulation",
+          "kind": "origin-trait",
+          "rulesStatus": "candidate physical functional trait; no bonus action or weapon proficiency",
+          "trait": {
+            "id": "physical-manipulation",
+            "name": "Physical Manipulation",
+            "description": "While the installed manipulator and its required actuation and control support are operational, it can physically grasp and handle ordinary objects within its reach. This does not grant extra actions, additional hands for equipment rules, weapon proficiency, or any ability-score increase.",
+            "physicalManipulation": true,
+            "requiresOperationalComponent": true
+          }
+        },
+        {
+          "id": "trait.construct.ordinary-communication",
+          "name": "Construct Ordinary Communication",
+          "kind": "origin-trait",
+          "rulesStatus": "starting-playtest functional trait; no additional language entitlement",
+          "trait": {
+            "id": "ordinary-communication",
+            "name": "Ordinary Communication",
+            "description": "While its control interface is operational, the Construct can communicate audibly in languages it already knows. This does not grant language proficiencies, telepathy, or unusual communication ranges.",
+            "ordinaryAudibleCommunication": true,
+            "requiresOperationalComponent": true
+          }
+        },
+        {
+          "id": "trait.construct.ordinary-ground-movement",
+          "name": "Construct Ordinary Ground Movement",
+          "kind": "origin-trait",
+          "rulesStatus": "starting-playtest functional trait; movement and structural support integration remain provisional",
+          "trait": {
+            "id": "ordinary-ground-movement",
+            "name": "Ordinary Ground Movement",
+            "description": "While this locomotion component is operational, it supports ordinary ground movement with a nominal 30-foot walking speed, subject to other applicable movement and physical-support rules. This does not waive body-mass limitations or grant movement while disabled.",
+            "walkingSpeedFeet": 30,
+            "requiresOperationalComponent": true
+          }
+        },
+        {
+          "id": "trait.construct.climbing-movement",
+          "name": "Construct Climbing Movement",
+          "kind": "origin-trait",
+          "rulesStatus": "provisional playable movement-speed candidate; mobility, energy and physical-load balance require integrated testing",
+          "trait": {
+            "id": "climbing-movement",
+            "name": "Climbing Movement",
+            "description": "Supports climbing on compatible surfaces while installed and operational. An authorized climbing speed and surface limitations are required before the character can use this mode; no walking speed, fall protection, or universal adhesion is granted.",
+            "movementMode": "climb",
+            "grantsFallProtection": false,
+            "requiresOperationalComponent": true,
+            "speedFeet": 20
+          }
+        },
+        {
+          "id": "trait.construct.flying-movement",
+          "name": "Construct Flying Movement",
+          "kind": "origin-trait",
+          "rulesStatus": "provisional playable movement-speed candidate; mobility, energy and physical-load balance require integrated testing",
+          "trait": {
+            "id": "flying-movement",
+            "name": "Flying Movement",
+            "description": "Supports aerial movement while installed and operational, pending an authorized flying speed and lift/load rules. Does not grant hover, immunity to falling, or an unrestricted ability to fly.",
+            "movementMode": "fly",
+            "grantsHover": false,
+            "requiresOperationalComponent": true,
+            "speedFeet": 30
+          }
+        },
+        {
+          "id": "trait.construct.burrowing-movement",
+          "name": "Construct Burrowing Movement",
+          "kind": "origin-trait",
+          "rulesStatus": "provisional playable movement-speed candidate; mobility, energy and physical-load balance require integrated testing",
+          "trait": {
+            "id": "burrowing-movement",
+            "name": "Burrowing Movement",
+            "description": "Supports excavating movement in author-permitted material while installed and operational. Requires an authorized burrowing speed and permitted substrates; does not grant universal stone penetration, permanent tunnels, or suffocation protection.",
+            "movementMode": "burrow",
+            "negatesSuffocation": false,
+            "leavesPermanentTraversableTunnel": false,
+            "requiresOperationalComponent": true,
+            "speedFeet": 15
+          }
+        },
+        {
+          "id": "trait.construct.swimming-movement",
+          "name": "Construct Swimming Movement",
+          "kind": "origin-trait",
+          "rulesStatus": "provisional playable movement-speed candidate; mobility, energy and physical-load balance require integrated testing",
+          "trait": {
+            "id": "swimming-movement",
+            "name": "Swimming Movement",
+            "description": "Supports self-propelled aquatic movement while installed and operational, pending an authorized swimming speed and applicable water conditions. Does not grant underwater breathing, pressure protection, or water breathing.",
+            "movementMode": "swim",
+            "grantsWaterBreathing": false,
+            "requiresOperationalComponent": true,
+            "speedFeet": 20
+          }
+        }
+      ]
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/species/base/dwarf.json",
+      "blobSha": "3efcd8cf819f4cf9ee6e611c87b30043d258cd59",
+      "record": {
+        "id": "species.dwarf",
+        "name": "Dwarf",
+        "kind": "species",
+        "status": "selected-native",
+        "selectable": true,
+        "traits": [
+          {
+            "traitId": "trait.level-based-vitality"
+          },
+          {
+            "traitId": "trait.poison-resilience"
+          },
+          {
+            "traitId": "trait.stonebound-tremorsense"
+          },
+          {
+            "traitId": "trait.dwarven-fortitude"
+          }
+        ],
+        "creatureType": "humanoid",
+        "size": "medium",
+        "walkingSpeedFeet": 25,
+        "darkvisionFeet": 60,
+        "reviewNotes": [
+          "Darkvision reduced from 120 to 60 feet; underground Dwarf Ancestry distribution remains open. Walking Speed reduced to 25 feet in the approved comparative Species review.",
+          "The maximum-HP rule's application to NPCs or monster Hit Dice remains unresolved.",
+          "Approved: Dwarven Fortitude is an inherent biological adaptation allowing one available Hit Die to be spent for healing when taking Dodge in combat, using the Hit Die roll plus Constitution modifier (minimum 1 HP regained). The original feat's ability-score increase is omitted; the Dodge action and Hit Die are not granted by the trait.",
+          "Approved trial repricing: Level-Based Vitality increases from 1 to 3 points without changing +1 maximum HP per character level. Dwarven Fortitude costs 4 points. Base Dwarf is 17/18; Hill Dwarf, including Stability, is 18/18. These are provisional playtest values.",
+          "Needs review; pending approval — Squat Nimbleness remains a separately considered historical feat; no additional movement or grapple mechanic is granted."
+        ],
+        "defaultUpbringing": "upbringing.dwarf.general",
+        "tremorsenseSubTrait": {
+          "rangeFeet": 60,
+          "contactMaterials": [
+            "stone"
+          ]
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/origination/biological/species/ancestry/gnome/rock.json",
+      "blobSha": "d3557f665257dc7ab5232b290adeb1845933c799",
+      "record": {
+        "id": "ancestry.gnome.rock",
+        "name": "Rock Gnome",
+        "kind": "ancestry",
+        "status": "selected-native",
+        "selectable": true,
+        "parent": "species.gnome",
+        "traits": [
+          {
+            "traitId": "trait.stonebound-tremorsense"
+          },
+          {
+            "traitId": "trait.natural-climber"
+          },
+          {
+            "traitId": "trait.natural-trickster"
+          }
+        ],
+        "defaultUpbringing": "upbringing.gnome.rock",
+        "tremorsenseSubTrait": {
+          "rangeFeet": 60,
+          "contactMaterials": [
+            "earth",
+            "stone"
+          ]
+        },
+        "spellcastingAbilityChoice": [
+          "intelligence",
+          "wisdom",
+          "charisma"
+        ],
+        "reviewNotes": [
+          "Approved final Rock Gnome biological package: shared Tremorsense configured for earth or stone, Natural Climber (15-foot Climb Speed), and one permanent Natural Trickster spell choice with one free casting per Long Rest.",
+          "Trial allocation: shared Gnome 9, configured Tremorsense 4, Natural Climber 2, Natural Trickster 2, source-bound spellcasting Ability 1; total 18/18. The same 60-foot range and use schedule are preserved for Dwarves and Rock Gnomes."
+        ]
+      }
+    }
+  ]
+}

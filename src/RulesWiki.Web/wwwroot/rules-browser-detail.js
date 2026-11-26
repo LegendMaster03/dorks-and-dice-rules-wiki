@@ -1,3 +1,6 @@
+import { originsEnabled, originWorkspaceForRule, originRoute, originTitle } from "./origins-navigation.js";
+import { readOriginOccurrenceRoute } from "./origin-workspace-composition.js";
+import { currentToolRoute } from "./rules-browser-routing.js";
 /**
  * Coordinates selected-rule detail rendering. Native rule views use the native
  * renderer; versioned references retain effective/variation comparison tabs.
@@ -85,9 +88,16 @@ export async function renderRuleDetailPane(
             validateNativeEnvelope(context, referenceIdentity, detail.native);
             const token = lifecycle.begin(context, referenceIdentity);
             const lease = Object.freeze({ ...token, isCurrent: () => token.isCurrent() && isCurrent() });
+            const query = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+            const originOccurrence = ["originSelected", "originSource", "originPath"].some(key => query.has(key))
+                ? readOriginOccurrenceRoute(currentToolRoute(app), query, context, detail.native.rule) : null;
+            if (originOccurrence && !originsEnabled(reader)) throw new Error("Characteristic occurrence reference unavailable.");
             const mounted = await renderNativeDetail(container, detail.native, onBackToList, app,
-                { context, reader, lifecycle: lease, ruleId: referenceIdentity });
-            if (mounted && lease.isCurrent()) app.presentRenderedFragment?.(container);
+                { context, reader, lifecycle: lease, ruleId: referenceIdentity, originOccurrence });
+            if (mounted && lease.isCurrent()) {
+                appendOriginWorkspaceReturn(app, container, detail.native.rule);
+                app.presentRenderedFragment?.(container);
+            }
             return;
         }
 
@@ -113,6 +123,11 @@ export async function renderRuleDetailPane(
     } catch (error) {
         if (!isCurrent()) return;
         container.replaceChildren(alertNode("danger", describeError(error)));
+        if (error?.status === 404 && originsEnabled(boundRulesetReader) && referenceIdentity.startsWith("subspecies.")) {
+            const base = (app.hostContext.toolBasePath ?? "/tools/rules-wiki").replace(/\/$/, "");
+            container.append(element("p", { text: "This historical Subspecies identity is not present in the current native snapshot. No replacement has been assumed." }),
+                element("a", { text: "Browse Species and Ancestries", attributes: { href: base + originRoute("species-and-ancestries") } }));
+        }
         app.presentRenderedFragment?.(container);
     }
 }
@@ -539,4 +554,15 @@ function humanizeEntityType(entityType) {
     return value
         .replace(/([a-z])([A-Z])/g, "$1 $2")
         .replace(/^./, match => match.toUpperCase());
+}
+
+/** Return from any canonical native detail, including search and recent history. */
+function appendOriginWorkspaceReturn(app, container, rule) {
+    if (!originsEnabled(app.rulesetReader)) return;
+    const target = originWorkspaceForRule(rule);
+    const tabs = container.querySelector(".rules-core-version-tabs");
+    if (!target || !tabs) return;
+    const base = (app.hostContext.toolBasePath ?? "/tools/rules-wiki").replace(/\/$/, "");
+    tabs.prepend(element("a", { className: "wiki-context-back",
+        text: "Back to " + originTitle(target[0]), attributes: { href: base + originRoute(...target) } }));
 }

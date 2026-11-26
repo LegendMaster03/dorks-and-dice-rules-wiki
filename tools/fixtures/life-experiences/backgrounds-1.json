@@ -1,0 +1,927 @@
+{
+  "coreCommit": "0baa466b7fc8f55e5d675b886f76e95f9a4b551f",
+  "records": [
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/acolyte.json",
+      "blobSha": "1669ab51a5f287f35f879d0f96ded103f9ce88cb",
+      "record": {
+        "id": "background.acolyte",
+        "name": "Acolyte",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have served, studied, or performed religious duties in a faith, temple, shrine, or spiritual community. This Background does not require divine spellcasting, a Cleric class, a particular alignment, or a prescribed childhood or present religious allegiance.",
+        "benefits": [
+          {
+            "id": "acolyte-insight",
+            "name": "Insight Training",
+            "description": "Gain training in Insight.",
+            "skill": "skill.insight",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "acolyte-religion",
+            "name": "Religion Training",
+            "description": "Gain training in Religion.",
+            "skill": "skill.religion",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "acolyte-religious-language",
+            "name": "Religious Language",
+            "description": "Learn one language of your choice associated with your deity, faith, religious traditions, or practices. It might be used in sacred texts, rites, scholarship, or by the faith's community. Common is an appropriate choice when the character's religious practices use it.",
+            "extraLanguages": 1,
+            "choiceConstraint": "associated-with-deity-faith-religious-traditions-or-practices"
+          },
+          {
+            "id": "acolyte-shelter-of-the-faithful",
+            "name": "Shelter of the Faithful",
+            "grantType": "background-feature",
+            "description": "Members of your faith may recognize your religious service and allow you to perform its ordinary rites. You and your companions can ordinarily seek healing and care from an established temple, shrine, or comparable community of the same faith, while providing required material components for spells. Members of your faith may support you, but not automatically your companions, at a modest lifestyle. Where you have a temple or community affiliation, you may have residence or access to its members' assistance when in good standing and when the assistance is reasonable and not dangerous. These privileges depend on recognition, location, available resources, and relationships; they do not confer supernatural spellcasting, universal access, or compulsory aid."
+          }
+        ],
+        "startingEquipment": {
+          "description": "A holy symbol, a prayer book or prayer wheel, five sticks of incense, vestments, common clothes, and a belt pouch containing 15 gp. These become ordinary inventory. The holy symbol or prayer item may be appropriate to the character's religious tradition; no particular deity or institutional backstory is mandatory.",
+          "items": [
+            {
+              "name": "Holy symbol",
+              "quantity": 1
+            },
+            {
+              "name": "Prayer book or prayer wheel",
+              "quantity": 1,
+              "options": [
+                "Prayer book",
+                "Prayer wheel"
+              ]
+            },
+            {
+              "name": "Stick of incense",
+              "quantity": 5
+            },
+            {
+              "name": "Vestments",
+              "quantity": 1
+            },
+            {
+              "name": "Common clothes",
+              "quantity": 1
+            },
+            {
+              "name": "Belt pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 15
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "Personality traits, ideals, bonds, flaws, religious associations, and formative experiences are optional prompts. They do not limit the character's faith, morality, personality, life history, or current relations with an institution.",
+          "prompts": [
+            "What religious community, practices, or teachings shaped your experience?",
+            "What responsibility did you perform for that faith or community?",
+            "Which relationships from your service remain important?",
+            "What aspect of your beliefs or experiences is open to change?"
+          ]
+        },
+        "reviewNotes": [
+          "Native reconciliation follows the 2014 5e Acolyte Background, rather than the 2024 source retained as a separate candidate in working/backgrounds/acolyte.json.",
+          "The 2014 two unrestricted languages are replaced with one language of choice associated with the character's deity, faith, religious traditions, or practices; Common is allowed where appropriate.",
+          "A religiously associated language is an additional acquired Background language, distinct from formative language grants through Upbringing. Duplicate-language semantics remain pending corpus-wide reconciliation.",
+          "Insight and Religion are the retained skill-training grants.",
+          "Shelter of the Faithful retains religious ceremony, faith-community care, modest support for the Acolyte, and conditional temple ties while not guaranteeing assistance independent of standing or availability.",
+          "No Magic Initiate (Cleric), fixed 2024 ability increases, or mandatory Calligraphy proficiency.",
+          "Starting equipment is descriptive pending native item-identity verification and ordinary-inventory materialization; the prayer book/wheel is an exclusive choice, not both.",
+          "Background narrative suggestions are optional and do not impose required personal traits or a Cleric class."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/charlatan.json",
+      "blobSha": "909eb051c2f643964a6ab5057ec85b3e935face9",
+      "record": {
+        "id": "background.charlatan",
+        "name": "Charlatan",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have practiced misrepresentation, impersonation, confidence schemes, or similar deception and established believable false presentations of yourself or your dealings. Your experience does not require a particular Upbringing, Species, criminal organization, continued unlawful activity, or moral outlook.",
+        "benefits": [
+          {
+            "id": "charlatan-deception",
+            "name": "Deception Training",
+            "grantType": "skill-training",
+            "skill": "skill.deception",
+            "description": "Gain training in Deception through convincing false claims, presentations, and personas."
+          },
+          {
+            "id": "charlatan-sleight-of-hand",
+            "name": "Sleight of Hand Training",
+            "grantType": "skill-training",
+            "skill": "skill.sleight-of-hand",
+            "description": "Gain training in Sleight of Hand through concealed manipulation and practiced tricks."
+          },
+          {
+            "id": "charlatan-disguise-kit",
+            "name": "Disguise Kit Training",
+            "grantType": "competency-training",
+            "competency": "competency.disguise",
+            "description": "Gain one rank in the native Disguise Competency, associated with a Disguise Kit. This does not grant ownership of a physical Disguise Kit.",
+            "competencyTraining": {
+              "ranks": 1,
+              "proficient": false
+            }
+          },
+          {
+            "id": "charlatan-forgery",
+            "name": "Forgery Training",
+            "grantType": "competency-training",
+            "competency": "competency.forgery",
+            "description": "Gain one rank in the native Forgery Competency, associated with a Forgery Kit. There is no separate native Forgery Skill, and this grant does not include a physical Forgery Kit.",
+            "competencyTraining": {
+              "ranks": 1,
+              "proficient": false
+            }
+          },
+          {
+            "id": "charlatan-false-identity",
+            "name": "False Identity",
+            "grantType": "background-feature",
+            "description": "You have established one alternate persona supported by plausible documents, suitable disguise arrangements, and acquaintances who recognize you by that identity. Where its history and evidence are credible, you can present yourself as the persona without having to create its identity from nothing. You know how to imitate official or personal documents and a person's handwriting after examining an appropriate example, given suitable materials, time, and opportunity. Making an imitation does not guarantee acceptance or resistance to scrutiny. The persona does not confer genuine noble rank, official authority, legal privileges, unrestricted access, criminal-network contacts, or intelligence sources. Suspicion, verification, exposure, and changing circumstances remain subject to ordinary play and GM adjudication."
+          }
+        ],
+        "startingEquipment": {
+          "description": "Fine clothes, one physical Disguise Kit, one choice of ordinary con-related props (ten small stoppered bottles of colored liquid, weighted dice, marked playing cards, or a signet ring referring to a fictional noble), and a pouch with 15 gp. These are ordinary inventory possessions. They grant no magic, gaming proficiency, actual noble rank, or automatic success. False Identity provides supporting documents and relationships through its feature, not unlimited salable evidence or a separate physical Forgery Kit.",
+          "items": [
+            {
+              "name": "Fine clothes",
+              "quantity": 1
+            },
+            {
+              "name": "Disguise Kit",
+              "quantity": 1
+            },
+            {
+              "name": "Con-related props",
+              "quantity": 1,
+              "options": [
+                "Ten small stoppered bottles of colored liquid",
+                "Weighted dice",
+                "Marked playing cards",
+                "Signet ring referring to a fictional noble"
+              ],
+              "choiceCount": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 15
+          }
+        },
+        "suggestedSchemes": [
+          "Confidence pitches",
+          "False investments",
+          "Forged references",
+          "Altered documents",
+          "Impersonation",
+          "Rigged games",
+          "Stage cons",
+          "Fraudulent sales"
+        ],
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "A charlatan may have abandoned deception, retained a cover for protection, or adopted a stage persona. These prompts do not impose alignment, current criminal activity, or extra mechanical variants.",
+          "prompts": [
+            "What did your alternate persona claim to be?",
+            "Which people know that persona and what do they believe?",
+            "Which scheme or disguise did you practice most?",
+            "What consequences would exposure have?"
+          ]
+        },
+        "reviewNotes": [
+          "Independent native Background reconciled from 2014 Charlatan, not from the 2024 ability and Origin-feat model.",
+          "Fixed Deception and Sleight of Hand training, fixed Disguise Kit and Forgery Competency training, and no additional language.",
+          "Forgery is one native Competency rather than a separate Forgery Skill plus kit proficiency. Its associated equipment does not grant a second independent qualification; compare its training benefit against Disguise during the corpus balance review.",
+          "Disguise Kit does not independently grant Disguise Skill. Tool training is different from possessing a physical kit.",
+          "False Identity grants an already established alternate persona with supporting history, documents, arrangements and acquaintances; it does not generate limitless cover personas.",
+          "Document and handwriting imitation from a studied example remains a meaningful feature separate from generic Forgery training, but not guaranteed acceptance by an observer.",
+          "People who recognize the persona are not automatically Criminal Contacts or Spy Intelligence Sources. A fabricated noble identity grants no genuine rank or authority.",
+          "The ordinary starting inventory includes a physical Disguise Kit and one mutually exclusive con-prop package, but no physical Forgery Kit. The fictional signet and rigged game props do not grant privileged standing or gaming proficiency.",
+          "The established cover's supporting documents remain available in fiction without creating unlimited salable inventory. Later item identity and inventory materialization remain deferred.",
+          "No automatic Origin feat, ability adjustments, class powers, culturally inherited characteristics, or mandatory criminal affiliation.",
+          "Duplicate training, feature execution, specialized document adjudication, and equipment balance await later common mechanics work."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/criminal.json",
+      "blobSha": "d56c959f2633073cc311290f4521cc00e2034e45",
+      "record": {
+        "id": "background.criminal",
+        "name": "Criminal",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "Your previous experiences include illicit activity, the networks around it, or work performed beyond the law. You may have acted independently or within an organization. This Background does not determine your current occupation, loyalties, morals, or personal history.",
+        "benefits": [
+          {
+            "id": "criminal-deception",
+            "name": "Deception Training",
+            "description": "Gain training in Deception.",
+            "skill": "skill.deception",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "criminal-stealth",
+            "name": "Stealth Training",
+            "description": "Gain training in Stealth.",
+            "skill": "skill.stealth",
+            "grantType": "skill-training"
+          },
+          {
+            "id": "criminal-thieves-tools",
+            "name": "Thieves' Tools Proficiency",
+            "description": "Gain training with Thieves' Tools.",
+            "grantType": "qualification-training",
+            "qualificationCategory": "tool",
+            "equipmentTypeId": "equipment.tool.thieves-tools"
+          },
+          {
+            "id": "criminal-gaming-set",
+            "name": "Gaming Set Training",
+            "description": "Choose one type of gaming set and gain training with it.",
+            "grantType": "qualification-training",
+            "choiceCategory": "gaming-set",
+            "choiceCount": 1,
+            "qualificationCategory": "tool"
+          },
+          {
+            "id": "criminal-contact",
+            "name": "Criminal Contact",
+            "description": "You have an established contact who can carry messages between you and a criminal network. You know how to reach the contact through appropriate channels, including when separated by distance. This relationship does not guarantee access, information, assistance, or cooperation from every criminal organization.",
+            "grantType": "background-feature"
+          }
+        ],
+        "startingEquipment": {
+          "description": "A crowbar, dark common clothes with a hood, and a pouch containing 15 gp. Add these as ordinary inventory possessions.",
+          "items": [
+            {
+              "name": "Crowbar",
+              "quantity": 1
+            },
+            {
+              "name": "Dark common clothes with hood",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 15
+          }
+        },
+        "suggestedSpecialties": [
+          "Blackmailer",
+          "Burglar",
+          "Enforcer",
+          "Fence",
+          "Highway Robber",
+          "Hired Killer",
+          "Pickpocket",
+          "Smuggler"
+        ],
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "Personality traits, ideals, bonds, flaws, and criminal specialties are optional inspiration. They impose no morality, alignment, current membership, or required personal history.",
+          "prompts": [
+            "How did you first become involved in illicit work?",
+            "What kind of relationship do you maintain with your contact?",
+            "Which rules, if any, do you refuse to break?",
+            "Do you still work in that world, or have you left it behind?"
+          ]
+        },
+        "reviewNotes": [
+          "Native reconciliation follows the 2014 5e Criminal Background, rather than the 2024 definition preserved separately in working/backgrounds/criminal.json.",
+          "The 2014 two-skill baseline is Deception and Stealth, not the 2024 Sleight of Hand and Stealth pairing.",
+          "One gaming-set type is a selectable equipment proficiency; it does not grant a ranked Competency. The native equipment evaluator uses the approved equipmentProficiencyGrants choice, subject to authorized character selection.",
+          "No language grant is included. A character's Upbringing normally supplies formative languages, while later learned languages require another justification.",
+          "Criminal Contact is a relationship-based social feature, not unrestricted underworld privilege.",
+          "Specialties and suggested characteristics are optional narrative guidance without additional mechanical grants. Spy is a separately selectable native Background, not a Criminal variant.",
+          "The 2014 starting equipment is descriptive pending native item identity matching and ordinary inventory materialization; no separate equipment bag is created.",
+          "The 2024 Alert Origin feat and fixed ability adjustments are not automatically granted."
+        ],
+        "equipmentProficiencyGrants": {
+          "fixed": [
+            {
+              "id": "criminal-thieves-tools",
+              "targetId": "equipment.tool.thieves-tools"
+            }
+          ],
+          "choices": [
+            {
+              "id": "criminal-gaming-set",
+              "count": 1,
+              "fromCategory": "tool",
+              "fromGroupIds": [
+                "equipment.group.tool.gaming-set"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/entertainer.json",
+      "blobSha": "87cfe7a59593704241b398f8383015ae90615a96",
+      "record": {
+        "id": "background.entertainer",
+        "name": "Entertainer",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have substantial experience performing for audiences through music, acting, storytelling, dance, comedy, acrobatics, sleight of hand, or similar public entertainment. This Background describes an acquired practice, not a mandatory performing-family childhood, Species, patron, current employment or reputation in every settlement.",
+        "benefits": [
+          {
+            "id": "entertainer-performance",
+            "name": "Performance Training",
+            "grantType": "skill-training",
+            "skill": "skill.performance",
+            "description": "Gain training in Performance through regularly presenting entertainment to audiences. This broad Skill does not automatically grant ranks in the separately ranked Perform specialties."
+          },
+          {
+            "id": "entertainer-performance-specialty",
+            "name": "Performance Specialty",
+            "grantType": "skill-training",
+            "chooseOne": [
+              "skill.acrobatics",
+              "skill.deception",
+              "skill.persuasion",
+              "skill.sleight-of-hand",
+              "skill.insight"
+            ],
+            "choiceCount": 1,
+            "description": "Choose one Skill reflecting how you perform: Acrobatics, Deception, Persuasion, Sleight of Hand, or Insight. Composite Acrobatics does not separately train Balance or Tumble."
+          },
+          {
+            "id": "entertainer-performance-method",
+            "name": "Performance Method Training",
+            "grantType": "benefit-choice",
+            "choiceCount": 1,
+            "description": "Choose exactly one benefit: one rank in the native Disguise Competency or proficiency with one specific type of musical instrument. This does not grant both, an instrument item automatically, or ranks in separate Perform specialties.",
+            "options": [
+              {
+                "id": "disguise-kit",
+                "name": "Disguise Kit Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.disguise",
+                    "description": "Gain one rank in the native Disguise Competency, associated with a Disguise Kit. This does not include ownership of the equipment or ranks in separate Perform specialties.",
+                    "competencyTraining": {
+                      "ranks": 1,
+                      "proficient": false
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "musical-instrument",
+                "name": "Musical Instrument Training",
+                "benefits": [
+                  {
+                    "grantType": "qualification-training",
+                    "choiceCategory": "musical-instrument",
+                    "choiceCount": 1,
+                    "description": "Choose one specific type of musical instrument and gain training with that type. This does not grant other instruments or separate Perform specialty ranks.",
+                    "qualificationCategory": "tool",
+                    "equipmentTypeChoiceId": "entertainer-musical-instrument"
+                  }
+                ],
+                "equipmentProficiencyGrants": {
+                  "choices": [
+                    {
+                      "id": "entertainer-musical-instrument",
+                      "count": 1,
+                      "fromCategory": "tool",
+                      "fromGroupIds": [
+                        "equipment.group.tool.musical-instrument"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "id": "entertainer-by-popular-demand",
+            "name": "By Popular Demand",
+            "grantType": "background-feature",
+            "description": "In a settlement or venue where your kind of entertainment can reasonably attract an audience, you can generally secure an opportunity to perform through ordinary hosts or organizers. While you fulfill the agreed engagements, including regular evening performances when required, your host provides food and lodging of modest or comfortable quality appropriate to the establishment without an additional room-and-board fee. People who recognize your past performances may be favorably disposed toward you at first. This benefit does not guarantee payment, universal fame, private lodging for companions, an available venue where none exists, entry to closed establishments, or authority over hosts. Suitable venues, agreements and circumstances are adjudicated by the GM."
+          }
+        ],
+        "startingEquipment": {
+          "description": "Choose one ordinary performance item consistent with your selected performance-method training: an instrument of your trained type if musical training was selected, or a physical Disguise Kit or suitable mundane stage prop if Disguise Kit training was selected. Also receive a mundane admirer favor or token, one costume, and a pouch containing 15 gp. All equipment enters ordinary inventory. Instrument and Disguise Kit proficiencies do not themselves supply items; this starting item is separately granted. No magic, guild membership, or guaranteed audiences are included.",
+          "items": [
+            {
+              "name": "Performance item",
+              "quantity": 1,
+              "options": [
+                "Musical instrument matching trained instrument type",
+                "Disguise Kit",
+                "Mundane performance prop"
+              ],
+              "choiceCount": 1,
+              "choiceConstraint": "match-selected-performance-method-and-be-an-ordinary-item",
+              "sourceBenefitChoiceId": "entertainer-performance-method",
+              "conditionalItemChoices": [
+                {
+                  "whenOptionId": "disguise-kit",
+                  "ordinaryItemOptions": [
+                    "Disguise Kit",
+                    "Mundane performance prop"
+                  ],
+                  "itemRequirements": {
+                    "mundane": true
+                  }
+                },
+                {
+                  "whenOptionId": "musical-instrument",
+                  "equipmentTypeChoiceId": "entertainer-musical-instrument",
+                  "itemRequirements": {
+                    "sameBaseEquipmentTypeAsChoice": true,
+                    "mundane": true
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Admirer's favor or token",
+              "quantity": 1
+            },
+            {
+              "name": "Performance costume",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 15
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "The form, venue, audience, career circumstances and reputation are narrative choices, not mandatory skill specialties or inherited origin traits.",
+          "prompts": [
+            "What kind of performances did you give?",
+            "Which venues or audiences know your work?",
+            "What performance item or costume do you favor?",
+            "What circumstances brought you into or out of public performance?"
+          ]
+        },
+        "reviewNotes": [
+          "Independent 2014-based Entertainer reconciliation; Gladiator is a separate Background, not a child or inherited variant.",
+          "Fixed Performance and one choice of Acrobatics, Deception, Persuasion, Sleight of Hand or Insight. Broad Performance does not automatically train independent Perform family child Skills; composite Acrobatics does not separately train Balance or Tumble.",
+          "One total choice between Disguise Competency training and a specific Musical Instrument equipment proficiency. The instrument equipment choice is nested under its conditional selected option, never granted unconditionally; the Origin choice authority must enforce exclusivity.",
+          "No additional language, fixed ability adjustment, 2024 Musician Origin feat, class feature or universal entertainment affiliation is granted.",
+          "By Popular Demand provides conditional food and lodging in exchange for actual performances and contextual favorable recognition, not a permanent free-lodging entitlement without suitable work or venues.",
+          "The equipment choice is ordinary inventory and should correspond to the chosen performance method; an instrument is not compulsory for a nonmusical entertainer.",
+          "Item identity, the nested benefit choice, overlapping Skills/competencies, performance venue adjudication, and corpus balance remain for common integration; no consumer/runtime changes are part of this content approval.",
+          "The one Performance Item references `entertainer-performance-method` through `sourceBenefitChoiceId`; conditionalItemChoices maps each selected outer option to its permitted ordinary item. The Musical Instrument branch reuses the nested instrument proficiency choice ID, while the Disguise branch grants a physical Disguise Kit or mundane prop without awarding any separate equipment proficiency. No item is materialized before the Origin choice authority validates this relationship."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/explorer.json",
+      "blobSha": "7d301c66679a2ec2e741750b75613f272e7d3d92",
+      "record": {
+        "id": "background.explorer",
+        "name": "Explorer",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have meaningful experience exploring, surveying, documenting, or taking part in expeditions through unfamiliar places. Your work may have involved ruins, waterways, wilderness, subterranean regions, or other terrain. You need not have grown up outdoors, practiced subsistence gathering, served a military or commercial organization, or held any particular upbringing or ancestry.",
+        "benefits": [
+          {
+            "id": "explorer-perception",
+            "name": "Perception Training",
+            "grantType": "skill-training",
+            "skill": "skill.perception",
+            "description": "Gain training in Perception through observation and field experience. Composite Perception training does not independently train Listen or Spot."
+          },
+          {
+            "id": "explorer-expedition-skill",
+            "name": "Expedition Skill",
+            "grantType": "skill-training",
+            "description": "Choose one Skill from Survival, Investigation, History, Nature, or Athletics, based on the environments and kinds of expeditions you undertook.",
+            "chooseOne": [
+              "skill.survival",
+              "skill.investigation",
+              "skill.history",
+              "skill.nature",
+              "skill.athletics"
+            ],
+            "choiceCount": 1
+          },
+          {
+            "id": "explorer-field-competency",
+            "name": "Field Competency",
+            "grantType": "competency-training",
+            "description": "Choose Navigation (Navigator's Tools) or Cartography (Cartographer's Tools). The selected Competency gains one rank, without an automatic proficiency grant. This is one training choice; selecting either does not grant the other or training in operating vehicles.",
+            "chooseOne": [
+              "competency.navigation",
+              "competency.cartography"
+            ],
+            "choiceCount": 1,
+            "competencyTraining": {
+              "ranks": 1,
+              "proficient": false
+            }
+          },
+          {
+            "id": "explorer-expedition-survey",
+            "name": "Expedition Survey",
+            "grantType": "background-feature",
+            "description": "When you have a reasonable opportunity to survey a distinct area through observation, travel, or usable maps or accounts, you can ask the GM for one reliable, actionable conclusion supported by that evidence about visible or documented terrain, landmarks, or routes. Examples include a plausible approach to a visible or mapped destination, an orientation landmark, or a relationship between observed paths. When the available evidence supports such a conclusion, the GM provides it without a separate check merely to interpret that evidence; if it does not, the GM explains that the evidence is insufficient instead of inventing information. You can reliably recall major landmarks, turns, and junctions of routes you personally surveyed without a separate check solely to remember the route. Repeated questions about unchanged observations do not generate unlimited new facts. This feature does not reveal concealed places, guarantee a short or safe route, or remove ordinary checks for getting lost, recognizing that you are lost, or choosing a new course under uncertain conditions."
+          }
+        ],
+        "startingEquipment": {
+          "description": "A field journal or notes, map paper, a writing implement, traveler's clothes, and a pouch containing 10 gp. These are ordinary inventory possessions and do not grant a complete map of unknown places, guaranteed discoveries, or extra navigation equipment.",
+          "items": [
+            {
+              "name": "Field journal or notes",
+              "quantity": 1
+            },
+            {
+              "name": "Map paper",
+              "quantity": 1
+            },
+            {
+              "name": "Writing implement",
+              "quantity": 1
+            },
+            {
+              "name": "Traveler's clothes",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 10
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "Exploration may be academic, personal, commercial, charitable, or opportunistic. The character need not be an expert survivalist or have a designated sponsor.",
+          "prompts": [
+            "Which places did you explore or survey, and why?",
+            "What landmark, route, or discovery do you remember best?",
+            "Which companions or contacts helped on your expeditions?",
+            "What unknown region or question continues to interest you?"
+          ]
+        },
+        "reviewNotes": [
+          "Explorer is a standalone Background inspired by the professional and geographical portions of the 2014 Outlander source; Wilderness-Raised is a separate selected-native Upbringing.",
+          "Fixed Perception and a single Skill choice from Survival, Investigation, History, Nature, and Athletics. Composite training does not automatically train independently ranked children.",
+          "One Competency choice is Navigation or Cartography. It does not automatically grant water/land vehicle qualification or both tool proficiencies.",
+          "No additional Background language is granted.",
+          "Expedition Survey gives one reliable evidence-supported and actionable navigational conclusion during meaningful surveying, plus recall of major landmarks and junctions on personally surveyed routes. It is not perfect cartographic memory, hidden map revelation, or an automatic bypass of uncertain routefinding checks.",
+          "The existing Rules Core travel/environment contract defines navigation checks and the Hex Crawl consumer owns expedition map, route and lost state. This Background does not create a competing travel subsystem, new check bonus, speed multiplier, or automated survey action.",
+          "Starting equipment is ordinary inventory; item identity and materialization remain deferred. No 2014 Outlander staff, trap, or animal trophy is automatically inherited.",
+          "No Wilderness Provisioning, additional language, fixed ability score increase, Origin feat, universal safe travel, or class feature is added.",
+          "Differences between the expedition feature and ordinary skill use, cross-package duplicates, and comparative utility require the later general balance audit and playtesting."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/folk-hero.json",
+      "blobSha": "f56b41bc174e4283605a6f894a83bf448c4542d5",
+      "record": {
+        "id": "background.folk-hero",
+        "name": "Folk Hero",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You earned recognition and practical support within a community through a consequential deed or sustained efforts on behalf of others. Your reputation comes from what you did, not from a required rural childhood, social class, occupation, ancestry, or official title. People may disagree about your actions, and your reputation need not be known everywhere.",
+        "benefits": [
+          {
+            "id": "folk-hero-deed-skills",
+            "name": "Defining Deed Skills",
+            "grantType": "skill-training",
+            "description": "Choose two distinct Skills reflecting your experiences and the actions through which you earned community recognition: Animal Handling, Survival, Athletics, Medicine, Persuasion, Insight, Intimidation, or Investigation. Training in composite Athletics does not independently train its Climb, Jump, or Swim components.",
+            "chooseFrom": [
+              "skill.animal-handling",
+              "skill.survival",
+              "skill.athletics",
+              "skill.medicine",
+              "skill.persuasion",
+              "skill.insight",
+              "skill.intimidation",
+              "skill.investigation"
+            ],
+            "choiceCount": 2,
+            "distinctChoices": true
+          },
+          {
+            "id": "folk-hero-community-refuge",
+            "name": "Community Refuge",
+            "grantType": "background-feature",
+            "description": "Because people know or can credibly learn of what you have done for others, you can seek temporary shelter, modest hospitality, or a discreet place to recover among ordinary people sympathetic to your deeds. Such supporters may help keep your whereabouts from casual inquiry or pursuers when they believe doing so is justified and reasonably safe. Their help depends on recognition, trust, capacity, and practical circumstances; they are not expected to risk their lives or livelihoods or defy overwhelming danger. Traveling companions may be accommodated when supporters can reasonably provide for them, but no unlimited group shelter is guaranteed. The feature does not confer authority over supporters, universal popularity, legal immunity, or protection from every enemy."
+          }
+        ],
+        "startingEquipment": {
+          "description": "Common or work-appropriate clothing, a mundane keepsake or testimonial associated with the defining deed, one ordinary personal item connected to earlier work or the incident as agreed with the DM without an automatic monetary value or training grant, and a pouch containing 10 gp. These are ordinary inventory possessions; no artisan tool set, land vehicle, livestock, home, title, or monetary reward is guaranteed.",
+          "items": [
+            {
+              "name": "Common or work-appropriate clothing",
+              "quantity": 1
+            },
+            {
+              "name": "Mundane keepsake or testimonial of the defining deed",
+              "quantity": 1
+            },
+            {
+              "name": "Ordinary personal item associated with prior work or the deed",
+              "quantity": 1,
+              "choiceConstraint": "DM-agreed ordinary item without guaranteed monetary value or proficiency"
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 10
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "The event, public reputation, and community relationships are determined by the character's history and the setting. A notable deed need not make the character uniformly celebrated or morally uncomplicated.",
+          "prompts": [
+            "What deed or sustained actions led people to recognize you?",
+            "Who witnessed or benefited from your actions?",
+            "Which people might shelter or assist you now?",
+            "Where is your reputation disputed or unknown?"
+          ]
+        },
+        "reviewNotes": [
+          "Independent Folk Hero Background reconciled from the 2014 concept but not restricted to rural ancestry, agricultural work, poverty, or the upbringing and occupation assumptions of its historical presentation.",
+          "Choose two distinct Skills from the eight approved options. The original Animal Handling and Survival pair remains possible but is not mandatory.",
+          "Deliberately grant no automatic crafting or musical Competency, Land Vehicles qualification, additional language, or third Skill. Earlier draft options were rejected as unrelated to the common defining experience; the reduced 2014 vocational package is intentional rather than an assertion of numerical parity.",
+          "Community Refuge is grounded in earned recognition and sympathetic ordinary people. Its hospitality and discretion are meaningful where supporters can help, but do not guarantee lawful immunity, refuge everywhere, universal popularity, or risk to supporters' lives or livelihoods.",
+          "Companions may benefit only when appropriate to available capacity and circumstances; the Background does not grant guaranteed housing to an arbitrary party size.",
+          "Starting equipment is ordinary inventory: practical clothing, a mundane deed-related keepsake, one DM-agreed ordinary personal item without guaranteed market value or qualification, a pouch, and 10 gp. It does not automatically supply the original 2014 artisan tools, shovel and iron pot.",
+          "Any Species or Upbringing may select Folk Hero. A proposed Rural Community Upbringing, if reconciled later, would reflect formative rural life without automatic heroic reputation or Community Refuge.",
+          "Reputation is adjudicated in narrative context rather than by a new automatic renown or faction-standing subsystem. The character's learned Skills remain if social assistance later changes.",
+          "Comparative balance against Soldier, Knight, Acolyte, Guild Artisan, Wilderness-Raised, and other native origin options is deferred to the corpus review.",
+          "Native multi-skill choice execution, cross-package duplicate-grant rules, and ordinary inventory item resolution remain deferred. No fixed ability-score changes, Origin feat, class features, or new consumer code are added."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/gladiator.json",
+      "blobSha": "2631e3c60647f0fce9b61a8d30182d67f73174ba",
+      "record": {
+        "id": "background.gladiator",
+        "name": "Gladiator",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have significant experience performing in organized combat exhibitions, arena contests, staged duels, or other physical spectacles before spectators. This Background does not assume enslavement, killing, a particular social class, military standing, weapons class, Species, Upbringing or moral outlook.",
+        "benefits": [
+          {
+            "id": "gladiator-performance",
+            "name": "Performance Training",
+            "grantType": "skill-training",
+            "skill": "skill.performance",
+            "description": "Gain Performance training through presenting physical contests and combat exhibitions before audiences. It does not train separate Perform specialties automatically."
+          },
+          {
+            "id": "gladiator-arena-skill",
+            "name": "Arena Skill",
+            "grantType": "skill-training",
+            "chooseOne": [
+              "skill.athletics",
+              "skill.acrobatics",
+              "skill.intimidation"
+            ],
+            "choiceCount": 1,
+            "description": "Choose one Skill from Athletics, Acrobatics or Intimidation to reflect your arena discipline. Composite Athletics and Acrobatics do not automatically train their independently ranked child Skills."
+          },
+          {
+            "id": "gladiator-arena-weapon",
+            "name": "Arena Weapon Proficiency",
+            "grantType": "qualification-training",
+            "qualificationCategory": "weapon",
+            "choiceCategory": "specific-weapon",
+            "choiceCount": 1,
+            "choiceConstraint": "one-specific-existing-mundane-arena-appropriate-weapon-type",
+            "description": "Choose one specific mundane weapon type appropriate to the fighting discipline you performed and gain proficiency with that type. Trident and net are examples, not an exhaustive list. This single-weapon proficiency replaces ordinary tool training; it does not grant Disguise Kit, Musical Instrument training, proficiency with a whole weapon category, fighting styles, maneuvers, additional attacks, armor proficiency, or ownership of every weapon of that type. The chosen weapon type should match your ordinary starting arena weapon.",
+            "equipmentTypeChoiceId": "arena-weapon"
+          },
+          {
+            "id": "gladiator-arena-performances",
+            "name": "Arena Performances",
+            "grantType": "background-feature",
+            "description": "Where organized combat exhibitions or spectator contests are a recognized kind of entertainment, you can generally find a suitable organizer or venue willing to consider you for an appropriate demonstration or match. When you regularly perform as agreed, you may receive modest or comfortable food and lodging through the venue without an additional room-and-board fee. Spectators who recognize your past exhibitions may initially regard you favorably as a performer. This does not guarantee victory, prizes, employment where no suitable spectacle exists, safe contests, legal immunity, access to restricted arena areas, or authority over organizers. Performances may be staged or nonlethal; they do not require killing an opponent."
+          }
+        ],
+        "startingEquipment": {
+          "description": "One ordinary, inexpensive arena weapon of the same specific type selected for Arena Weapon Proficiency, an admirer favor or personal token, an arena costume, and a pouch with 15 gp. The weapon is a normal inventory item and not a proficiency grant by possession. Trident and net are historical examples, not an exclusive allowed list. No magic, automatic armor, second weapon, arena ownership, entourage, permit, or guaranteed sponsor.",
+          "items": [
+            {
+              "name": "Arena weapon matching selected proficiency",
+              "quantity": 1,
+              "choiceCategory": "specific-weapon",
+              "choiceConstraint": "same-specific-mundane-arena-appropriate-weapon-type-as-proficiency-and-inexpensive",
+              "equipmentTypeChoiceId": "arena-weapon",
+              "itemRequirements": {
+                "sameBaseWeaponTypeAsChoice": true,
+                "mundane": true,
+                "inexpensive": true
+              }
+            },
+            {
+              "name": "Admirer's favor or personal token",
+              "quantity": 1
+            },
+            {
+              "name": "Arena costume",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 15
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "Arena role, contested results, treatment by organizers and local public recognition are narrative details. Gladiators need not have fought lethal matches or served an owner.",
+          "prompts": [
+            "What type of exhibitions did you participate in?",
+            "What weapon or fighting discipline became your specialty?",
+            "Where have spectators seen you fight?",
+            "What organizers, rivals, or audiences remember your performances?"
+          ]
+        },
+        "reviewNotes": [
+          "Gladiator is a standalone Background with independent grants, not an inherited Entertainer variant.",
+          "The 2014 Gladiator variant shared Entertainer's tool proficiencies and substituted an unusual weapon only as equipment. This approved native package deliberately grants one narrow weapon proficiency IN PLACE OF a tool proficiency.",
+          "Fixed Performance and one Skill from Athletics, Acrobatics or Intimidation. Composite Skills do not train their separately ranked components automatically.",
+          "The selected proficiency covers exactly one specific arena-appropriate native weapon type. Trident and net are examples, not a required two-item pool; item and weapon catalogs must establish actual allowed identities at execution time.",
+          "No automatic Disguise Kit, Musical Instrument, other tool training, extra language, martial weapon category, armor proficiency, combat maneuvers, fighting style, additional attack, or class features.",
+          "The qualification-training representation follows existing vehicle qualification style but uses weapon category and one specific weapon selection. Execution of this new selection requires later general native qualification-choice support. Do not infer training merely from the starting item.",
+          "Arena Performances grants venue-dependent opportunities, food and lodging in exchange for performances, and bounded positive recognition; no guaranteed pay, prizes, safe matches, global fame, or arena authority.",
+          "The selected inexpensive mundane arena weapon is ordinary starting inventory and matches the training type. Its item identity and value comparison remain deferred.",
+          "No 2024 Origin feat, ability score increases or extra Upbringing. Weapon-versus-tool strength and duplicate grants require later corpus balance review.",
+          "The chosen base weapon type is linked to the ordinary starting item by equipmentTypeChoiceId. Arena appropriateness is descriptive and adjudicated by the DM, not a machine-enforced eligibility predicate; the All Weapons group supplies candidate base types, not a granted group proficiency. This does not grant Weapon Mastery.",
+          "Approved selection scope: any one existing mundane base weapon type appropriate to the character's arena discipline. The equipment catalog enumerates base types and the DM judges arena suitability; software needs only enforce the specific selected weapon proficiency and matching ordinary starting item. This is neither a whole-family proficiency nor Weapon Mastery.",
+          "The `gladiator-arena-weapon` benefit and first ordinary starting item both reference the executable choice `arena-weapon` through `equipmentTypeChoiceId`. Item requirements are authored constraints, not a claim that the current common equipment resolver validates mundane cost, arena context or inventory instances."
+        ],
+        "equipmentProficiencyGrants": {
+          "choices": [
+            {
+              "id": "arena-weapon",
+              "count": 1,
+              "fromCategory": "weapon",
+              "fromGroupIds": [
+                "equipment.group.weapon.all"
+              ],
+              "selectionKind": "equipment-type"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/backgrounds/guild-artisan.json",
+      "blobSha": "48866abd5712f1bfdca152ced8ce817cbd68f5f5",
+      "record": {
+        "id": "background.guild-artisan",
+        "name": "Guild Artisan",
+        "kind": "background",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "You have practical experience in a craft or trade and have belonged to a guild or comparable professional association. Your expertise and relationships may have developed through apprenticeship, later training, or independent work. This Background does not require a particular Upbringing, inherited membership, business ownership, or current good standing with every guild.",
+        "benefits": [
+          {
+            "id": "guild-artisan-insight",
+            "name": "Insight Training",
+            "description": "Gain training in Insight.",
+            "grantType": "skill-training",
+            "skill": "skill.insight"
+          },
+          {
+            "id": "guild-artisan-persuasion",
+            "name": "Persuasion Training",
+            "description": "Gain training in Persuasion.",
+            "grantType": "skill-training",
+            "skill": "skill.persuasion"
+          },
+          {
+            "id": "guild-artisan-trade",
+            "name": "Guild Trade Competency",
+            "description": "Choose one existing native Competency from the shared crafting-method category appropriate to the craft you practiced through your guild. Gain one rank in that Competency, without automatically becoming proficient. This does not grant a separate historical Craft Skill, additional tool proficiency, or equipment ownership.",
+            "grantType": "competency-training",
+            "choiceCategory": "crafting-competency",
+            "choiceCount": 1,
+            "choiceConstraint": "appropriate-to-character-guild-trade",
+            "exampleCompetencies": [
+              "competency.smithing",
+              "competency.leatherworking",
+              "competency.cooking",
+              "competency.carpentry",
+              "competency.weaving",
+              "competency.pottery",
+              "competency.calligraphy",
+              "competency.cartography",
+              "competency.brewing",
+              "competency.alchemy"
+            ],
+            "competencyTraining": {
+              "ranks": 1,
+              "proficient": false
+            },
+            "choiceCategoryId": "competency-category.crafting-method"
+          },
+          {
+            "id": "guild-artisan-trade-language",
+            "name": "Trade Language",
+            "description": "Learn one language of your choice associated with your guild's work, its members, clients, or trade relationships. Common is valid when used in that context.",
+            "extraLanguages": 1,
+            "choiceConstraint": "associated-with-guild-work-members-clients-or-trade-relationships"
+          },
+          {
+            "id": "guild-artisan-membership",
+            "name": "Guild Membership",
+            "grantType": "background-feature",
+            "description": "Your experience and recognized standing with a craft guild or comparable trade association can provide introductions to members, professional contacts, and modest food or lodging when the guild can reasonably assist you. The association may offer advocacy or introductions to influential people when doing so serves its interests. Assistance depends on its reach, resources, and your standing; it does not ensure legal immunity, unrestricted support, or access to unrelated guilds. Maintaining good standing ordinarily requires dues of 5 gp each month. The DM adjudicates missed payments and their effects under the circumstances."
+          }
+        ],
+        "startingEquipment": {
+          "description": "One set of tools appropriate to your selected guild craft, where a matching tool set exists, a letter of introduction or comparable proof of guild connection, traveler's clothes, and a pouch containing 15 gp. These are ordinary inventory possessions. A native craft Competency without corresponding tool equipment does not automatically supply an invented tool set, workshop, materials, or recipes. Guild dues are separate and are not automatically deducted from the starting money.",
+          "items": [
+            {
+              "name": "Guild craft tool set",
+              "quantity": 1,
+              "choiceConstraint": "appropriate-to-selected-craft-when-matching-tool-set-exists"
+            },
+            {
+              "name": "Guild letter of introduction or evidence of membership",
+              "quantity": 1
+            },
+            {
+              "name": "Traveler's clothes",
+              "quantity": 1
+            },
+            {
+              "name": "Pouch",
+              "quantity": 1
+            }
+          ],
+          "currency": {
+            "gp": 15
+          }
+        },
+        "suggestedCharacteristics": {
+          "optional": true,
+          "description": "The guild, craft, past employment, and member relationships are optional narrative details. A craft worker need not have grown up in an artisan family, own a workshop, or hold a particular social or political view.",
+          "prompts": [
+            "Which craft did you practice, and how did you learn it?",
+            "What guild or professional association recognized your work?",
+            "How do your relationships with fellow members affect your access to assistance?",
+            "What obligations or disagreements continue to shape your professional life?"
+          ]
+        },
+        "reviewNotes": [
+          "Independently reconciled from the 2014 Guild Artisan Background rather than its 2024 version; Guild Merchant is a separate future Background candidate and not an inherited variant.",
+          "The 2014 Skill baseline of Insight and Persuasion is retained.",
+          "The shared authoritative category competency-category.crafting-method defines eligible native craft disciplines. exampleCompetencies is illustrative only, not the eligible-choice authority. The selected discipline must suit the character's actual guild trade; unrelated noncraft activities do not become eligible merely through associated equipment.",
+          "A native Competency is one learned discipline whose use may span several tasks and associated tools, without automatically creating separate equipment proficiencies. This approved guild benefit grants one rank and no proficiency.",
+          "Learn one language related to the guild's practice or trade relationships, including Common where appropriate.",
+          "Guild Membership grants conditional institutional and professional assistance. Maintaining good standing ordinarily requires 5 gp per month; no new guild dues tracking service or mandatory accounting subsystem is implemented.",
+          "Existing membership and standing depend on the setting; former members keep their learned training even when access to guild benefits changes.",
+          "Starting equipment consists of trade-appropriate tools where an actual matching set exists, proof of guild connection, traveler's clothes, and 15 gp as ordinary inventory. The tool choice is descriptive pending item identity resolution, and no fictional tool set is automatically fabricated.",
+          "No 2024 Origin feat, fixed ability increases, automatic class features, hereditary membership, or grant of a second Background.",
+          "Duplicate competencies from cultural Upbringings such as General Dwarf and General Goliath require the later system-wide duplicate-grant policy."
+        ]
+      }
+    }
+  ]
+}

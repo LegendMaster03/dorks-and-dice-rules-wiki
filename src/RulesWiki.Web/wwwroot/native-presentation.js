@@ -38,6 +38,7 @@ export function createPresentationInput(context, envelope, reader, options = {})
         hrefForRule: id => (options.toolBasePath ?? "").replace(/\/$/, "") + ruleRoute(c.rulesetId, id),
         renderSource: options.renderSource ?? null,
         onBack: options.onBack ?? null,
+        originOccurrence: options.originOccurrence ?? null,
         lifecycle: options.lifecycle ?? null });
 }
 export function createNativeRendererRegistry(fallback = renderGenericNative) {

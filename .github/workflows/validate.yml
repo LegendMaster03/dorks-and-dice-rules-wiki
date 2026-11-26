@@ -38,7 +38,9 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm test
       - name: Verify reader geometry in Chromium
-        run: node tools/test-wiki-reader-layout.mjs
+        run: |
+          node tools/test-wiki-reader-layout.mjs
+          node tools/test-life-experiences-reader.mjs --preview-dir /tmp/life-experience-previews --geometry
       - name: Retain safe Embedded Module rendering lifecycle
         run: |
           if grep -R 'MutationObserver' -n src/RulesWiki.Web/wwwroot; then

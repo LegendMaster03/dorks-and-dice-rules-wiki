@@ -53,13 +53,15 @@ export function renderNativeDetail(container, detail, onBack, app = null, option
     const reader = options.reader ?? (app?.api?.getNativeRule && app?.api?.searchNativeRules
         ? createRulesetReader(app.api, context, context.rulesetId === DEFAULT_RULESET_ID ? app.wikiIndex?.packageDescriptor : null) : null);
     const input = createPresentationInput(context, detail, reader, {
-        toolBasePath: app?.hostContext?.toolBasePath ?? "", onBack, lifecycle,
+        toolBasePath: app?.hostContext?.toolBasePath ?? "", onBack, lifecycle, originOccurrence: options.originOccurrence ?? null,
         renderSource: app?.renderNativeSource ? value => app.renderNativeSource(value) : null
     });
     const registry = app
         ? (app.nativeRendererRegistry ??= createWikiNativeRendererRegistry(app))
         : createWikiNativeRendererRegistry();
     const selected = registry.select(input);
+    if (input.originOccurrence && selected.id !== "origins.characteristic")
+        throw new Error("Characteristic occurrence reference unavailable.");
     const result = mountNativePresentation(container, { render: value => selected.render(value) }, input, {
         decorate: content => {
             if (selected.id === LEGACY_NATIVE_RENDERER) return content;
