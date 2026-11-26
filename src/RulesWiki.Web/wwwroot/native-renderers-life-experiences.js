@@ -320,6 +320,17 @@ export async function renderLifeExperience(input) {
     extraRecord(article, r, state);
     if (r !== input.record) details(article, "Additional record context", Object.fromEntries(Object.entries(input.record).filter(([k]) => k !== "definition")), input);
     article.append(renderNativeAttribution(input));
+    // Life Experience fields can be nested several choice levels deep. A
+    // resizable desktop pane is not necessarily wide enough for max-content
+    // label columns, even when the viewport is wide. Keep this adapter's
+    // field stacks and list indents bounded independently of shared CSS.
+    for (const dl of article.querySelectorAll(".rules-core-inline-details")) {
+        dl.style.gridTemplateColumns = "minmax(0, 1fr)";
+        dl.style.minWidth = "0";
+    }
+    for (const field of article.querySelectorAll(".rules-core-inline-details > dt, .rules-core-inline-details > dd"))
+        field.style.minWidth = "0";
+    for (const list of article.querySelectorAll("ul, ol")) list.style.paddingInlineStart = "1.2rem";
     // The existing native-rule-detail decorator owns the package notice.
     return article;
 }

@@ -214,8 +214,9 @@ if (process.argv.includes("--geometry")) {
     const temp = mkdtempSync(join(tmpdir(), "wiki-life-experience-"));
     const script = '<script>try {const pane=document.getElementById("pane"), article=pane.querySelector(".life-experience-reader");'
         + 'for(const width of [320,Math.min(760,innerWidth-8)]){pane.style.width=width+"px";pane.style.maxWidth="100%";'
-        + 'if(article.clientWidth<200||article.scrollWidth>article.clientWidth+2||pane.scrollWidth>pane.clientWidth+2) throw Error("Article overflow at "+width+": "+article.scrollWidth+"/"+article.clientWidth+"; pane "+pane.scrollWidth+"/"+pane.clientWidth);'
-        + '}document.body.dataset.layoutResult="pass";}catch(error){document.body.dataset.layoutResult="fail";document.body.dataset.layoutError=error.message;}</script>';
+        + 'for(const open of [false,true]){article.querySelectorAll("details").forEach(d=>d.open=open);'
+        + 'if(article.clientWidth<200||article.scrollWidth>article.clientWidth+2||pane.scrollWidth>pane.clientWidth+2) throw Error("Article overflow at "+width+" (disclosures "+open+"): "+article.scrollWidth+"/"+article.clientWidth+"; pane "+pane.scrollWidth+"/"+pane.clientWidth);'
+        + '}}document.body.dataset.layoutResult="pass";}catch(error){document.body.dataset.layoutResult="fail";document.body.dataset.layoutError=error.message;}</script>';
     try {
         for (const id of ["upbringing.elf.drow", "upbringing.aristocratic", "background.entertainer"]) {
             const path = join(temp, id + ".html");
