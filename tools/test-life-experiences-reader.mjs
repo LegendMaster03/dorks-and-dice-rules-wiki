@@ -81,8 +81,8 @@ function previewHtml(content, script = "") {
         + '*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;line-height:1.5}'
         + ':root{--bs-body-bg:white;--bs-body-color:#212529;--bs-border-color:#dee2e6;--bs-secondary-bg:#eee;--bs-tertiary-bg:#f5f5f5}'
         + '.card-body,.p-3{padding:1rem}.p-2{padding:.5rem}.border{border:1px solid #dee2e6}.rounded{border-radius:.375rem}'
-        + styles + '</style></head><body><main id="pane" class="rules-core-library-detail"><div class="rules-core-library-detail-body">'
-        + content + '</div></main>' + script + '</body></html>';
+        + styles + '</style></head><body><div class="rules-core-library-workspace has-selection" style="display:block;min-height:0;height:auto"><main id="pane" class="rules-core-library-detail"><div class="rules-core-library-detail-body">'
+        + content + '</div></main></div>' + script + '</body></html>';
 }
 function setup(record, options = {}) {
     const calls = { source: 0, hierarchy: 0, resolve: 0 };
@@ -129,7 +129,7 @@ async function show(record) {
     const ownGrants = [...main.querySelectorAll("[data-source-id]")].filter(n => n.dataset.sourceId === record.id &&
         /^\/benefits\/\d+$/.test(n.dataset.sourcePointer));
     assert.equal(ownGrants.length, record.benefits.length, record.id);
-    if (previewDir) writeFileSync(previewDir + "/" + record.id + ".html",
+    if (previewDir && records.get(record.id) === record) writeFileSync(previewDir + "/" + record.id + ".html",
         previewHtml(main.innerHTML));
     return main.cloneNode(true);
 }
@@ -226,7 +226,7 @@ if (process.argv.includes("--geometry")) {
                     "--window-size=" + size, "--dump-dom", pathToFileURL(path).href],
                     { encoding: "utf8", timeout: 45000, maxBuffer: 4 * 1024 * 1024 });
                 assert.equal(result.status, 0, result.error?.message ?? result.stderr);
-                assert.match(result.stdout, /<body data-layout-result="pass">/,
+                assert.ok(/<body data-layout-result="pass">/.test(result.stdout),
                     id + " layout at " + size + ": " + (result.stdout.match(/data-layout-error="([^"]*)"/)?.[1] ?? "No result"));
             }
         }
