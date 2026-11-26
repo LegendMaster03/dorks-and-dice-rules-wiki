@@ -14,6 +14,15 @@ for (const response of Object.values(captures)) {
 for (const response of Object.values(captures)) {
     for (const row of response.lineage ?? []) first.set(row.id, { id: row.id, name: row.name, kind: row.kind, definition: row.definition });
 }
+// The component projection contains Core's loader-expanded definition, including
+// the identity omitted from the raw source. Only the ordinary detail wrapper is synthetic.
+for (const response of Object.values(captures)) {
+    if (!response.componentId) continue;
+    const definition = response.definition;
+    assert.equal(definition.id, response.componentId);
+    assert.equal(definition.kind, "construct-component");
+    first.set(definition.id, { id: definition.id, name: definition.name, kind: definition.kind, definition });
+}
 // Use exact recorded characteristic and Construct source values where available.
 // Their ordinary native-detail envelopes are synthetic transport wrappers, not HTTP captures.
 const characteristicRecords = read("./fixtures/origin-characteristic/records.json");
