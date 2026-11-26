@@ -185,10 +185,17 @@ function benefit(parent, b, state, source, pointer) {
 }
 function benefits(parent, source, state) {
     const r = source.definition;
-    if (Array.isArray(r.benefits)) r.benefits.forEach((b, i) => benefit(parent, b, state, source, "/benefits/" + i));
-    else if (present(r.benefits)) parent.append(valueNode(r.benefits, state));
+    if (Array.isArray(r.benefits) && r.benefits.length) r.benefits.forEach((b, i) => benefit(parent, b, state, source, "/benefits/" + i));
+    else if (present(r.benefits) && !Array.isArray(r.benefits)) parent.append(valueNode(r.benefits, state));
     else parent.append(node("p", "No benefits are supplied in this record."));
     qualification(parent, r.equipmentProficiencyGrants, state, source, "/equipmentProficiencyGrants");
+}
+// This is a local authored cross-reference for display, not an eligible
+// option calculation. Ambiguous or absent IDs are left unresolved.
+function uniqueLocalId(entries, id) {
+    if (!Array.isArray(entries) || typeof id !== "string") return null;
+    const matches = entries.filter(entry => object(entry) && entry.id === id);
+    return matches.length === 1 ? matches[0] : null;
 }
 function equipment(parent, equipment, state, source) {
     const s = section(parent, "Starting equipment", "life-experience-equipment");
@@ -201,11 +208,28 @@ function equipment(parent, equipment, state, source) {
         else {
             block.append(node("h4", (item.name ?? "Item") + (present(item.quantity) ? " × " + item.quantity : ""), "h6"));
             if (present(item.choiceCount)) block.append(node("p", "Choose " + item.choiceCount));
+            const choice = uniqueLocalId(source.definition.benefits, item.sourceBenefitChoiceId);
+            if (present(item.sourceBenefitChoiceId)) {
+                const related = node("p", "Related training choice: " + (choice?.name ?? item.sourceBenefitChoiceId), "small");
+                related.dataset.sourceBenefitChoiceId = item.sourceBenefitChoiceId;
+                block.append(related);
+            }
             if (Array.isArray(item.conditionalItemChoices)) {
                 block.append(node("h5", "Conditional item choices", "h6"));
-                item.conditionalItemChoices.forEach(c => block.append(valueNode(c, state)));
+                item.conditionalItemChoices.forEach((condition, j) => {
+                    if (!object(condition)) { block.append(valueNode(condition, state)); return; }
+                    const branch = node("div", null, "border rounded p-2 mb-2");
+                    if (present(condition.whenOptionId)) {
+                        const option = uniqueLocalId(choice?.options, condition.whenOptionId);
+                        branch.append(node("h6", "When " + (option?.name ?? condition.whenOptionId) + " is chosen"));
+                        branch.dataset.whenOptionId = condition.whenOptionId;
+                    }
+                    fields(branch, condition, state, new Set(["whenOptionId"]));
+                    provenance(branch, state, source, "/startingEquipment/items/" + i + "/conditionalItemChoices/" + j);
+                    block.append(branch);
+                });
             }
-            fields(block, item, state, new Set(["name", "quantity", "choiceCount",
+            fields(block, item, state, new Set(["name", "quantity", "choiceCount", "sourceBenefitChoiceId",
                 ...(Array.isArray(item.conditionalItemChoices) ? ["conditionalItemChoices"] : [])]));
         }
         provenance(block, state, source, "/startingEquipment/items/" + i);
@@ -276,7 +300,7 @@ export async function renderLifeExperience(input) {
             benefits(s, row, state);
             if (row.inheritedSource) extraRecord(s, row.definition, state);
         }
-        const s = section(article, "Authored Species and Ancestry suggestions");
+        const s = section(article, "Authored Species and Ancestry suggestions", "life-experience-suggestions");
         s.append(node("p", "Suggestions only; no Species restriction or additional benefit is implied."));
         if (!suggestions.length) s.append(node("p", "No authored suggestions reference this Upbringing."));
         else {

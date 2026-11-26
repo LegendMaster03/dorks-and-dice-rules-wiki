@@ -1,7 +1,11 @@
 /** Isolated F acceptance. Native source files are pinned; only uncaptured
  * HTTP envelopes and missing/denied targets are synthetic transport fixtures. */
 import assert from "node:assert/strict";
-import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
+import { readFileSync, mkdirSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { gunzipSync } from "node:zlib";
 import { JSDOM } from "jsdom";
 import { createRulesContext } from "../src/RulesWiki.Web/wwwroot/rules-context.js";
@@ -68,6 +72,18 @@ for (const file of ["first-party-001--skill.athletics", "first-party-001--equipm
 const previewIndex = process.argv.indexOf("--preview-dir");
 const previewDir = previewIndex < 0 ? null : process.argv[previewIndex + 1];
 if (previewDir) mkdirSync(previewDir, { recursive: true });
+const styles = ["rules-core.css", "rules-core-detail.css", "rules-reference-browser-phase1.css", "wiki-experience.css"]
+    .map(name => readFileSync(new URL("../src/RulesWiki.Web/wwwroot/" + name, import.meta.url), "utf8")).join("\n");
+// Isolated reference pane, not a reproduction of the Site shell or its
+// Bootstrap assets. Use the real Wiki rules styles with minimal box metrics.
+function previewHtml(content, script = "") {
+    return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>'
+        + '*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;line-height:1.5}'
+        + ':root{--bs-body-bg:white;--bs-body-color:#212529;--bs-border-color:#dee2e6;--bs-secondary-bg:#eee;--bs-tertiary-bg:#f5f5f5}'
+        + '.card-body,.p-3{padding:1rem}.p-2{padding:.5rem}.border{border:1px solid #dee2e6}.rounded{border-radius:.375rem}'
+        + styles + '</style></head><body><main id="pane" class="rules-core-library-detail"><div class="rules-core-library-detail-body">'
+        + content + '</div></main>' + script + '</body></html>';
+}
 function setup(record, options = {}) {
     const calls = { source: 0, hierarchy: 0, resolve: 0 };
     const api = {
@@ -114,12 +130,19 @@ async function show(record) {
         /^\/benefits\/\d+$/.test(n.dataset.sourcePointer));
     assert.equal(ownGrants.length, record.benefits.length, record.id);
     if (previewDir) writeFileSync(previewDir + "/" + record.id + ".html",
-        '<!doctype html><meta name="viewport" content="width=device-width, initial-scale=1"><main>' + main.innerHTML + '</main>');
+        previewHtml(main.innerHTML));
     return main.cloneNode(true);
 }
 const views = new Map();
 for (const row of [...upbringingRows, ...backgroundRows]) views.set(row.id, await show(fixture(row.id)));
 const view = id => views.get(id);
+const biologicalRows = actual("hierarchy-biological.json").rows;
+for (const row of upbringingRows) {
+    const links = [...view(row.id).querySelectorAll(".life-experience-suggestions a")].map(a => a.getAttribute("href")).sort();
+    const expected = biologicalRows.filter(b => b.defaultUpbringingId === row.id)
+        .map(b => "/rulesets/first-party-001/rules/" + b.id).sort();
+    assert.deepEqual(links, expected, "Only authored default relationships appear as suggestions: " + row.id);
+}
 const drow = view("upbringing.elf.drow");
 assert.match(drow.textContent, /Select one effective Upbringing/);
 assert.match(drow.textContent, /activity must qualify, not merely the location/i);
@@ -130,12 +153,22 @@ assert.ok(drow.querySelector('a[href="/rulesets/first-party-001/rules/upbringing
 assert.equal(view("upbringing.elf.general").querySelector(".life-experience-inherited"), null);
 assert.match(view("upbringing.gnome.general").textContent, /not independently selectable/);
 assert.match(view("upbringing.aristocratic").textContent, /available to any Species/);
+assert.match(view("upbringing.aristocratic").textContent, /Ranks granted: 0/);
+assert.match(view("upbringing.aristocratic").textContent, /Proficiency granted: Yes/);
 assert.match(view("upbringing.elf.wood").textContent, /forest-navigation/);
 const entertainer = view("background.entertainer");
 assert.match(entertainer.textContent, /Choose 1/);
 assert.match(entertainer.textContent, /Ranks granted: 1/);
 assert.match(entertainer.textContent, /Proficiency granted: No/);
 assert.match(entertainer.textContent, /Conditional item choices/);
+const itemBranches = entertainer.querySelectorAll(".life-experience-equipment [data-when-option-id]");
+assert.equal(itemBranches.length, 2);
+assert.equal(itemBranches[0].dataset.whenOptionId, "disguise-kit");
+assert.match(itemBranches[0].textContent, /When Disguise Kit Training is chosen/);
+assert.match(itemBranches[0].textContent, /Mundane performance prop/);
+assert.equal(itemBranches[1].dataset.whenOptionId, "musical-instrument");
+assert.match(itemBranches[1].textContent, /When Musical Instrument Training is chosen/);
+assert.match(itemBranches[1].textContent, /entertainer-musical-instrument/);
 assert.ok(entertainer.querySelector('[data-source-pointer="/benefits/2/options/1/equipmentProficiencyGrants/choices/0"]'));
 assert.ok(entertainer.querySelector(".life-experience-equipment [data-source-pointer='/startingEquipment/items/0']"));
 assert.equal(entertainer.querySelector('a[href$="/equipment.group.tool.musical-instrument"]'), null);
@@ -169,4 +202,35 @@ unknown.benefits[0].futureField = "<img src=x onerror=alert(1)>";
 const unknownView = await show(unknown);
 assert.match(unknownView.textContent, /futureField|Future Field|Future field/);
 assert.equal(unknownView.querySelector("img"), null);
+const empty = structuredClone(fixture("background.acolyte"));
+empty.benefits = [];
+assert.match((await show(empty)).textContent, /No benefits are supplied/);
+// Real computed geometry of isolated native article content. Full hosted
+// reader geometry and responsive navigation remain the integration review.
+if (process.argv.includes("--geometry")) {
+    const candidates = process.env.CHROME_BIN ? [process.env.CHROME_BIN] : ["google-chrome", "chromium", "chromium-browser"];
+    const chrome = candidates.find(command => spawnSync(command, ["--version"], { encoding: "utf8" }).status === 0);
+    assert.ok(chrome, "Chromium is required for the isolated geometry check.");
+    const temp = mkdtempSync(join(tmpdir(), "wiki-life-experience-"));
+    const script = '<script>try {const pane=document.getElementById("pane"), article=pane.querySelector(".life-experience-reader");'
+        + 'for(const width of [320,Math.min(760,innerWidth-8)]){pane.style.width=width+"px";pane.style.maxWidth="100%";'
+        + 'if(article.clientWidth<200||article.scrollWidth>article.clientWidth+2||pane.scrollWidth>pane.clientWidth+2) throw Error("Article overflow at "+width+": "+article.scrollWidth+"/"+article.clientWidth+"; pane "+pane.scrollWidth+"/"+pane.clientWidth);'
+        + '}document.body.dataset.layoutResult="pass";}catch(error){document.body.dataset.layoutResult="fail";document.body.dataset.layoutError=error.message;}</script>';
+    try {
+        for (const id of ["upbringing.elf.drow", "upbringing.aristocratic", "background.entertainer"]) {
+            const path = join(temp, id + ".html");
+            writeFileSync(path, previewHtml(view(id).innerHTML, script));
+            for (const size of ["500,900", "1360,900"]) {
+                const result = spawnSync(chrome, ["--headless", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu",
+                    "--no-first-run", "--no-default-browser-check", "--user-data-dir=" + join(temp, "profile-" + size),
+                    "--window-size=" + size, "--dump-dom", pathToFileURL(path).href],
+                    { encoding: "utf8", timeout: 45000, maxBuffer: 4 * 1024 * 1024 });
+                assert.equal(result.status, 0, result.error?.message ?? result.stderr);
+                assert.match(result.stdout, /<body data-layout-result="pass">/,
+                    id + " layout at " + size + ": " + (result.stdout.match(/data-layout-error="([^"]*)"/)?.[1] ?? "No result"));
+            }
+        }
+    } finally { rmSync(temp, { recursive: true, force: true }); }
+    console.log("Chromium: three isolated Life Experiences articles fit desktop and compact reference panes.");
+}
 console.log("Workstream F: 29 pinned records, captured hierarchy and Wood Elf lineage, imported adapter, missing references and lifecycle cases passed.");
