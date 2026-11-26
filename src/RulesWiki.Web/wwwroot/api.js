@@ -30,7 +30,9 @@ export class RulesCoreApi {
     }
 
     operation(name, args = []) {
-        if (!["getNativeRulesets", "searchNativeRules", "getNativeRule"].includes(name)) {
+        if (!["getNativeRulesets", "searchNativeRules", "getNativeRule",
+            "getNativeOriginHierarchy", "getNativeOriginSource", "getNativeOriginTraitSources", "getNativeOriginComponent",
+            "getNativeOriginMethods", "getNativeOriginComponentSources"].includes(name)) {
             throw new Error("This operation is unavailable in the read-only native Wiki.");
         }
         return requestJson(`${this.operationBaseUrl}/${name}`, {

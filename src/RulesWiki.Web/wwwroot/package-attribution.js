@@ -25,7 +25,9 @@ export function packageDescriptor(context, descriptor) {
         modificationNotices: strings(m.modificationNotices), acknowledgments: strings(m.acknowledgments)
     }) : null;
     return Object.freeze({ id: c.rulesetId, fingerprint: c.fingerprint,
-        capabilities: Object.freeze({ read: true, write: false }), metadata });
+        capabilities: Object.freeze({ read: true, write: false,
+            ...(c.rulesetId === "first-party-001" && descriptor.capabilities.originReferenceContractVersion === 1
+                ? { originReferenceContractVersion: 1 } : {}) }), metadata });
 }
 /** Use the same authorized index response to establish both identity and attribution. */
 export async function discoverPackageContext(api, rulesetId) {

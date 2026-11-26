@@ -5,6 +5,11 @@ import { registerNativeRenderers as registerClasses } from "./native-renderers-c
 import { registerNativeRenderers as registerCreatures } from "./native-renderers-creature.js";
 import { registerNativeRenderers as registerReferences } from "./native-renderers-reference.js";
 
+import { registerBiologicalRenderer } from "./origin-workspace-composition.js";
+import { registerOriginCharacteristicRenderer } from "./native-origin-characteristic.js";
+import { registerConstructRenderers } from "./native-construct-reference.js";
+import { registerLifeExperienceRenderers } from "./native-renderers-life-experiences.js";
+
 export const LEGACY_NATIVE_RENDERER = "legacy-first-party";
 export function createRegisteredNativeRenderers(renderLegacy) {
     const registry = createNativeRendererRegistry();
@@ -16,5 +21,9 @@ export function createRegisteredNativeRenderers(renderLegacy) {
     registerClasses(registry);
     registerCreatures(registry);
     registerReferences(registry);
+    registerBiologicalRenderer(registry);
+    registerOriginCharacteristicRenderer(registry, {requireCapability: true});
+    registerConstructRenderers(registry);
+    registerLifeExperienceRenderers(registry, {requireCapability: true});
     return registry;
 }

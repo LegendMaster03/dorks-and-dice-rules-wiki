@@ -1,0 +1,400 @@
+{
+  "coreCommit": "0baa466b7fc8f55e5d675b886f76e95f9a4b551f",
+  "records": [
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/gnome/forest.json",
+      "blobSha": "7e02b8b184c2c5b12e8db95f66785b8873a0cb04",
+      "record": {
+        "id": "upbringing.gnome.forest",
+        "name": "Forest Gnome Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "benefits": [
+          {
+            "id": "naturalist-training",
+            "description": "Choose one skill training.",
+            "chooseOne": [
+              "skill.nature",
+              "skill.survival",
+              "skill.animal-handling"
+            ],
+            "grantType": "skill-training",
+            "choiceCount": 1
+          }
+        ],
+        "parent": "upbringing.gnome.general"
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/gnome/general.json",
+      "blobSha": "a842a5c8097b3d24f1508c10b620a7504a50af70",
+      "record": {
+        "id": "upbringing.gnome.general",
+        "name": "General Gnome Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": false,
+        "benefits": [
+          {
+            "id": "gnomish",
+            "description": "Learn Gnomish.",
+            "language": "gnomish"
+          }
+        ],
+        "reviewNotes": [
+          "Shared cultural knowledge was approved in principle; exact mechanical grant remains unresolved and is not invented here.",
+          "Inheritance-only cultural foundation. Forest Gnome and Rock Gnome Upbringings inherit Gnomish once; General Gnome is not an independent Upbringing selection."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/gnome/rock.json",
+      "blobSha": "1ea0457229844ed9bdd952a594af5a2187c0cc9c",
+      "record": {
+        "id": "upbringing.gnome.rock",
+        "name": "Rock Gnome Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "benefits": [
+          {
+            "id": "tinkering",
+            "description": "Gain proficiency in the native Tinkering Competency, associated with Tinker's Tools. The association does not automatically grant equipment ownership or a separate equipment qualification.",
+            "competency": "competency.tinkering",
+            "grantType": "competency-training",
+            "competencyTraining": {
+              "ranks": 0,
+              "proficient": true
+            }
+          },
+          {
+            "id": "artificers-lore",
+            "description": "On qualifying Intelligence (History) checks involving magical, alchemical, or technological objects, apply twice your Proficiency Bonus instead of any ordinary proficiency contribution, even if you lack History proficiency. This does not grant general History proficiency or a Competency rank.",
+            "skill": "skill.history",
+            "ability": "intelligence",
+            "proficiencyBonusMultiplier": 2,
+            "scope": "magic-alchemy-technology-objects",
+            "proficiencyBonusApplication": "replace-normal-proficiency-contribution",
+            "appliesWithoutSkillProficiency": true
+          },
+          {
+            "id": "clockwork-tinker",
+            "description": "May make appropriate clockwork devices using the Tinkering Competency, proper tools, materials and time."
+          },
+          {
+            "id": "prestidigitation",
+            "description": "Learn Prestidigitation as a cantrip. Choose Intelligence, Wisdom, or Charisma as its spellcasting ability when you gain this Upbringing benefit.",
+            "spell": "prestidigitation",
+            "spellcastingAbilityChoice": [
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ]
+          },
+          {
+            "id": "magical-tinkering",
+            "description": "Learn a technique combining Tinkering Competency and Prestidigitation. Does not automatically grant Mending."
+          }
+        ],
+        "parent": "upbringing.gnome.general",
+        "reviewNotes": [
+          "Prestidigitation uses one chosen Intelligence, Wisdom, or Charisma spellcasting ability; this choice applies to that Upbringing-granted spell, not to all spells the character knows."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/goliath/general.json",
+      "blobSha": "d00662031644ba9ae2964f5d7dd826ef9f591ecb",
+      "record": {
+        "id": "upbringing.goliath.general",
+        "name": "General Goliath Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "benefits": [
+          {
+            "id": "gol-kaa",
+            "name": "Gol-Kaa",
+            "description": "Learn Gol-Kaa, the traditional language of many older Goliath clan communities. This learned language is not an inherited Species trait.",
+            "language": "gol-kaa"
+          },
+          {
+            "id": "clan-training",
+            "name": "Clan Training",
+            "description": "Choose one Skill training from Athletics, Insight, or Survival. Training in composite Athletics does not automatically train its independently ranked Climb, Jump, or Swim components.",
+            "grantType": "skill-training",
+            "chooseOne": [
+              "skill.athletics",
+              "skill.insight",
+              "skill.survival"
+            ],
+            "choiceCount": 1,
+            "doesNotAutomaticallyTrainChildSkills": true
+          },
+          {
+            "id": "clan-craft",
+            "name": "Clan Craft",
+            "description": "Choose one Competency from Cooking, Leatherworking, or Navigation, reflecting practical community traditions. The selected Competency gains proficiency but no ranks.",
+            "grantType": "competency-training",
+            "chooseOne": [
+              "competency.cooking",
+              "competency.leatherworking",
+              "competency.navigation"
+            ],
+            "choiceCount": 1,
+            "competencyTraining": {
+              "ranks": 0,
+              "proficient": true
+            }
+          }
+        ],
+        "reviewNotes": [
+          "One baseline of Goliath clan culture is selected for the first pass regardless of whether the character has Cloud, Fire, Frost, Hill, Stone, or Storm ancestry.",
+          "This is a learned cultural upbringing, not an inherited parent of any other Upbringing; a Goliath can explicitly select Giant Foundling or another culture.",
+          "Gol-Kaa is retained from the original 3.5e Goliath traditions. Giant remains a distinct language, which Goliaths may also learn through contact.",
+          "The exact traditions of individual Goliath clans can vary; six distinct Goliath clan cultures mapped to Giant Ancestry are not established by the reviewed sources.",
+          "No Origin feat, rune casting, ancestral supernatural ability, or mandatory Ordning membership is granted.",
+          "Gol-Kaa now has an authoritative language.gol-kaa definition under native/languages/; its learned grant remains part of this Upbringing."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/street-raised.json",
+      "blobSha": "81dc76ef9650e66fb9a87d90092a2f37191321a1",
+      "record": {
+        "id": "upbringing.street-raised",
+        "name": "Street-Raised Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "Your formative years were shaped by everyday life among the streets, markets, lanes, and informal communities of a substantial settlement. You learned practical skills and ways of moving through its public routes. This Upbringing is available to any Species and does not require poverty, orphanhood, criminal activity, a particular family arrangement, or a later urban occupation.",
+        "benefits": [
+          {
+            "id": "street-raised-community-language",
+            "name": "Community Language",
+            "description": "Learn one language used by the community that shaped your upbringing. Common is a valid choice where it was spoken by your formative household or community, but is not universally mandatory. This is learned experience rather than a Species trait.",
+            "extraLanguages": 1,
+            "choiceConstraint": "spoken-in-formative-household-or-community"
+          },
+          {
+            "id": "street-raised-formative-skill",
+            "name": "Street-Raised Skill",
+            "grantType": "skill-training",
+            "description": "Choose one Skill from Stealth, Sleight of Hand, Perception, Insight, or Survival, reflecting what you learned through formative urban life. Perception is a composite Skill; training it does not independently train Listen or Spot.",
+            "chooseOne": [
+              "skill.stealth",
+              "skill.sleight-of-hand",
+              "skill.perception",
+              "skill.insight",
+              "skill.survival"
+            ],
+            "choiceCount": 1
+          },
+          {
+            "id": "street-raised-community-competency",
+            "name": "Community Training Choice",
+            "grantType": "benefit-choice",
+            "description": "Choose one training benefit from Disguise, Thieves' Tools, Cooking, or Forgery, reflecting practical experience within your formative community. The choice does not imply criminal conduct or ownership of the equipment.",
+            "choiceCount": 1,
+            "options": [
+              {
+                "id": "disguise",
+                "name": "Disguise Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.disguise",
+                    "competencyTraining": {
+                      "ranks": 0,
+                      "proficient": true
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "thieves-tools",
+                "name": "Thieves' Tools Proficiency",
+                "benefits": [
+                  {
+                    "grantType": "qualification-training",
+                    "qualificationCategory": "tool",
+                    "equipmentTypeId": "equipment.tool.thieves-tools"
+                  }
+                ],
+                "equipmentProficiencyGrants": {
+                  "fixed": [
+                    {
+                      "id": "street-raised-thieves-tools",
+                      "targetId": "equipment.tool.thieves-tools"
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "cooking",
+                "name": "Cooking Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.cooking",
+                    "competencyTraining": {
+                      "ranks": 0,
+                      "proficient": true
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "forgery",
+                "name": "Forgery Training",
+                "benefits": [
+                  {
+                    "grantType": "competency-training",
+                    "competency": "competency.forgery",
+                    "competencyTraining": {
+                      "ranks": 0,
+                      "proficient": true
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "street-raised-urban-navigation",
+            "name": "Urban Navigation",
+            "grantType": "upbringing-feature",
+            "description": "When traveling outside combat through a substantial settlement, you can identify efficient routes through its accessible streets, alleys, and passages. You and companions following your guidance can travel between locations in half the usual time. This benefit does not bypass physical barriers or grant additional movement during combat."
+          }
+        ],
+        "reviewNotes": [
+          "Approved independent Street-Raised Upbringing, resolving the formative portion of the historical 2014 Urchin source rather than creating a native Urchin Background.",
+          "One learned community language; Common is eligible if used by the formative household or community, but is not automatically required or an inherited Species language.",
+          "Initial balance baseline: choose exactly one Skill from Stealth, Sleight of Hand, Perception, Insight, or Survival and exactly one community training benefit from Disguise, Cooking, Forgery, or Thieves' Tools proficiency. The owner authorized the choice counts; later corpus-wide balance review may revisit them.",
+          "Three choices train native Competencies; the fourth, Thieves' Tools, grants a narrow equipment proficiency with no Competency ranks. The conditional tool grant is available only after validating that selected origin option; there is no unconditional equipment grant.",
+          "The half-time Urban Navigation rule is approved for accessible routes in substantial settlements outside combat and includes companions following the character's guidance. It does not bypass barriers, grant combat speed, reveal otherwise hidden locations, or create a separate map/pathfinding subsystem.",
+          "All Species may select this Upbringing. It does not require poverty, orphanhood, criminality, abandonment, a particular social class, or a criminal future occupation.",
+          "This Upbringing is separate from Criminal, Spy, Charlatan, Soldier, Sage, and all other independently chosen Backgrounds. It does not grant their contacts, false identities, military rank, or other Background features.",
+          "The original Urchin Background equipment, city map, pet mouse, parent's keepsake, knife, clothing, and money do not create a second Upbringing equipment package. No startingEquipment grant is included.",
+          "No fixed ability changes, Origin feat, mandatory tool ownership, separate criminal affiliation, or automatic training of composite Perception's independently ranked Listen/Spot components.",
+          "Shared future work includes generic Skill/Competency choice execution, language choices, conditional urban travel integration, the corpus-level duplication policy, and testing whether one Skill plus one Competency alongside Urban Navigation is appropriately balanced against other Upbringings.",
+          "The chosen Disguise, Cooking, or Forgery Competency grants proficiency and no ranks. The Thieves' Tools alternative grants only its separate binary equipment qualification."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/upbringings/wilderness-raised.json",
+      "blobSha": "2a63c826352d973c9d4fe1a585474c76512b8299",
+      "record": {
+        "id": "upbringing.wilderness-raised",
+        "name": "Wilderness-Raised Upbringing",
+        "kind": "upbringing",
+        "status": "selected-native",
+        "selectable": true,
+        "description": "Your formative years were shaped by a household, community, or sustained environment where obtaining and using natural resources was part of everyday life. This Upbringing is available to any Species and does not require a nomadic culture, isolation from settlements, hunting, poverty, or a particular moral outlook.",
+        "benefits": [
+          {
+            "id": "wilderness-raised-community-language",
+            "name": "Community Language",
+            "description": "Learn one language spoken in your formative household or community. Common may be chosen where it was used there; no special wilderness language is presumed.",
+            "extraLanguages": 1,
+            "choiceConstraint": "spoken-in-formative-household-or-community"
+          },
+          {
+            "id": "wilderness-raised-formative-skill",
+            "name": "Formative Training",
+            "description": "Choose one Skill from Survival, Nature, Animal Handling, Perception, or Athletics to reflect knowledge and practices learned while growing up. Training in composite Perception or Athletics does not automatically train independently ranked component Skills.",
+            "grantType": "skill-training",
+            "chooseOne": [
+              "skill.survival",
+              "skill.nature",
+              "skill.animal-handling",
+              "skill.perception",
+              "skill.athletics"
+            ],
+            "choiceCount": 1
+          },
+          {
+            "id": "wilderness-raised-provisioning",
+            "name": "Wilderness Provisioning",
+            "grantType": "upbringing-feature",
+            "description": "From formative experience obtaining provisions from uncultivated environments, you know how to gather usable food and fresh water when these resources are sufficiently available and accessible. Given a reasonable opportunity to gather provisions during a day, you can supply enough food and fresh water for yourself and up to five other people. This ability does not create resources where none exist, purify unsafe water, bypass inaccessible terrain, or prevent other dangers encountered while gathering."
+          }
+        ],
+        "reviewNotes": [
+          "Independent Upbringing based on the formative aspects of the 2014 Outlander concept. No native Outlander Background is selected; Explorer is a separate Background.",
+          "One language is learned from the character's household or community, including Common if appropriate. The grant does not presume a universal wilderness language.",
+          "One Skill is selected from Survival, Nature, Animal Handling, Perception, and Athletics. Training in either composite Skill does not automatically train its separately ranked child Skills.",
+          "Wilderness Provisioning offers dependable daily food and fresh water for up to six people total when sufficient resources are accessible and gathering is feasible; it does not simply grant permission for an ordinary Survival check.",
+          "The six-person group benefit is campaign-dependent. Exact mechanical balance against complete conventional Species–Ancestry–Upbringing combinations and cross-cultural substitutions remains part of the corpus audit.",
+          "No additional crafting Competency, instrument proficiency, starting items, ability-score increase, Origin feat, inherited ancestry traits, or automatic Explorer feature is granted.",
+          "The Upbringing is independent of Rural Community and Itinerant Community candidates. Selecting it does not require a particular race, poverty, nomadism, or a wilderness-only later career.",
+          "Upbringing-feature projection and overlapping language or Skill training remain deferred to general mechanics integration and cross-package duplicate-grant resolution."
+        ]
+      }
+    },
+    {
+      "path": "data/rulesets/first-party-001/native/rules/species-subspecies-upbringing.json",
+      "blobSha": "43360a0e2c8fbeb318ab72aa4e18cac7da6d11d3",
+      "record": {
+        "id": "rule.species-subspecies-upbringing",
+        "kind": "rule",
+        "name": "Character Origin Selection and Inheritance",
+        "status": "selected-native",
+        "upbringings": {
+          "selectedCount": 1,
+          "defaultField": "defaultUpbringing",
+          "speciesRestrictionsByDefault": false,
+          "description": "Select one effective Upbringing. A Species or Ancestry default is a suggestion, not an extra automatically granted Upbringing and not a Species restriction. An explicit Upbringing choice replaces the suggested default. The selected Upbringing inherits any Upbringing parent benefits once, without requiring a second selection. Only records with selectable: true can be chosen directly; an inheritance-only parent contributes benefits solely through a selected child.",
+          "parentSelectability": {
+            "default": "inheritance-only",
+            "directSelectionExceptionField": "allowParentSelection",
+            "description": "Any Upbringing referenced as another Upbringing's parent is nonselectable by default. It may be independently chosen only when it explicitly sets both selectable: true and allowParentSelection: true. Nonselectable parents grant benefits through one selected child, never as an additional selection."
+          }
+        },
+        "originInheritance": {
+          "speciesAncestryParentField": "parent",
+          "upbringingParentField": "parent",
+          "selectedUpbringingParentBenefits": "inherited-once",
+          "defaultIsAdditionalSelection": false,
+          "nonselectableUpbringingParents": "inherit-through-selectable-child-only"
+        },
+        "reviewNotes": [
+          "Mixed Ancestry is a separate design question and is not required for directly selected Species and Ancestry.",
+          "Character selection and grant authorization remain unimplemented; this JSON is authoritative content rather than an executable character builder.",
+          "General Elf and General Gnome are inheritance-only nonselectable parents. Their children retain inherited cultural benefits; Species defaults cannot point to these parents.",
+          "Upbringings serving as parents are inheritance-only by default; a separately selectable parent requires explicit allowParentSelection.",
+          "Duplicate Skill and specific-tool proficiencies follow same-kind replacement. Duplicate Competency proficiency follows the separate optional-resolution contract; duplicate languages and broad/narrow weapon overlap do not create automatic alternatives.",
+          "Pillar 1 Species/Ancestry parent, default and direct-selection fields are provisional native content for the currently reviewed direct-selection corpus. Pillar 2 will define mixed-Ancestry, origination, contributed heritage and manifested-trait representation; it may substantially revise these structures. Do not implement Species/Ancestry selection, inheritance execution or persisted character schemas from this interim model."
+        ],
+        "duplicateTraining": {
+          "skillProficiency": {
+            "duplicateResolution": "choose-another-same-kind",
+            "replacementKind": "skill",
+            "authorizedChoiceRequired": true,
+            "description": "If independent authorized sources grant the same Skill proficiency, choose a different Skill proficiency instead of losing the redundant grant. Do not add a rank."
+          },
+          "toolProficiency": {
+            "duplicateResolution": "choose-another-same-kind",
+            "replacementKind": "tool",
+            "authorizedChoiceRequired": true,
+            "description": "If independently earned binary proficiencies cover the same specific tool type, choose another eligible tool proficiency. Do not turn a tool qualification into a ranked Competency."
+          },
+          "competencyProficiency": {
+            "ruleId": "rule.competency-duplicate-proficiency",
+            "description": "Competency duplication follows the separately configured policy: provisional same-Competency rank conversion or an authorized alternative Competency proficiency."
+          },
+          "weaponAndOtherEquipment": {
+            "duplicateResolution": "single-effective-boolean",
+            "description": "Repeated or overlapping broad/narrow weapon and other non-tool equipment qualifications retain source provenance. They do not award another proficiency or mastery by implication."
+          },
+          "language": {
+            "duplicateResolution": "retain-without-automatic-replacement",
+            "description": "Language duplication is not covered by the 5e Skill/tool duplicate rule; no new language grant has been approved by this pass."
+          }
+        }
+      }
+    }
+  ]
+}

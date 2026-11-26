@@ -1,12 +1,15 @@
 /** Native presentation adapters use the existing private transport. */
 import { requireBaseContext, validateNativeEnvelope, assertSnapshot, nativeRuleIdentity, ruleRoute } from "./rules-context.js";
+import { createOriginReferenceReader } from "./origin-reference-reader.js";
 import { packageDescriptor, renderPackageAttribution } from "./package-attribution.js";
 import { renderStructuredContent } from "./structured-content.js";
 export function createRulesetReader(api, context, descriptor = null) {
     const c = requireBaseContext(context);
+    const authorized = packageDescriptor(c, descriptor);
     return Object.freeze({
         context: c,
-        packageDescriptor: packageDescriptor(c, descriptor),
+        packageDescriptor: authorized,
+        ...createOriginReferenceReader(api, c, authorized),
         async search(filters = {}) {
             const response = assertSnapshot(c, await api.searchNativeRules(c.rulesetId, filters));
             if (!Array.isArray(response.rules) || !Number.isInteger(response.total) || response.total < 0)
@@ -35,6 +38,7 @@ export function createPresentationInput(context, envelope, reader, options = {})
         hrefForRule: id => (options.toolBasePath ?? "").replace(/\/$/, "") + ruleRoute(c.rulesetId, id),
         renderSource: options.renderSource ?? null,
         onBack: options.onBack ?? null,
+        originOccurrence: options.originOccurrence ?? null,
         lifecycle: options.lifecycle ?? null });
 }
 export function createNativeRendererRegistry(fallback = renderGenericNative) {
